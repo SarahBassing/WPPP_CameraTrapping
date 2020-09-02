@@ -1,0 +1,192 @@
+    ##  Create shapefiles of camera locations
+    ##  Sarah Bassing
+    ##  Washington Predator-Prey Project
+    ##  April 2020
+    ##  ================================================
+    ##  Simple script to make spatial files of camera locations
+    ##  Relies on using Camera_Station_Wrangling.R to create master files of all
+    ##  deployments and checks.
+    ##
+    ##  Version 1: lists all locations of a camera, even if moved or pulled from
+    ##  the field early; good for tracking all camera locations over time
+    ##
+    ##  Version 2: drops the original deployment/check location(s) if the camera 
+    ##  had to be removed early or moved to a new location; good for tracking
+    ##  CURRENT location of cameras in the field
+    ##  ================================================
+  
+  #  Load packages
+  library(tidyverse)
+
+  ##  ==================================================    
+  ##  Version 1: Organize ALL camera locations, even if cameras were moved during season
+  
+  #  Cameras deployed summer 2018
+  master18_19 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018_updated.5.1.20.csv") %>%
+    select("Status", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Camera_Long", "Camera_Lat", "Distance_Focal_Point", "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", "Habitat_Type") %>%
+    #  Add a column merging cell & camera, format date
+    mutate(
+      Name = paste(Cell_ID, "_", Camera_ID),
+      Date = as.Date(Date, format = "%m/%d/%Y")
+    ) %>%
+    arrange(Name, Date) %>%
+    #  Remove entries when the camera was pulled
+    filter(Status != "Removed") %>%
+    #  Remove duplicate data (where deployment and check data match for a given camera)
+    group_by(Camera_Lat, Camera_Long) %>%
+    distinct(Name, .keep_all = TRUE) %>%
+    ungroup() %>%
+    #  Remove cameras that were deployed but never collected data (BURNED) 
+    filter(Name != "OK1474 _ 104" & Name != "OK2051 _ 98" & Name != "OK6270 _ 109") %>%
+    #  Remove duplicate cameras with incorrect coordinates (cameras were not moved)
+    filter(Cell_ID != "NE5094" | Status != "Checked") %>%    
+    filter(Cell_ID != "NE6019" | Status != "Checked") %>%
+    filter(Cell_ID != "NE7602" | Status != "Checked")
+    
+  #  Convert to dataframes
+  cams_all18_19 <- as.data.frame(master18_19) %>%
+    select(-c(Status, Study_Area))
+  OK_all18_19 <- as.data.frame(master18_19[master18_19$Study_Area == "OK",]) %>%
+    select(-c(Status, Study_Area))
+  NE_all18_19 <- as.data.frame(master18_19[master18_19$Study_Area == "NE",]) %>%
+    select(-c(Status, Study_Area))
+  #  How many camera stations total?
+  nrow(OK_all18_19)
+  nrow(NE_all18_19)   
+  
+  #  Cameras deployed summer 2019
+  master19_20 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated.5.1.20.csv") %>% #camera_master_2019.4.24.20.csv
+    select("Status", "Date", "Study_Area", "Cell_ID", "Camera_ID","Camera_Long", "Camera_Lat",  "Distance_Focal_Point", "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", "Habitat_Type") %>%
+    #  Add a column merging cell & camera, format date
+    mutate(
+      Name = paste(Cell_ID, "_", Camera_ID),
+      Date = as.Date(Date, format = "%m/%d/%Y")
+    ) %>%
+    arrange(Name, Date) %>%
+    #  Remove entries when the camera was pulled
+    filter(Status != "Removed") %>%
+    #  Remove duplicate data (where deployment and check data match for a given camera)
+    group_by(Camera_Lat, Camera_Long) %>%
+    distinct(Name, .keep_all = TRUE) %>%
+    ungroup() %>%
+    #  Remove camera station that did not change but camera # was changed due to damage
+    filter(Name != "OK2145 _ 3") %>%
+    #  Remove duplicates that dplyr thinks are distinct
+    filter(Cell_ID != "NE1990" | Status != "Checked") %>%    
+    filter(Cell_ID != "NE2383" | Status != "Checked") 
+
+  #  Convert to dataframes
+  cams_all19_20 <- as.data.frame(master19_20) %>%
+    select(-c(Status, Study_Area))
+  OK_all19_20 <- as.data.frame(master19_20[master19_20$Study_Area == "OK",]) %>%
+    select(-c(Status, Study_Area))
+  NE_all19_20 <- as.data.frame(master19_20[master19_20$Study_Area != "OK",]) %>%
+    select(-c(Status, Study_Area))
+  #  How many camera stations total?
+  nrow(OK_all19_20)
+  nrow(NE_all19_20)
+  
+  
+  
+  ##  ==================================================
+  ##  Version 2: Only cameras that are currently deployed in their most recent location
+  
+  #  Cameras deployed summer 2019
+  current19_20 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated.5.1.20.csv") %>% #camera_master_2019.4.24.20.csv
+    select("Status", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Camera_Long", "Camera_Lat", "Cam_Removed") %>%
+    #  Add a column merging cell & camera, format date and camera removal data
+    mutate(
+      Name = paste(Cell_ID, "_", Camera_ID),
+      Date = as.Date(Date, format = "%m/%d/%Y"),
+      Cam_Removed = ifelse(is.na(Cam_Removed), "1", Cam_Removed)  # 1 = N, 2 = Y
+    ) %>%
+    #select(-Date) %>%
+    arrange(Name, Date) %>%
+    #  Filter data to only have most recent check & location data
+    group_by(Cell_ID) %>%  # origionally used Name 
+    filter(Date == max(Date)) %>%
+    ungroup() %>%
+    #  Exclude camera stations that are no longer active (cameras moved or removed)
+    filter(Cam_Removed != 2) %>%
+    #  Remove duplicate cameras when redeployed to slightly new location
+    #  Keep in mind this only works if the "Checked" row is below the "Deployed" row
+    distinct(Name, .keep_all = TRUE) %>%
+    select(Name, Study_Area, Camera_Long, Camera_Lat) 
+  
+  #  Convert to dataframes
+  cams_current19_20 <- as.data.frame(current19_20)  
+  OK_current19_20 <- as.data.frame(current19_20[current19_20$Study_Area == "OK",]) %>%
+    select(-Study_Area)
+  NE_current19_20 <- as.data.frame(current19_20[current19_20$Study_Area != "OK",]) %>%
+    dplyr::select(-Study_Area)
+  
+  #  Do I have the right number of cameras?
+  nrow(OK_current19_20)
+  nrow(NE_current19_20)
+  
+  
+  
+  
+  ##  ===============================================
+  ##  Make these spatial and save as shapefiles and GPX files
+  
+  #  Load spatial packages  
+  library(sp)
+  library(rgdal)
+  #library(raster)
+  
+  #  Data collected in WGS84 geographic coordinate system (Lat/Long)
+  WGS84 <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs ")
+  
+  #  Study area shapefiles
+  OK_SA <- readOGR("./Shapefiles/fwdstudyareamaps", layer = "METHOW_SA") 
+  NE_SA <- readOGR("./Shapefiles/fwdstudyareamaps", layer = "NE_SA")  
+  OK <- spTransform(OK_SA, WGS84)
+  NE <- spTransform(NE_SA, WGS84)
+  
+  #  Create SpatialPointDataFrames
+  cams_master18_19_spdf <- SpatialPointsDataFrame(coords = cams_all18_19[,4:5], data = cams_all18_19, proj4string = WGS84)
+  OK_master18_19_spdf <- SpatialPointsDataFrame(coords = OK_all18_19[,4:5], data = OK_all18_19, proj4string = WGS84)
+  NE_master18_19_spdf <- SpatialPointsDataFrame(coords = NE_all18_19[,4:5], data = NE_all18_19, proj4string = WGS84)
+  
+  cams_master19_20_spdf <- SpatialPointsDataFrame(coords = cams_all19_20[,4:5], data = cams_all19_20, proj4string = WGS84)
+  OK_master19_20_spdf <- SpatialPointsDataFrame(coords = OK_all19_20[,4:5], data = OK_all19_20, proj4string = WGS84)
+  NE_master19_20_spdf <- SpatialPointsDataFrame(coords = NE_all19_20[,4:5], data = NE_all19_20, proj4string = WGS84)
+  
+  cams_current19_20 <- SpatialPointsDataFrame(coords = cams_current19_20[,3:4], data = cams_current19_20, proj4string = WGS84)
+  OKcams_current19_20 <- SpatialPointsDataFrame(coords = OK_current19_20[,2:3], data = OK_current19_20, proj4string = WGS84)
+  NEcams_current19_20 <- SpatialPointsDataFrame(coords = NE_current19_20[,2:3], data = NE_current19_20, proj4string = WGS84)
+  
+  #  Does everything make sense?
+  plot(cams_master18_19_spdf)
+  plot(OK, add = T); plot(NE, add = T)
+  
+  plot(cams_master19_20_spdf)
+  plot(OK, add = T); plot(NE, add = T)
+  plot(cams_current19_20, add = T, col = "red", pch = 19)
+  plot(cams_master19_20_spdf, add = T)
+  plot(NEcams_current19_20, add = T, col = "darkgreen", pch = 19)
+  plot(OKcams_current19_20, add = T, col = "darkgreen", pch = 19)
+
+  
+  #  Write shapefiles
+  writeOGR(cams_master18_19_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "cams_master18_19_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(OK_master18_19_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "OK_master18_19_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(NE_master18_19_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "NE_master18_19_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  
+  writeOGR(cams_master19_20_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "cams_master19_20_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(OK_master19_20_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "OK_master19_20_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(NE_master19_20_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "NE_master19_20_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  
+  writeOGR(cams_current19_20, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_currentlocs_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(OKcams_current19_20, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_currentlocs.OK_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(NEcams_current19_20, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_currentlocs.NE_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  
+  
+  #  Write GPX files
+  #  Be sure spdf only includes NAME, LONG, LAT
+  writeOGR(cams_current19_20, dsn="./Shapefiles/Camera_Locations/Cam_currentlocs_spdf_050220.gpx",
+           dataset_options="GPX_USE_EXTENSIONS=yes",layer="waypoints",driver="GPX", overwrite_layer = T)
+  
+  
+  
