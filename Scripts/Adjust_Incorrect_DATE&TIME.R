@@ -10,16 +10,31 @@
     
   ##  Libraries and data
   library(camtrapR)
-  library(exifr)
+  #library(exifr)
   library(tidyverse)
   
-  dat <- read.csv("G:/My Drive/1 Data/Image Processing/REVIEWING Processed Images/Proofed csvs & ddb/NE3000_C18_S3_CH_REVIEWED_DATETIMEWRONG.csv")
-  dat2 <- read.csv("G:/My Drive/1 Data/Image Processing/REVIEWING Processed Images/Proofed csvs & ddb/OK4880_94_C216_CH_REVIEWED.csv")
+  #  Make sure R can find ExifTool
+  #  (Necessary for timeShiftImages funciton to work)
+  #  Not sure how this all works but make sure the path leads to the exiftool.exe 
+  #  file (remove (-k) if included in the file name). 
+  #  More here: https://exiftool.org/#shift & https://groups.google.com/g/camtrapr/c/kAoUZuBUt8o
+  system("exiftool")
+  exiftool_dir <- "C:/exiftool-12.05"      
+  exiftoolPath(exiftoolDir = exiftool_dir)
+  grepl(exiftool_dir,  Sys.getenv("PATH"))
+  
+  #  Read in data
+  NE3815 <- read.csv("NE3815_28_C125_MSW_datetimeweird-cleaned.csv")
+  OK4880 <- read.csv("OK4880_C175_TT_DATEOFF1DAY.csv")
   timeShift <- read.csv("G:/My Drive/1 Data/Image Processing/timeShiftTable.csv")
   
-  ##  Attempting to use timeShiftTable to adjust the date and time of camera data
-  dat <- rbind(dat,dat2)
-  tst <- timeShiftImages(dat, 
+  ####  DOES NOT WORK  ####
+  #  The timeShiftImages function apparently ONLY works on raw images, not on the
+  #  already processed image data recorded in a csv  :(
+  
+  #  Attempting to use timeShiftTable to adjust the date and time of camera data
+  #dat <- rbind(NE3815, OK4880)
+  tst <- timeShiftImages(inDir = , 
                         timeShiftTable = timeShift,
                         stationCol = "Station",
                         cameraCol = "camera",
