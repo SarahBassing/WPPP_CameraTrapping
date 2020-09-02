@@ -19,16 +19,161 @@
   NE3815_C125 <- read.csv("./Processed Image Data/NE3815_28_C125_MSW_datetimeweird-cleaned.csv")
   OK4880_C175 <- read.csv("./Processed Image Data/OK4880_C175_TT_DATEOFF1DAY.csv")
   
-  #  Remove data that does not need to be adjusted 
+  #  Read in data & remove data that does not need to be adjusted 
   #  DON'T FORGET TO ADD THESE BACK IN ONCE DATE & TIME ARE FIXED!!!
-  NE5511_C186 <- read.csv("./Processed Image Data/NE5511_54_C168_C186_JM-DATETIME_WRONG-cleaned.csv") %>%
-    filter(str_detect(RelativePath, paste("C168"), negate = TRUE)) 
+  NE3000_S3_C18 <- read.csv("./Processed Image Data/NE3000_C18_S3_CH_REVIEWED_DATETIMEWRONG.csv") %>%
+    #filter(str_detect(RelativePath, paste("S3"), negate = TRUE))
+  NE3109_S4_C31_C96_C131 <- read.csv("./Processed Image Data/NE3109_113, Moultrie3_C31, C96, C131, S4_SBB_REVIEWED.csv") %>%
+    #filter(str_detect(RelativePath, paste("C31"), negate = TRUE)) %>%
+    #filter(str_detect(RelativePath, paste("C96"), negate = TRUE)) %>%
+    #filter(str_detect(RelativePath, paste("C131"), negate = TRUE))
+  NE3815_C26_C61 <- read.csv("./Processed Image Data/NE3815_28_C26_61_CH_REVIEWED.csv") %>%
+    #filter(str_detect(RelativePath, paste("C26"), negate = TRUE))
+  NE5511_C168_C186 <- read.csv("./Processed Image Data/NE5511_54_C168_C186_JM-DATETIME_WRONG-cleaned.csv") #%>%
+    # filter(str_detect(RelativePath, paste("C168"), negate = TRUE)) 
   # another way to code it:
   # remove_if <- "C168"
   # filter(str_detect(RelativePath, paste(remove_if, collapse="|"), negate = TRUE)
 
+  #  Function to format raw csv data so date, time, and other values are in a 
+  #  consistent format that can be manipulated further
+  format_csv <- function(x) {
+    format_raw <- x %>%
+      transmute(
+        File = as.character(File),
+        RelativePath = as.character(RelativePath),
+        Folder = as.character(Folder),
+        DateTime = as.POSIXct(paste(Date, Time),
+                              format="%d-%b-%y %H:%M:%S",tz="America/Los_Angeles"), 
+        Date = as.Date(Date, format = "%d-%b-%y"), 
+        Time = chron(times = Time),
+        ImageQuality = as.factor(ImageQuality),
+        CameraLocation = as.factor(as.character(CameraLocation)),
+        DT_Good = as.factor(as.character(DT_Good)),
+        Service = as.factor(as.character(Service)),
+        Empty = as.factor(as.character(Empty)),
+        Animal = as.factor(as.character(Animal)),
+        Human = as.factor(as.character(Human)),
+        Vehicle = as.factor(as.character(Vehicle)),
+        Species = as.factor(as.character(Species)),
+        HumanActivity = as.factor(as.character(HumanActivity)),
+        Count = as.numeric(Count),
+        AF = as.numeric(AdultFemale),
+        AM = as.numeric(AdultMale),
+        AU = as.numeric(AdultUnknown),
+        OS = as.numeric(Offspring),
+        UNK = as.numeric(UNK),
+        Collars = as.numeric(Collars),
+        Tags = as.character(Tags),
+        Color = as.character(NaturalMarks)
+      )
+    return(format_raw)
+  }
+  
+  #  List dataframes that need to be reformatted together
+  #raw_list <- list(NE3000_S3_C18, NE3109_S4_C31_C96_C131, NE3815_C61, NE3815_C125, NE5511_C186, OK4880_C175)
+  raw_list <- list(NE3815_C125, NE5511_C168_C186)
+  #  Run formatting function
+  format_raw <- lapply(raw_list, format_csv)
+
+  
+  #  Use base R to change date and time
+  #  This is done by adding or subtracting n days to Date and n seconds to DateTime
+  #  Check out https://www.gormanalysis.com/blog/dates-and-times-in-r-without-losing-your-sanity/
+  
+  #  Separate each memory card out so individual date & time issues can be fixed
+  # NE3000_S3_C18 <- format_raw[[1]]
+  # NE3000_C18 <- NE3000_S3_C18 %>%
+  #   filter(str_detect(RelativePath, paste("S3"), negate = TRUE)) %>%
+  #   mutate(RgtDate = Date + 1,
+  #          WrgDate = Date,
+  #          RgtDateTime = DateTime + 24*60*60 - 60*60 - 24*60, # plus 1 day, munus 1 hour, 24 minutes
+  #          WrgDateTime = DateTime)
+  # NE3109_S4_C31_C96_C131 <- format_raw[[2]] 
+  # NE3109_S4 <- NE3109_S4_C31_C96_C131 %>%
+  #   filter(str_detect(RelativePath, paste("C31"), negate = TRUE)) %>%
+  #   filter(str_detect(RelativePath, paste("C96"), negate = TRUE)) %>%
+  #   filter(str_detect(RelativePath, paste("C131"), negate = TRUE)) %>%
+  #   mutate(RgtDate = Date + 2323,  # plus 6 years, 4 months, 20 days (1/1/12 to 5/21/18)
+  #          WrgDate = Date,
+  #          RgtDateTime = DateTime + 6*365*24*60*60 + 133*24*60*60,
+  #          WrgDateTime = DateTime)
+  # NE3815_C26_C61 <- format_raw[[3]]
+  # NE3815_C61 <- NE3815_C26_C61 %>%
+  #   filter(str_detect(RelativePath, paste("C26"), negate = TRUE)) %>%
+  #   mutate(RgtDate = Date + 21,
+  #          WrgDate = Date,
+  #          RgtDateTime = DateTime + 21*24*60*60 + 7*60*60 + 3*60, # plus 21 days, 7 hours, 3 minutes
+  #          WrgDateTime = DateTime)
+  NE3815_C125 <- format_raw[[4]]%>%
+      mutate(RgtDate = Date + 21,
+             WrgDate = Date,
+             RgtDateTime = DateTime + 21*24*60*60 + 7*60*60 + 3*60, # plus 21 days, 7 hours, 3 minutes
+             WrgDateTime = DateTime)
+  NE5511_C168_C186 <- format_raw[[2]] # update this number
+  NE5511_C186 <- NE5511_C168_C186 %>%
+    filter(str_detect(RelativePath, paste("C168"), negate = TRUE)) %>%
+    mutate(RgtDate = Date + 163,
+           WrgDate = Date,
+           RgtDateTime = DateTime + 163*24*60*60 - 4*60*60 - 37*60, # plus 163 days, minus 4 hours, 37 minutes (7/3/18 to 12/13/18)
+           WrgDateTime = DateTime)
+  # OK4880_C175 <- format_raw[[6]] %>%
+  #   mutate(RgtDate = Date + 1,
+  #          WrgDate = Date,
+  #          RgtDateTime = DateTime + 24*60*60, # plus 1 day
+  #          WrgDateTime = DateTime)
+  
+  
+  #  Function to reorganize shifted dataframes to match other camera dataframes
+  #  REMEMBER that the Time column is incorrect and should not be used for further analyses
+  reformat_csv <- function(x) {
+    format_shiftdat <- x %>%
+      transmute(
+        File = as.character(File),
+        RelativePath = as.character(RelativePath),
+        Folder = as.character(Folder),
+        DateTime = RgtDateTime, 
+        Date = RgtDate, 
+        Time = chron(times = Time),
+        ImageQuality = as.factor(ImageQuality),
+        CameraLocation = as.factor(as.character(CameraLocation)),
+        DT_Good = as.factor(as.character(DT_Good)),
+        Service = as.factor(as.character(Service)),
+        Empty = as.factor(as.character(Empty)),
+        Animal = as.factor(as.character(Animal)),
+        Human = as.factor(as.character(Human)),
+        Vehicle = as.factor(as.character(Vehicle)),
+        Species = as.factor(as.character(Species)),
+        HumanActivity = as.factor(as.character(HumanActivity)),
+        Count = as.numeric(Count),
+        AF = as.numeric(AF),
+        AM = as.numeric(AM),
+        AU = as.numeric(AU),
+        OS = as.numeric(OS),
+        UNK = as.numeric(UNK),
+        Collars = as.numeric(Collars),
+        Tags = as.character(Tags),
+        Color = as.character(Color)
+      )
+    return(format_shiftdat)
+  }
+
+  #  List dataframes that had date & time data shifted
+  #shift_list <- list(NE3000_C18f, NE3109_S4f, NE3815_C61f, NE3815_C125f, NE5511_C186f, OK4880_C175f)
+  shift_list <- list(NE3815_C125f, NE5511_C186)
+  #  Run formatting function
+  reformat_shiftdat <- lapply(shift_list, reformat_csv)
+  
+  NE3815_C125shift <- reformat_shiftdat[[1]]
+  NE5511_C186shift <- reformat_shiftdat[[2]]
+  
+  #  Add memory cards back in where the data & time were correct
+  NE5511_C168 <- NE5511_C168_C186 %>%
+    filter(str_detect(RelativePath, paste("C186"), negate = TRUE)) 
+  NE5511_C168_C186shift <- rbind(NE5511_C168, NE5511_C186shift)   #NOT QUITE RIGHT- I THINK DAYLIGHT SAVINGS TIME WAS NOT ADJUSTED FOR AT SOME POINT- NEED TO FIX
+
   #  Example with a single csv
-  NE3815 <- NE3815_C125 %>%
+  NE3815 <- NE3815_C125 %>% 
     transmute(
       File = as.character(File),
       RelativePath = as.character(RelativePath),
@@ -128,7 +273,10 @@
   
   
   
-  
+  #### DON'T FORGET  ####
+  #  Add memory cards back to cameras that had data from multiple cards where 
+  #  date & time were correct
+  #  NE3000 S3; NE3109 C31, C96, C131; NE3815 C26; NE5511 C168
   
   
   ####  DOES NOT WORK  ####
