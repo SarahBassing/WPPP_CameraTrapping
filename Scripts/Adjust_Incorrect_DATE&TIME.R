@@ -18,8 +18,8 @@
   NE3109_S4_C31_C96_C131 <- read.csv("./Processed Image Data/NE3109_113, Moultrie3_C31, C96, C131, S4_SBB_REVIEWED.csv") 
   NE3815_C125 <- read.csv("./Processed Image Data/NE3815_28_C125_CH_REVIEWED_datetimeweird.csv")
   NE3815_C26_C61 <- read.csv("./Processed Image Data/NE3815_28_C26_61_CH_REVIEWED.csv") 
-  #NE5511_C168_C186 <- read.csv("./Processed Image Data/NE5511_54_C168_C186_JM-DATETIME_WRONG-cleaned.csv") 
-  #OK4880_C175 <- read.csv("./Processed Image Data/OK4880_C175_TT_DATEOFF1DAY.csv")
+  NE5511_C168_C186 <- read.csv("./Processed Image Data/NE5511_54_C168_C186_JM-DATETIME_WRONG-cleaned.csv")
+  OK4880_C175 <- read.csv("./Processed Image Data/OK4880_C175_TT_DATEOFF1DAY.csv")
 
   #  Step 1
   #  Function to format raw csv data so date, time, and other values are in a 
@@ -34,8 +34,8 @@
         RelativePath = as.character(RelativePath),
         Folder = as.character(Folder),
         DateTime = as.POSIXct(paste(Date, Time),  
-                              format="%d-%b-%Y %H:%M:%S",tz="America/Los_Angeles"), # update to %d-%b-%Y once all reviewed
-        Date = as.Date(Date, format = "%d-%b-%Y"), # update to %d-%b-%Y once all reviewed
+                              format="%d-%b-%y %H:%M:%S",tz="America/Los_Angeles"), # update to %d-%b-%Y once all reviewed
+        Date = as.Date(Date, format = "%d-%b-%y"), # update to %d-%b-%Y once all reviewed
         Time = chron(times = Time),
         ImageQuality = as.factor(ImageQuality),
         CameraLocation = as.factor(as.character(CameraLocation)),
@@ -61,9 +61,9 @@
   }
   
   #  Bundle data that need to be reformatted in a list
-  raw_list <- list(NE3000_S3_C18, NE3109_S4_C31_C96_C131, NE3815_C26_C61,
-                   NE3815_C125) #, NE5511_C168_C186, OK4880_C175
-  # raw_list <- list(NE3815_C125, NE5511_C168_C186)
+  # raw_list <- list(NE3000_S3_C18, NE3109_S4_C31_C96_C131, NE3815_C26_C61,
+  #                  NE3815_C125) #, NE5511_C168_C186, OK4880_C175
+  raw_list <- list(NE5511_C168_C186)
   #  Run formatting function
   format_raw <- lapply(raw_list, format_csv)
 
@@ -142,7 +142,8 @@
   # # Combine so data have correct dates & times while appropriately accounting for PDT
   # NE3815_C125 <- rbind(NE3815_C125[NE3815_C125$RgtDate < "2018-11-04",], NE3815_C125_PST)
   
-  NE5511_C168_C186 <- format_raw[[2]] # update this number
+  #  THIS IS ACCOUNTING FOR DIFFERENCES IN PST & PDT ON BOTH SIDES while doing the subtraction... need to address this somehow
+  NE5511_C168_C186 <- format_raw[[1]] # update this number
   NE5511_C186 <- NE5511_C168_C186 %>%
     filter(str_detect(RelativePath, paste("C168"), negate = TRUE)) %>%
     mutate(RgtDate = Date + 163,  # Date and DateTime are off when shifted times are close to midnight
@@ -154,7 +155,7 @@
   #  also wrong (1st half PDT instead of PST) so need to shift everything to PST, 
   #  then correct date & time, then shift 2nd half to PDT once date is corrected
   #  But when I do this the new times are hours off from the camera check data TR provided
-  NE5511_C168_C186 <- format_raw[[2]] # update this number
+  NE5511_C168_C186 <- format_raw[[1]] # update this number
   NE5511_C186 <- NE5511_C168_C186 %>%
     filter(str_detect(RelativePath, paste("C168"), negate = TRUE))
   NE5511_PST <- NE5511_C186[NE5511_C186$Date < "2018-11-04",] %>%   # wrong 11/4/18; File = "RCNX2761.JPG"
