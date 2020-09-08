@@ -14,22 +14,45 @@
   library(dplyr)
 
   #  Read in data
-  checks <- read.csv("G:/My Drive/1 Data/Summary Stats for Reporting/AudioMoth_and_Camera_Deployment &Checking_2020_082420.csv", header = TRUE)
-  #checks <- read.csv("G:/My Drive/1 Data/Summary Stats for Reporting/Camera_Deployment_and_Checking_071219.csv", header = TRUE)
-  
+  checks_yr1 <- read.csv("G:/My Drive/1 Data/Summary Stats for Reporting/Camera_Checking_2018.csv", header = TRUE)
+  checks_yr2 <- read.csv("G:/My Drive/1 Data/Summary Stats for Reporting/AudioMoth_and_Camera_Checking_2019.csv", header = TRUE)
+  checks_yr3 <- read.csv("G:/My Drive/1 Data/Summary Stats for Reporting/AudioMoth_and_Camera_Checking_2020_090820.csv", header = TRUE)
+  #checks_ <- read.csv("G:/My Drive/1 Data/Summary Stats for Reporting/AudioMoth_and_Camera_Deployment &Checking_2020_082420.csv", header = TRUE)
+
     
   #  Past files used:
   # Camera_Checks_Thru_Nov2018.csv
+  # Camera_Deployment_and_Checking_071219.csv
   
-  colnames(checks)
+  colnames(checks_yr1)
+  colnames(checks_yr2)
+  colnames(checks_yr3)
+  #colnames(checks)
   
-  #  Reduce the number of fields I'm working with
-  slim_checks <- checks[,c(1, 4:8, 12:13, 30)]
+  #  Reduce the number of fields I'm working with & make consistent format
+  slim_checks1 <- checks_yr1[,c(1, 4, 6:9, 14:15, 31)] %>%
+    transmute(
+      Date = Date,
+      Study_area = Study_area,
+      Cell_ID = Cell_No,
+      Cam_ID = Camera_ID, 
+      Cam_Long = Camera_Long,
+      Cam_Lat = Camera_Lat,
+      Cam_Card = Card_No,
+      Num_Images = No_Images,
+      Species = Species
+    )
+  slim_checks2 <- checks_yr2[,c(1, 4:8, 12:13, 29)]
+  slim_checks3 <- checks_yr3[,c(1, 4:8, 12:13, 30)]
+  #slim_checks <- checks[,c(1, 4:8, 12:13, 30)]
   #slim_checks <- slim_checks[!(slim_checks$Cell_ID == "OKbonus"),]
   #  Check Date, Study Area, Cell Number, Camera ID, Camera Long, Camera Lat, 
   #  Card Number, Number of Images, Species Observed
   
-  spp_checks <- checks[,c(1, 4:6, 12, 30)]
+  spp_checks1 <- slim_checks1[,c(1:6, 9)]
+  spp_checks2 <- slim_checks2[,c(1:6, 9)]
+  spp_checks3 <- slim_checks3[,c(1:6, 9)]
+  #spp_checks <- checks[,c(1, 4:6, 12, 30)]
   #spp_checks <- spp_checks[!(spp_checks$Cell_ID == "OKbonus"),]
   #  Check Date, Study Area, Cell Number, Camera ID, Card Number, Species Observed
   
@@ -63,10 +86,13 @@
   #   ind_spp <- cbind(spp_checks[i,], spp[i])
   # }
   
+  #  Update the spp_checks for each year
+  #spp_checks <- spp_checks1
+  #spp_checks <- spp_checks2
+  spp_checks <- spp_checks3
   
   #  Use the stringr package to manipulate strings of species observed at each camera
-  
-  #  Create some empty vectors and lists to hold data with each iteration
+  # #  Create some empty vectors and lists to hold data with each iteration
   x <- c()
   spp <- c()
   #trimmed <- c()
@@ -76,7 +102,7 @@
   #  the long string of listed species observed during each camera check
   for(i in 1:nrow(spp_checks)) {    #[1:2,]
     #  Creates a vector of the string you want to split up
-    x[i] <- as.character(spp_checks[i,6])
+    x[i] <- as.character(spp_checks[i,7]) #[i,6]
     # #  Trim extra white spaces around individual character strings
     # trimmed[i] <- str_trim(x[i], "both")
     #  Splits the string by commas in the string
@@ -87,18 +113,16 @@
   }
   
   #  Rename the df columns in each list so they can easily be merged together
-  newnames <- c("Date", "Study_area", "Cell_Nmb", "Camera_ID", "Card_Nmb", "Species", "Spp_Obs")
+  newnames <- c("Date", "Study_area", "Cell_ID", "Camera_ID", "Long", "Lat", "Species", "Spp_Obs")
   spp_list <- lapply(ind_spp, setNames, newnames)
   
   #  Merge lists of dfs into one giant df
   long_check <- bind_rows(spp_list, .id = "column_label")
   
-  
-  
   #  Need to make species names consistent throughout... ugh.
   #  Replace abbreviations with a single name for each species
   #  Oh my god be more standardized with your data sheets in the future!
-  head(long_check)
+  #head(long_check)
   replaces <- data.frame(from = c("atc", "atv", "ATVs", "riding lawn mower",
                                   "american badger", "badger",
                                   "black bears","black bear", "bear",
@@ -118,18 +142,18 @@
                                   "bushy-tailed wood rat", "woodrat", "mice", 
                                   "mouse", "rodent",
                                   "cars", "car", "trucks", "truck", "Jeep", "bulldozer",  
-                                  "plus vehicles", "vehicles", "vehicle",
+                                  "plus vehicles", "vehicles", "vehicle", "mower",
                                   "domestic cats", "domestic cat", "house cats", "house cat", 
                                   "cat", "House House cat", "BobHouse cat", 
                                   "chipmunk", "Douglas squirrel", "ground squirrel", "western gray squirrel",
                                   "squirrel (red?)", "squirrel spp.", "squirrel species", 
                                   "red squirrel", "flying squirrel", "squirrel", 
-                                  "collared cougar", "cougar", "mountain lion",
-                                  "collared coyote", "coyotes", "coyote", "cayote",
+                                  "collared cougar", "cougar", "mountain lion", "Mountain Lion",
+                                  "collared coyote", "coyote?", "coyotes", "coyote", "cayote",
                                   "and dirt bikes", "dirt Bicycle", "and Dirt Bicycle",
                                   "Dirt bikes", "dirt bikes", "dirt bike", "dirtbike",
                                   "and Dirt bike", "dirtBicycle", 
-                                  "cows", "cow", "livestock",
+                                  "cows", "cow", "livestock", "House cattle",
                                   "crows", "crow", "ravens", "raven",
                                   "domestic dog", "domestic Dog", "dogs", "Dogs", 
                                   "dog", 
@@ -183,19 +207,19 @@
                                 "Rodent spp.", "Rodent spp.", "Rodent spp.",
                                 "Rodent spp.",
                                 "Vehicle", "Vehicle", "Vehicle", "Vehicle", "Vehicle", 
-                                "Vehicle", "Vehicle", "Vehicle", "Vehicle",
+                                "Vehicle", "Vehicle", "Vehicle", "Vehicle", "Vehicle",
                                 "House cat", "House cat", "House cat", "House cat",
                                 "House cat", "House cat", "Bobcat",
                                 "Squirrel spp.", "Squirrel spp.", "Squirrel spp.", 
                                 "Squirrel spp.", "Squirrel spp.", "Squirrel spp.",
                                 "Squirrel spp.", "Squirrel spp.", "Squirrel spp.",
                                 "Squirrel spp.",
-                                "Cougar", "Cougar", "Cougar",
-                                "Coyote", "Coyote", "Coyote", "Coyote",
+                                "Cougar", "Cougar", "Cougar", "Cougar",
+                                "Coyote", "Coyote", "Coyote", "Coyote", "Coyote",
                                 "Dirt bike", "Dirt bike", "Dirt bike", "Dirt bike",
                                 "Dirt bike", "Dirt bike", "Dirt bike", "Dirt bike",
                                 "Dirt bike",
-                                "Cattle", "Cattle", "Cattle",
+                                "Cattle", "Cattle", "Cattle", "Cattle",
                                 "Corvid spp.", "Corvid spp.", "Corvid spp.", "Corvid spp.",
                                 "Dog", "Dog", "Dog", "Dog", "Dog",
                                 "Elk", "Elk",
@@ -227,12 +251,16 @@
                                 "Mountain beaver", "Otter", "Wolverine", "Weasel", "Porcupine", "Pig"))
   fixed_check <- FindReplace(data = long_check, Var = "Spp_Obs", replaceData = replaces,
                              from = "from", to = "to", exact = FALSE)
+
+  
+
   
   #  Remove white space around character strings
   #  White space is a residual of having species names followed by a comma then space
   nix_ws <- str_trim(fixed_check$Spp_Obs)
   nix_ws <- as.data.frame(nix_ws)
   colnames(nix_ws) <- "Spp_Obs"
+
   
   #  Double check that I didn't screw up the find and replace function
   #  Compare species from long_check to fixed_check to make sure it all looks good
@@ -242,7 +270,7 @@
     arrange(corrected)
   
   #  You are a magnificent beast. This looks amazing.
-  animals <- as.data.frame(cbind(fixed_check[,2:6] , nix_ws))
+  animals <- as.data.frame(cbind(fixed_check[,2:7] , nix_ws))
 
 
   
@@ -284,7 +312,7 @@
   #  Arrange by species alphabetically
   skinny_animals <- animals %>%
     na.omit() %>%
-    group_by(Cell_Nmb) %>%
+    group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
     ungroup() %>%
     #arrange(Cell_Nmb) %>%
@@ -295,7 +323,7 @@
   OK_animals <- animals %>%
     na.omit() %>%
     filter(Study_area == "OK") %>%
-    group_by(Cell_Nmb) %>%
+    group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
     ungroup() %>%
     count(Spp_Obs) %>%
@@ -305,7 +333,7 @@
   NE_animals <- animals %>%
     na.omit() %>%
     filter(Study_area == "NE") %>%
-    group_by(Cell_Nmb) %>%
+    group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
     ungroup() %>%
     count(Spp_Obs) %>%
@@ -333,7 +361,7 @@
   #  Repeat with the condensed human activity version
   skinny_hum_and_ans <- hums_and_animals %>%
     na.omit() %>%
-    group_by(Cell_Nmb) %>%
+    group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
     ungroup() %>%
     count(Spp_Obs) %>%
@@ -344,7 +372,7 @@
   OK_hum_and_ans <- hums_and_animals %>%
     na.omit() %>%
     filter(Study_area == "OK") %>%
-    group_by(Cell_Nmb) %>%
+    group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
     ungroup() %>%
     count(Spp_Obs) %>%
@@ -354,7 +382,7 @@
   NE_hum_and_ans <- hums_and_animals %>%
     na.omit() %>%
     filter(Study_area == "NE") %>%
-    group_by(Cell_Nmb) %>%
+    group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
     ungroup() %>%
     count(Spp_Obs) %>%
@@ -364,7 +392,7 @@
   #  And repeat with the condensed non-target species version
   skinny_focal_spp <- focal_species %>%
     na.omit() %>%
-    group_by(Cell_Nmb) %>%
+    group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
     ungroup() %>%
     count(Spp_Obs) %>%
@@ -378,7 +406,7 @@
   OK_spp <- focal_species %>%
     na.omit() %>%
     filter(Study_area == "OK") %>%
-    group_by(Cell_Nmb) %>%
+    group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
     ungroup() %>%
     count(Spp_Obs) %>%
@@ -390,7 +418,7 @@
   NE_spp <- focal_species %>%
     na.omit() %>%
     filter(Study_area == "NE") %>%
-    group_by(Cell_Nmb) %>%
+    group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
     ungroup() %>%
     count(Spp_Obs) %>%
@@ -434,8 +462,12 @@
   
   #  Plot OK and NE detections together
   #  Need to combine OK and NE counts into one dataframe first
-  NE_spp <- as.data.frame(NE_spp)
-  OK_spp <- as.data.frame(OK_spp)
+  NE_spp1 <- as.data.frame(NE_spp) # detections summer 2018 checks
+  NE_spp2 <- as.data.frame(NE_spp) # detections summer 2019 checks
+  NE_spp3 <- as.data.frame(NE_spp) # detections summer 2020 checks
+  OK_spp1 <- as.data.frame(OK_spp) # detections summer 2018 checks
+  OK_spp2 <- as.data.frame(OK_spp) # detections summer 2019 checks
+  OK_spp3 <- as.data.frame(OK_spp) # detections summer 2020 checks
   
   temp <- NE_spp %>%
     full_join(OK_spp, by = "Spp_Obs") 
@@ -552,4 +584,67 @@
   #         legend.text = element_text(size = 16)) +
   #   theme(plot.title = element_text(hjust = 0.5, size = 18)) +
   #   ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington, 2018-2019") 
+  
+  
+  ####  Mapping detections!  ####
+  
+  library(rgdal)
+  library(raster)
+  
+  #  Read in spatial data
+  WGS84 <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+  OK_SA <- readOGR("./Shapefiles/fwdstudyareamaps", layer = "METHOW_SA") #Okanogan
+  NE_SA <- readOGR("./Shapefiles/fwdstudyareamaps", layer = "NE_SA")  #NE
+  OK <- spTransform(OK_SA, WGS84)
+  NE <- spTransform(NE_SA, WGS84)
+  
+  cams_yr1 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master18_19_spdf_050220")
+  cams_yr2 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master19_20_spdf_050220")
+  cams_yr3 <- readOGR("./Shapefiles/Camera_Locations", layer = "Cam_locs_spdf_090820")
+  
+  #  Snag location data from camera shapefiles
+  yr1_locs <- cams_yr1@data
+  colnames(yr1_locs) <- c("Date", "Cell_ID", "Camera_ID", "Long", "Lat", "Dist", 
+                          "Height", "Monitoring", "Canopy", "Land_Mgnt", "Habitat", 
+                          "Cell_Loc")
+  yr2_locs <- cams_yr2@data
+  colnames(yr2_locs) <- c("Date", "Cell_ID", "Camera_ID", "Long", "Lat", "Dist", 
+                          "Height", "Monitoring", "Canopy", "Land_Mgnt", "Habitat", 
+                          "Cell_Loc")
+  
+  yr3_cams <- cams_yr3@data  # does not include deployment data right now
+  yr3_coord <- cams_yr3@coords
+  yr3_locs <- cbind(yr3_cams, yr3_coord)
+  colnames(yr3_locs) <- c("old_Cell_ID", "Camera_ID", "Study_area", "Cell_ID", "Name", "Long", "Lat")
+  yr3_locs <- yr3_locs %>%
+    dplyr::select("Study_area", "Cell_ID", "Camera_ID", "Long", "Lat")
+
+  
+  
+  #  Extract camera ID for specific species
+  colnames(focal_species) <- c("Date", "Study_area", "Cell_ID", "Camera_ID", "Card_Nmb", "Spp_Obs")
+  wolf <- focal_species[which(focal_species$Spp_Obs == "Wolf"),] 
+  wolf_det <- wolf %>%
+    left_join(yr2_locs, by = "Cell_ID")
+  mulies <- focal_species[which(focal_species$Spp_Obs == "Mule deer"),] %>%
+    left_join(yr2_locs, by = "Cell_ID")
+  wtd <- focal_species[which(focal_species$Spp_Obs == "White-tailed deer"),] %>%
+    left_join(yr2_locs, by = "Cell_ID")
+  elk <- focal_species[which(focal_species$Spp_Obs == "Elk"),] %>%
+    left_join(yr2_locs, by = "Cell_ID")
+  moose <- focal_species[which(focal_species$Spp_Obs == "Moose"),] %>%
+    left_join(yr2_locs, by = "Cell_ID")
+  cougar <- focal_species[which(focal_species$Spp_Obs == "Cougar"),] %>%
+    left_join(yr2_locs, by = "Cell_ID")
+  coy <- focal_species[which(focal_species$Spp_Obs == "Coyote"),] %>%
+    left_join(yr2_locs, by = "Cell_ID")
+  bob <- focal_species[which(focal_species$Spp_Obs == "Bobcat"),] %>%
+    left_join(yr2_locs, by = "Cell_ID")
+  bear <-   bob <- focal_species[which(focal_species$Spp_Obs == "Black bear"),] %>%
+    left_join(yr2_locs, by = "Cell_ID")
+  
+  
+  
+  
+  
   
