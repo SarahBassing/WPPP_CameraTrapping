@@ -165,12 +165,12 @@
   plot(AM_locs_spdf, add = T, col = "red")
   
   #  Write shapefiles
-  writeOGR(Cam_locs_spdf, "./Shapefiles/Camera_Locations", "Cam_locs_spdf_090319", driver = "ESRI Shapefile")
-  writeOGR(AM_locs_spdf, "./Shapefiles/Camera_Locations", "AM_locs_spdf_090319", driver = "ESRI Shapefile")
+  writeOGR(Cam_locs_spdf, "./Shapefiles/Camera_Locations", "Cam_locs_spdf_090820", driver = "ESRI Shapefile")
+  writeOGR(AM_locs_spdf, "./Shapefiles/Camera_Locations", "AM_locs_spdf_090820", driver = "ESRI Shapefile")
   
   #  Write KML files
   #  For this to work, need to specify a specific column to use for data ("Name" since it's grid cell and cam ID)
   # Cam_locs_spdf_WGS84 <- spTransform(Cam_locs_spdf, CRS("+proj=longlat +datum=WGS84"))
-  writeOGR(Cam_locs_spdf["Name"], "./Shapefiles/Camera_Locations/Cam_locs_spdf_090319.kml", layer = "Name", driver = "KML")
-  writeOGR(AM_locs_spdf["Name"], "./Shapefiles/Camera_Locations/AM_locs_spdf_090319.kml", layer = "Name", driver = "KML")
+  writeOGR(Cam_locs_spdf["Name"], "./Shapefiles/Camera_Locations/Cam_locs_spdf_090820.kml", layer = "Name", driver = "KML")
+  writeOGR(AM_locs_spdf["Name"], "./Shapefiles/Camera_Locations/AM_locs_spdf_090820.kml", layer = "Name", driver = "KML")
   
