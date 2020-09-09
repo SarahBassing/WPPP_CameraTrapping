@@ -11,6 +11,7 @@
   ##  Libraries and data
   library(data.table)
   library(chron)
+  #library(lubridate)
   library(tidyverse)
   
   #  Read in data where date & time are incorrect
@@ -19,7 +20,7 @@
   NE3815_C125 <- read.csv("./Processed Image Data/NE3815_28_C125_CH_REVIEWED_datetimeweird.csv")
   NE3815_C26_C61 <- read.csv("./Processed Image Data/NE3815_28_C26_61_CH_REVIEWED.csv") 
   NE5511_C168_C186 <- read.csv("./Processed Image Data/NE5511_54_C168_C186_JM-DATETIME_WRONG-cleaned.csv")
-  OK4880_C175 <- read.csv("./Processed Image Data/OK4880_C175_TT_DATEOFF1DAY.csv")
+  OK4880_C175 <- read.csv("./Processed Image Data/OK4880_C175_CH_REVIEWED.csv")
 
   #  Step 1
   #  Function to format raw csv data so date, time, and other values are in a 
