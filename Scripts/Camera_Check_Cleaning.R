@@ -29,29 +29,49 @@
   colnames(checks_yr3)
   #colnames(checks)
   
-  #  Reduce the number of fields I'm working with & make consistent format
-  slim_checks1 <- checks_yr1[,c(1, 4, 6:9, 14:15, 31)] %>%
-    transmute(
-      Date = Date,
-      Study_area = Study_area,
-      Cell_ID = Cell_No,
-      Cam_ID = Camera_ID, 
-      Cam_Long = Camera_Long,
-      Cam_Lat = Camera_Lat,
-      Cam_Card = Card_No,
-      Num_Images = No_Images,
-      Species = Species
-    )
-  slim_checks2 <- checks_yr2[,c(1, 4:8, 12:13, 29)]
-  slim_checks3 <- checks_yr3[,c(1, 4:8, 12:13, 30)]
+  #  Reduce the number of fields I'm working with & create consistent format
+  slim_checks1 <- checks_yr1[,c(1, 4:9, 14, 31)] %>%
+    transmute(Date = Date,
+              Study_area = Study_area,
+              Year = Year,
+              Cell_ID = Cell_No,
+              Cam_ID = Camera_ID, 
+              Cam_Long = Camera_Long,
+              Cam_Lat = Camera_Lat,
+              Cam_Card = Card_No,
+              Species = Species)
+  slim_checks1 <- slim_checks1[!(slim_checks1$Cell_ID == "OKbonus"),]
+  slim_checks2 <- checks_yr2[,c(1, 4:8, 12:13, 27, 29)] %>%
+    #  Differentiate cameras pulled in 2019 (Yr1 cam) vs checked in 2019 (Yr2 cam)
+    mutate(Year = ifelse(Cam_Removed == "Y", "Year1", "Year2")) %>%
+    transmute(Date = Date,
+              Study_area = Study_Area,
+              Year = Year,
+              Cell_ID = Cell_ID,
+              Cam_ID = Cam_ID, 
+              Cam_Long = Cam_Long,
+              Cam_Lat = Cam_Lat,
+              Cam_Card = Cam_Card,
+              Species = Species)
+  slim_checks3 <- checks_yr3[,c(1, 4:8, 12:13, 27, 30)] %>%
+    #  Differentiate cameras pulled in 2019 (Yr1 cam) vs checked in 2019 (Yr2 cam)
+    mutate(Year = ifelse(Cam_Removed == "Y", "Year2", "Year3")) %>%
+    transmute(Date = Date,
+              Study_area = Study_Area,
+              Year = Year,
+              Cell_ID = Cell_ID,
+              Cam_ID = Cam_ID, 
+              Cam_Long = Cam_Long,
+              Cam_Lat = Cam_Lat,
+              Cam_Card = Cam_Card,
+              Species = Species)
   #slim_checks <- checks[,c(1, 4:8, 12:13, 30)]
-  #slim_checks <- slim_checks[!(slim_checks$Cell_ID == "OKbonus"),]
   #  Check Date, Study Area, Cell Number, Camera ID, Camera Long, Camera Lat, 
   #  Card Number, Number of Images, Species Observed
   
-  spp_checks1 <- slim_checks1[,c(1:6, 9)]
-  spp_checks2 <- slim_checks2[,c(1:6, 9)]
-  spp_checks3 <- slim_checks3[,c(1:6, 9)]
+  spp_checks1 <- slim_checks1[,c(1:7, 9)]
+  spp_checks2 <- slim_checks2[,c(1:7, 9)]
+  spp_checks3 <- slim_checks3[,c(1:7, 9)]
   #spp_checks <- checks[,c(1, 4:6, 12, 30)]
   #spp_checks <- spp_checks[!(spp_checks$Cell_ID == "OKbonus"),]
   #  Check Date, Study Area, Cell Number, Camera ID, Card Number, Species Observed
@@ -86,9 +106,9 @@
   #   ind_spp <- cbind(spp_checks[i,], spp[i])
   # }
   
-  #  Update the spp_checks for each year
-  #spp_checks <- spp_checks1
-  #spp_checks <- spp_checks2
+  #  Update the spp_checks for each year (run through one at a time)
+  spp_checks <- spp_checks1
+  spp_checks <- spp_checks2
   spp_checks <- spp_checks3
   
   #  Use the stringr package to manipulate strings of species observed at each camera
@@ -102,7 +122,7 @@
   #  the long string of listed species observed during each camera check
   for(i in 1:nrow(spp_checks)) {    #[1:2,]
     #  Creates a vector of the string you want to split up
-    x[i] <- as.character(spp_checks[i,7]) #[i,6]
+    x[i] <- as.character(spp_checks[i,8]) #[i,6]
     # #  Trim extra white spaces around individual character strings
     # trimmed[i] <- str_trim(x[i], "both")
     #  Splits the string by commas in the string
@@ -113,7 +133,7 @@
   }
   
   #  Rename the df columns in each list so they can easily be merged together
-  newnames <- c("Date", "Study_area", "Cell_ID", "Camera_ID", "Long", "Lat", "Species", "Spp_Obs")
+  newnames <- c("Date", "Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Species", "Spp_Obs")
   spp_list <- lapply(ind_spp, setNames, newnames)
   
   #  Merge lists of dfs into one giant df
@@ -125,18 +145,18 @@
   #head(long_check)
   replaces <- data.frame(from = c("atc", "atv", "ATVs", "riding lawn mower",
                                   "american badger", "badger",
-                                  "black bears","black bear", "bear",
+                                  "Black Bear", "black bears","black bear", "bear",
                                   "Black Black bear", 
-                                  "bikes with dog", "bicycle", "bicycles", "bikes",  
+                                  "bikes with dog", "bicycle", "bicyclist", "bicycles", "bikes",  
                                   "mountain bike", "biker", "bike",
-                                  "bird spp.", "mountain blue bird",
+                                  "bird spp.", "mountain blue bird", "junko", "Owl",
                                   "bluebird", "California quail", "quail", "doves",  
                                   "magpie", "red-tailed hawk", "robins", "robin", "woodpecker", 
                                   "short-eared owl","song bird", "bird species", 
                                   "bird spp", "bird", "bird spp?", "Bird spp. spp.", 
                                   "Bird spp.s", "blue Bird spp.", "hawk", 
-                                  "great horned owl","owl", "flicker", 
-                                  "bobcate", "bobcats", "babcat", "bobcat", "bobcat?",  
+                                  "great horned owl","owl", "flicker", "pheasant",
+                                  "bobcate", "bobcats", "babcat", "Bobcat?", "bobcat?", "bobcat", 
                                   "bunny", "cottontail rabbit", "rabit", "rabbit",
                                   "bushy tailed wood rat", "busy tailed woodrat", "bushtailed woodrat",
                                   "bushy-tailed wood rat", "woodrat", "mice", 
@@ -149,7 +169,7 @@
                                   "squirrel (red?)", "squirrel spp.", "squirrel species", 
                                   "red squirrel", "flying squirrel", "squirrel", 
                                   "collared cougar", "cougar", "mountain lion", "Mountain Lion",
-                                  "collared coyote", "coyote?", "coyotes", "coyote", "cayote",
+                                  "collared coyote", "coyote?", "Coyotes", "coyotes", "coyote", "cayote",
                                   "and dirt bikes", "dirt Bicycle", "and Dirt Bicycle",
                                   "Dirt bikes", "dirt bikes", "dirt bike", "dirtbike",
                                   "and Dirt bike", "dirtBicycle", 
@@ -159,10 +179,10 @@
                                   "dog", 
                                   "collared elk", "elk",
                                   "grouse", "Ruffed Grouse",
-                                  "mule deer", "mulie",
+                                  "mule deer", "mulie", "Mule Deer",
                                   "hikers", "hikers with Dog", "hiker", "HIKERS!", "hunters",  
                                   "hunter", "Vision Questers!", "loggers", "person",
-                                  "hunters",
+                                  "hunters", "Hikers", "Hiker",
                                   "horse packers", "horses and humans", "mule", 
                                   "horses", "horse riders", "horseback riders", "horse",
                                   "pedestrian", "people with chainsaws", 
@@ -176,31 +196,34 @@
                                   "snowmobile",
                                   "snowshoe hare", "snowshoe", "snow shoe", "snowhare hare",
                                   "snowshore hare", "showshoe hare", "snowshow hare",
-                                  "wild turkey", "turky", "turkeys", "turkey", "tukey",
+                                  "wild turkey", "turky", "turkeys", "turkey", "tukey", "Turkeys",
                                   "unkwn deer spp.",
                                   "unkwn night creature", "unknown",
                                   "mystery animal that messed up camera", "mystery animal",
-                                  "white-tailed deer", "white tail deer", "white-tail", "white tailed deer",   
-                                  "White tailed deer", "white-tail deer", "White-tailed deer deer", 
+                                  "white-tailed deer", "white-trailed deer", "white tail deer",   
+                                  "white-tail", "white tailed deer", "White tailed deer", 
+                                  "white tailed-deer", "white-tail deer", "White-tailed deer deer", 
                                   "wt deer", "wtd", "wdt", "whitetail",
                                   "one black wolf", "one wolf", "gray wolf", 
                                   "wolves", "fat wolf","wolf", 
                                   "yellow-bellied marmot", "hoary marmot", "marmot", "marten", 
-                                  "mountain goat", "fisher", "mountain beaver",
+                                  "mountain goat",  "Mountian Goat", "fisher", "mountain beaver",
                                   "otter", "wolverine", "weasel", "porcupine", "pig"), 
                          to = c("ATV", "ATV", "ATV", "ATV",
                                 "Badger", "Badger",
                                 "Black bear", "Black bear", "Black bear", "Black bear",
+                                "Black bear",
                                 "Bicycle", "Bicycle", "Bicycle", "Bicycle", "Bicycle",
-                                "Bicycle", "Bicycle",
+                                "Bicycle", "Bicycle", "Bicycle",
                                 "bluebird",
                                 "Bird spp.", "Bird spp.", "Bird spp.", "Bird spp.",
                                 "Bird spp.", "Bird spp.", "Bird spp.", "Bird spp.", 
                                 "Bird spp.", "Bird spp.", "Bird spp.", "Bird spp.",
                                 "Bird spp.", "Bird spp.", "Bird spp.", "Bird spp.",
                                 "Bird spp.", "Bird spp.", "Bird spp.", "Bird spp.",
-                                "Bird spp.", "Bird spp.", "Bird spp.",
-                                "Bobcat", "Bobcat", "Bobcat", "Bobcat", "Bobcat",
+                                "Bird spp.", "Bird spp.", "Bird spp.", "Bird spp.",
+                                "Bird spp.", "Bird spp.",
+                                "Bobcat", "Bobcat", "Bobcat", "Bobcat", "Bobcat", "Bobcat",
                                 "Rabbit spp.", "Rabbit spp.", "Rabbit spp.",
                                 "Rabbit spp.",
                                 "Rodent spp.", "Rodent spp.", "Rodent spp.", "Rodent spp.",
@@ -215,7 +238,7 @@
                                 "Squirrel spp.", "Squirrel spp.", "Squirrel spp.",
                                 "Squirrel spp.",
                                 "Cougar", "Cougar", "Cougar", "Cougar",
-                                "Coyote", "Coyote", "Coyote", "Coyote", "Coyote",
+                                "Coyote", "Coyote", "Coyote", "Coyote", "Coyote", "Coyote",
                                 "Dirt bike", "Dirt bike", "Dirt bike", "Dirt bike",
                                 "Dirt bike", "Dirt bike", "Dirt bike", "Dirt bike",
                                 "Dirt bike",
@@ -224,9 +247,9 @@
                                 "Dog", "Dog", "Dog", "Dog", "Dog",
                                 "Elk", "Elk",
                                 "Grouse spp.", "Grouse spp.",
-                                "Mule deer", "Mule deer",
-                                "Human", "Human", "Human", "Human", "Human",
-                                "Human", "Human", "Human", "Human", "Human",
+                                "Mule deer", "Mule deer", "Mule deer",
+                                "Human", "Human", "Human", "Human", "Human", "Human",
+                                "Human", "Human", "Human", "Human", "Human", "Human",
                                 "Horse", "Horse", "Horse", "Horse", "Horse", "Horse", "Horse",
                                 "Human", "Human", "Human", "Human", "Human",
                                 "Human", "Human", "Human", "Human", "Human", "Human",
@@ -239,16 +262,19 @@
                                 "Snowshoe hare", "Snowshoe hare", "Snowshoe hare",
                                 "Snowshoe hare",
                                 "Turkey", "Turkey", "Turkey", "Turkey", "Turkey",
+                                "Turkey",
                                 "Unknown deer spp.",
                                 "Unknown spp.", "Unknown spp.", "Unknown spp.", 
                                 "Unknown spp.",
                                 "White-tailed deer", "White-tailed deer", "White-tailed deer", 
                                 "White-tailed deer", "White-tailed deer", "White-tailed deer",
                                 "White-tailed deer", "White-tailed deer", "White-tailed deer",
-                                "White-tailed deer", "White-tailed deer",
+                                "White-tailed deer", "White-tailed deer", "White-tailed deer",
+                                "White-tailed deer",
                                 "Wolf", "Wolf", "Wolf", "Wolf", "Wolf", "Wolf",
-                                "Marmot", "Marmot", "Marmot", "Marten", "Mountain goat", "Fisher",
-                                "Mountain beaver", "Otter", "Wolverine", "Weasel", "Porcupine", "Pig"))
+                                "Marmot", "Marmot", "Marmot", "Marten", "Mountain goat", 
+                                "Mountain goat", "Fisher", "Mountain beaver", "Otter", 
+                                "Wolverine", "Weasel", "Porcupine", "Pig"))
   fixed_check <- FindReplace(data = long_check, Var = "Spp_Obs", replaceData = replaces,
                              from = "from", to = "to", exact = FALSE)
 
@@ -270,8 +296,14 @@
     arrange(corrected)
   
   #  You are a magnificent beast. This looks amazing.
-  animals <- as.data.frame(cbind(fixed_check[,2:7] , nix_ws))
-
+  animals1 <- as.data.frame(cbind(fixed_check[,2:8] , nix_ws))
+  animals2 <- as.data.frame(cbind(fixed_check[,2:8] , nix_ws))
+  animals3 <- as.data.frame(cbind(fixed_check[,2:8] , nix_ws))
+  #animals <- as.data.frame(cbind(fixed_check[,2:8] , nix_ws))  
+  
+  #  Combine all checks across years and organize
+  all_checks <- rbind(animals1, animals2, animals3) %>%
+    arrange(Year, Cell_ID)
 
   
   #  Extra cleaning to simplify summary stats!
@@ -280,11 +312,13 @@
   #  Merge all human activity (ATV, Human, etc.) into a single human category
   #  Can use either version (animals or hums_and_animals) for summary stats
   hums <- data.frame(from = c("ATV", "Bicycle", "Dirt bike", "Vehicle", "Horseback rider",
-                              "Snowmobile", "Human", "Human activitys", "Human activity activity"),
+                              "Snowmobile", "Human", "Human activitys", "Human activityrs", 
+                              "Human activity activity"),
                      to = c("Human activity", "Human activity", "Human activity", 
                             "Human activity", "Human activity", "Human activity",
-                            "Human activity", "Human activity", "Human activity"))
-  hums_and_animals <- FindReplace(data = animals, Var = "Spp_Obs", 
+                            "Human activity", "Human activity", "Human activity",
+                            "Human activity"))
+  hums_and_animals <- FindReplace(data = all_checks, Var = "Spp_Obs",  # animals
                                   replaceData = hums, from = "from", to = "to", 
                                   exact = FALSE)
   
@@ -310,7 +344,7 @@
   #  Arrange by grid cell number
   #  Count the number of times each species was observed across both study areas
   #  Arrange by species alphabetically
-  skinny_animals <- animals %>%
+  skinny_animals <- animals2 %>%      # all_checks for all years
     na.omit() %>%
     group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
@@ -320,7 +354,7 @@
     arrange(Spp_Obs)
   
   #  Split it up by study area now
-  OK_animals <- animals %>%
+  OK_animals <- animals2 %>%          # all_checks for all years
     na.omit() %>%
     filter(Study_area == "OK") %>%
     group_by(Cell_ID) %>%
@@ -328,9 +362,8 @@
     ungroup() %>%
     count(Spp_Obs) %>%
     arrange(Spp_Obs)
-    
   
-  NE_animals <- animals %>%
+  NE_animals <- animals2 %>%          # all_checks for all years
     na.omit() %>%
     filter(Study_area == "NE") %>%
     group_by(Cell_ID) %>%
@@ -414,7 +447,6 @@
   #OK_spp <- OK_spp[-c(4, 10:11, 21),]
   OK_spp <- OK_spp[!(OK_spp$Spp_Obs == "etc" |OK_spp$Spp_Obs == "etc."|OK_spp$Spp_Obs == ""),]
   
-  
   NE_spp <- focal_species %>%
     na.omit() %>%
     filter(Study_area == "NE") %>%
@@ -444,7 +476,7 @@
   df <- as.data.frame(skinny_focal_spp)
   ggplot(data = df, aes(x = Spp_Obs, y = n)) +
     geom_bar(stat="identity") +
-    scale_y_continuous(expand = c(0,0), limits = c(0, 80)) +
+    scale_y_continuous(expand = c(0,0), limits = c(0, 150)) + #limits = c(0, 80))
     theme_bw() +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
@@ -462,19 +494,14 @@
   
   #  Plot OK and NE detections together
   #  Need to combine OK and NE counts into one dataframe first
-  NE_spp1 <- as.data.frame(NE_spp) # detections summer 2018 checks
-  NE_spp2 <- as.data.frame(NE_spp) # detections summer 2019 checks
-  NE_spp3 <- as.data.frame(NE_spp) # detections summer 2020 checks
-  OK_spp1 <- as.data.frame(OK_spp) # detections summer 2018 checks
-  OK_spp2 <- as.data.frame(OK_spp) # detections summer 2019 checks
-  OK_spp3 <- as.data.frame(OK_spp) # detections summer 2020 checks
-  
   temp <- NE_spp %>%
     full_join(OK_spp, by = "Spp_Obs") 
   NE_OK_join <- mutate(temp,
       rnd = as.numeric(rep(1), nrow(temp))
     )
   colnames(NE_OK_join) <- c("Spp_Obs", "NE", "OK", "rnd")
+  
+  
   df2 <- gather(NE_OK_join, "rnd", "n", 2:3) %>%
     arrange(Spp_Obs) %>%
     mutate(
@@ -489,7 +516,7 @@
   #  Plot OK and NE detections together
   ggplot(df2, aes(x=Spp_Obs, y=n, fill=SA)) + 
     geom_bar (stat="identity", position = position_dodge(width = 1)) +
-    scale_y_continuous(expand = c(0,0), limits = c(0, 60)) +
+    scale_y_continuous(expand = c(0,0), limits = c(0, 150)) +  #limits = c(0, 50))
     theme_bw() +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
@@ -503,69 +530,71 @@
     theme(legend.title = element_text(size = 14),
           legend.text = element_text(size = 14)) +
     theme(plot.title = element_text(hjust = 0.5, size = 18)) +
-    ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington 2019 - 2020") 
+    ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington 2018 - 2019")    
+    # ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington 2019 - 2020") 
+    # ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington 2020 - 2021")
   
   
-  # Just the NE
-  df3 <- df2[df2$SA == "NE",]
-  ggplot(df3, aes(x = Spp_Obs, y = n)) +
-    geom_bar(stat = "identity", fill = "darkblue") +
-    scale_y_continuous(expand = c(0,0), limits = c(0, 50)) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, colour = "black",  size = 14),
-          axis.title.x = element_text(colour = "black", size = 16)) +
-    xlab("Species Detected") +
-    theme(axis.text.y = element_text(colour = "black",  size = 14),
-          axis.title.y = element_text(colour = "black", size = 16)) +
-    ylab("Number of Cameras") +
-    theme(plot.title = element_text(hjust = 0.5, size = 18)) +
-    ggtitle("Number of Cameras where a Species was Detected \n in Northeastern Study Area, WA") 
-  
-  
-  # Just the OK
-  df4 <- df2[df2$SA == "OK",]
-  ggplot(df4, aes(x = Spp_Obs, y = n)) +
-    geom_bar(stat = "identity", fill = "red") +
-    scale_y_continuous(expand = c(0,0), limits = c(0, 60)) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, colour = "black",  size = 14),
-          axis.title.x = element_text(colour = "black", size = 16)) +
-    xlab("Species Detected") +
-    theme(axis.text.y = element_text(colour = "black",  size = 14),
-          axis.title.y = element_text(colour = "black", size = 16)) +
-    ylab("Number of Cameras") +
-    theme(plot.title = element_text(hjust = 0.5, size = 18)) +
-    ggtitle("Number of Cameras where a Species was Detected \n in the Okanogan Study Area, WA") 
-  
-  
-  
-  # Super slimmed down version of the NE data
-  df5 <- df2[df2$SA == "NE",]
-  #df5 <- df5[c(2:3,5:6,8,11:19),]
-  df5 <- df5[c(1:5, 7:8, 14),]
-  ggplot(df5, aes(x = Spp_Obs, y = n)) +
-    geom_bar(stat = "identity", fill = "darkblue") +
-    scale_y_continuous(expand = c(0,0), limits = c(0, 60)) +
-    theme_bw() +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, colour = "black",  size = 16),
-          axis.title.x = element_text(colour = "black", size = 16)) +
-    xlab("Species Detected") +
-    theme(axis.text.y = element_text(colour = "black",  size = 16),
-          axis.title.y = element_text(colour = "black", size = 16)) +
-    ylab("Number of Cameras") +
-    theme(plot.title = element_text(hjust = 0.5, size = 18)) +
-    ggtitle("Number of Cameras where a Species was Detected \n in the Northeast Study Area, WA") 
-  
-  
-  
-  # Super slimmed down version of all the data
-  df6 <- df2
+  # # Just the NE
+  # df3 <- df2[df2$SA == "NE",]
+  # ggplot(df3, aes(x = Spp_Obs, y = n)) +
+  #   geom_bar(stat = "identity", fill = "darkblue") +
+  #   scale_y_continuous(expand = c(0,0), limits = c(0, 50)) +
+  #   theme_bw() +
+  #   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  #         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  #   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, colour = "black",  size = 14),
+  #         axis.title.x = element_text(colour = "black", size = 16)) +
+  #   xlab("Species Detected") +
+  #   theme(axis.text.y = element_text(colour = "black",  size = 14),
+  #         axis.title.y = element_text(colour = "black", size = 16)) +
+  #   ylab("Number of Cameras") +
+  #   theme(plot.title = element_text(hjust = 0.5, size = 18)) +
+  #   ggtitle("Number of Cameras where a Species was Detected \n in Northeastern Study Area, WA") 
+  # 
+  # 
+  # # Just the OK
+  # df4 <- df2[df2$SA == "OK",]
+  # ggplot(df4, aes(x = Spp_Obs, y = n)) +
+  #   geom_bar(stat = "identity", fill = "red") +
+  #   scale_y_continuous(expand = c(0,0), limits = c(0, 60)) +
+  #   theme_bw() +
+  #   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  #         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  #   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, colour = "black",  size = 14),
+  #         axis.title.x = element_text(colour = "black", size = 16)) +
+  #   xlab("Species Detected") +
+  #   theme(axis.text.y = element_text(colour = "black",  size = 14),
+  #         axis.title.y = element_text(colour = "black", size = 16)) +
+  #   ylab("Number of Cameras") +
+  #   theme(plot.title = element_text(hjust = 0.5, size = 18)) +
+  #   ggtitle("Number of Cameras where a Species was Detected \n in the Okanogan Study Area, WA") 
+  # 
+  # 
+  # 
+  # # Super slimmed down version of the NE data
+  # df5 <- df2[df2$SA == "NE",]
+  # #df5 <- df5[c(2:3,5:6,8,11:19),]
+  # df5 <- df5[c(1:5, 7:8, 14),]
+  # ggplot(df5, aes(x = Spp_Obs, y = n)) +
+  #   geom_bar(stat = "identity", fill = "darkblue") +
+  #   scale_y_continuous(expand = c(0,0), limits = c(0, 60)) +
+  #   theme_bw() +
+  #   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  #         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  #   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, colour = "black",  size = 16),
+  #         axis.title.x = element_text(colour = "black", size = 16)) +
+  #   xlab("Species Detected") +
+  #   theme(axis.text.y = element_text(colour = "black",  size = 16),
+  #         axis.title.y = element_text(colour = "black", size = 16)) +
+  #   ylab("Number of Cameras") +
+  #   theme(plot.title = element_text(hjust = 0.5, size = 18)) +
+  #   ggtitle("Number of Cameras where a Species was Detected \n in the Northeast Study Area, WA") 
+  # 
+  # 
+  # 
+  # # Super slimmed down version of all the data
+  # df6 <- df2
   # df6 <- df6[c(3:6,9:12,15:16,21:38),]
   # ggplot(df6, aes(x=Spp_Obs, y=n, fill=SA)) + 
   #   geom_bar (stat="identity", position = position_dodge(width = 1)) +
@@ -607,6 +636,8 @@
   colnames(yr1_locs) <- c("Date", "Cell_ID", "Camera_ID", "Long", "Lat", "Dist", 
                           "Height", "Monitoring", "Canopy", "Land_Mgnt", "Habitat", 
                           "Cell_Loc")
+  # get rid of extra crap
+  
   yr2_locs <- cams_yr2@data
   colnames(yr2_locs) <- c("Date", "Cell_ID", "Camera_ID", "Long", "Lat", "Dist", 
                           "Height", "Monitoring", "Canopy", "Land_Mgnt", "Habitat", 
@@ -622,10 +653,14 @@
   
   
   #  Extract camera ID for specific species
-  colnames(focal_species) <- c("Date", "Study_area", "Cell_ID", "Camera_ID", "Card_Nmb", "Spp_Obs")
-  wolf <- focal_species[which(focal_species$Spp_Obs == "Wolf"),] 
-  wolf_det <- wolf %>%
-    left_join(yr2_locs, by = "Cell_ID")
+  wolf <- focal_species[which(focal_species$Spp_Obs == "Wolf"),] %>%
+    dplyr::select(-c("Date", "Camera_ID")) %>%
+    distinct() %>%
+    left_join(yr1_locs, by = c("Cell_ID", "Long", "Lat")) %>%
+    left_join(yr2_locs, by = c("Cell_ID", "Long", "Lat"))
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Long", "Lat", "Spp_Obs")
+    
   mulies <- focal_species[which(focal_species$Spp_Obs == "Mule deer"),] %>%
     left_join(yr2_locs, by = "Cell_ID")
   wtd <- focal_species[which(focal_species$Spp_Obs == "White-tailed deer"),] %>%
