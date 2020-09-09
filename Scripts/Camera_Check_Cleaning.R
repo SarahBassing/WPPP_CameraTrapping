@@ -631,52 +631,140 @@
   cams_yr2 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master19_20_spdf_050220")
   cams_yr3 <- readOGR("./Shapefiles/Camera_Locations", layer = "Cam_locs_spdf_090820")
   
-  #  Snag location data from camera shapefiles
-  yr1_locs <- cams_yr1@data
-  colnames(yr1_locs) <- c("Date", "Cell_ID", "Camera_ID", "Long", "Lat", "Dist", 
-                          "Height", "Monitoring", "Canopy", "Land_Mgnt", "Habitat", 
-                          "Cell_Loc")
-  # get rid of extra crap
-  
-  yr2_locs <- cams_yr2@data
-  colnames(yr2_locs) <- c("Date", "Cell_ID", "Camera_ID", "Long", "Lat", "Dist", 
-                          "Height", "Monitoring", "Canopy", "Land_Mgnt", "Habitat", 
-                          "Cell_Loc")
-  
-  yr3_cams <- cams_yr3@data  # does not include deployment data right now
-  yr3_coord <- cams_yr3@coords
-  yr3_locs <- cbind(yr3_cams, yr3_coord)
-  colnames(yr3_locs) <- c("old_Cell_ID", "Camera_ID", "Study_area", "Cell_ID", "Name", "Long", "Lat")
-  yr3_locs <- yr3_locs %>%
-    dplyr::select("Study_area", "Cell_ID", "Camera_ID", "Long", "Lat")
+  # #  Snag location data from camera shapefiles
+  # yr1_locs <- cams_yr1@data %>%
+  #   dplyr::select("Cell_ID", "Camr_ID", "Cmr_Lng", "Camr_Lt")
+  # colnames(yr1_locs) <- c("Cell_ID", "Camera_ID", "Long", "Lat")
+  # 
+  # # get rid of extra crap
+  # 
+  # yr2_locs <- cams_yr2@data %>%
+  #   dplyr::select("Cell_ID", "Camr_ID", "Cmr_Lng", "Camr_Lt")
+  # colnames(yr2_locs) <- c("Cell_ID", "Camera_ID", "Long", "Lat")
+  # 
+  # yr3_cams <- cams_yr3@data  # does not include deployment data right now
+  # yr3_coord <- cams_yr3@coords
+  # yr3_locs <- cbind(yr3_cams, yr3_coord)
+  # colnames(yr3_locs) <- c("old_Cell_ID", "Camera_ID", "Study_area", "Cell_ID", "Name", "Long", "Lat")
+  # yr3_locs <- yr3_locs %>%
+  #   dplyr::select("Study_area", "Cell_ID", "Camera_ID", "Long", "Lat")
 
   
   
-  #  Extract camera ID for specific species
+  #  Extract camera location for specific species & make spatial
   wolf <- focal_species[which(focal_species$Spp_Obs == "Wolf"),] %>%
-    dplyr::select(-c("Date", "Camera_ID")) %>%
+    dplyr::select(-"Date") %>%
     distinct() %>%
-    left_join(yr1_locs, by = c("Cell_ID", "Long", "Lat")) %>%
-    left_join(yr2_locs, by = c("Cell_ID", "Long", "Lat"))
+    #  left_join with camera deployment data
+    # left_join(yr1_locs, by = c("Cell_ID", "Long", "Lat")) %>%
+    # left_join(yr2_locs, by = c("Cell_ID", "Long", "Lat")) %>%
     arrange(Study_area, Year) %>%
-    dplyr::select("Study_area", "Year", "Cell_ID", "Long", "Lat", "Spp_Obs")
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs") #  "Camera_ID.x" if left_joining with camera location dfs
+  colnames(wolf) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  wolf <- wolf[!(wolf$Cell_ID == "OKbonus"),]  # 42 sites detected wolves
+
+  #  Only wolf detections from 2018-2019 & 2019-2020 camera deployments
+  wolf_18_20 <- wolf[wolf$Cam_Year == "Year1" | wolf$Cam_Year == "Year2",]
+  #  Create spatial df
+  wolf <- SpatialPointsDataFrame(coords = wolf_18_20[,5:6], data = wolf_18_20, proj4string = WGS84)
     
   mulies <- focal_species[which(focal_species$Spp_Obs == "Mule deer"),] %>%
-    left_join(yr2_locs, by = "Cell_ID")
+    dplyr::select(-"Date") %>%
+    distinct() %>%
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  colnames(mulies) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+
+  #  Only mule deer detections from 2018-2019 & 2019-2020 camera deployments
+  mulies_18_20 <- mulies[mulies$Cam_Year == "Year1" | mulies$Cam_Year == "Year2",]
+  #  Create spatial df
+  mulies <- SpatialPointsDataFrame(coords = mulies_18_20[,5:6], data = mulies_18_20, proj4string = WGS84)
+    
   wtd <- focal_species[which(focal_species$Spp_Obs == "White-tailed deer"),] %>%
-    left_join(yr2_locs, by = "Cell_ID")
+    dplyr::select(-"Date") %>%
+    distinct() %>%
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  colnames(wtd) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+
+  #  Only white-tailed deer detections from 2018-2019 & 2019-2020 camera deployments
+  wtd_18_20 <- wtd[wtd$Cam_Year == "Year1" | wtd$Cam_Year == "Year2",]
+  #  Create spatial df
+  wtd <- SpatialPointsDataFrame(coords = wtd_18_20[,5:6], data = wtd_18_20, proj4string = WGS84)
+  
   elk <- focal_species[which(focal_species$Spp_Obs == "Elk"),] %>%
-    left_join(yr2_locs, by = "Cell_ID")
+    dplyr::select(-"Date") %>%
+    distinct() %>%
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  colnames(elk) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+
+  #  Only elk detections from 2018-2019 & 2019-2020 camera deployments
+  elk_18_20 <- elk[elk$Cam_Year == "Year1" | elk$Cam_Year == "Year2",]
+  #  Create spatial df
+  elk <- SpatialPointsDataFrame(coords = elk_18_20[,5:6], data = elk_18_20, proj4string = WGS84)
+  
   moose <- focal_species[which(focal_species$Spp_Obs == "Moose"),] %>%
-    left_join(yr2_locs, by = "Cell_ID")
+    dplyr::select(-"Date") %>%
+    distinct() %>%
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  colnames(moose) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+
+  #  Only moose detections from 2018-2019 & 2019-2020 camera deployments
+  moose_18_20 <- moose[moose$Cam_Year == "Year1" | moose$Cam_Year == "Year2",]
+  #  Create spatial df
+  moose <- SpatialPointsDataFrame(coords = moose_18_20[,5:6], data = moose_18_20, proj4string = WGS84)
+  
+    
   cougar <- focal_species[which(focal_species$Spp_Obs == "Cougar"),] %>%
-    left_join(yr2_locs, by = "Cell_ID")
+    dplyr::select(-"Date") %>%
+    distinct() %>%
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  colnames(cougar) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+
+  #  Only cougar detections from 2018-2019 & 2019-2020 camera deployments
+  cougar_18_20 <- cougar[cougar$Cam_Year == "Year1" | cougar$Cam_Year == "Year2",]
+  #  Create spatial df
+  cougar <- SpatialPointsDataFrame(coords = cougar_18_20[,5:6], data = cougar_18_20, proj4string = WGS84)
+  
   coy <- focal_species[which(focal_species$Spp_Obs == "Coyote"),] %>%
-    left_join(yr2_locs, by = "Cell_ID")
+    dplyr::select(-"Date") %>%
+    distinct() %>%
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  colnames(coy) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+
+  #  Only coyote detections from 2018-2019 & 2019-2020 camera deployments
+  coy_18_20 <- coy[coy$Cam_Year == "Year1" | coy$Cam_Year == "Year2",]
+  #  Create spatial df
+  coy <- SpatialPointsDataFrame(coords = coy_18_20[,5:6], data = coy_18_20, proj4string = WGS84)
+  
+    
   bob <- focal_species[which(focal_species$Spp_Obs == "Bobcat"),] %>%
-    left_join(yr2_locs, by = "Cell_ID")
-  bear <-   bob <- focal_species[which(focal_species$Spp_Obs == "Black bear"),] %>%
-    left_join(yr2_locs, by = "Cell_ID")
+    dplyr::select(-"Date") %>%
+    distinct() %>%
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  colnames(bob) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+
+  #  Only bobcat detections from 2018-2019 & 2019-2020 camera deployments
+  bob_18_20 <- bob[bob$Cam_Year == "Year1" | bob$Cam_Year == "Year2",]
+  #  Create spatial df
+  bob <- SpatialPointsDataFrame(coords = bob_18_20[,5:6], data = bob_18_20, proj4string = WGS84)
+  
+  bear <- focal_species[which(focal_species$Spp_Obs == "Black bear"),] %>%
+    dplyr::select(-"Date") %>%
+    distinct() %>%
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  colnames(bear) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+
+  #  Only bear detections from 2018-2019 & 2019-2020 camera deployments
+  bear_18_20 <- bear[bear$Cam_Year == "Year1" | bear$Cam_Year == "Year2",]
+  #  Create spatial df
+  bear <- SpatialPointsDataFrame(coords = bear_18_20[,5:6], data = bear_18_20, proj4string = WGS84)
   
   
   
