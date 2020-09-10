@@ -627,8 +627,13 @@
   WGS84 <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
   OK_SA <- readOGR("./Shapefiles/fwdstudyareamaps", layer = "METHOW_SA") #Okanogan
   NE_SA <- readOGR("./Shapefiles/fwdstudyareamaps", layer = "NE_SA")  #NE
+  packpoly19 <- readOGR("./Shapefiles/fwdupdatedwolfpackmcps", layer = "Final_2019_PackPolygons_wDiobsud")
   OK <- spTransform(OK_SA, WGS84)
   NE <- spTransform(NE_SA, WGS84)
+  packs <- spTransform(packpoly19, WGS84)
+  WPPPpacks <- packs[packs@data$Pack == "Stranger" | packs@data$Pack == "Carpenter Ridge" | 
+                      packs@data$Pack == "Huckleberry" | packs@data$Pack == "Dirty Shirt" |
+                      packs@data$Pack == "Loup Loup" | packs@data$Pack == "Lookout",]
   
   cams_yr1 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master18_19_spdf_050220")
   cams_yr2 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master19_20_spdf_050220")
@@ -744,13 +749,29 @@
   bear <- SpatialPointsDataFrame(coords = bear[,5:6], data = bear, proj4string = WGS84)
   
   
-  ##  Map out some general camera detections
+  # ##  Map out some general camera detections
+  # #  Create bounding box
+  # bbox(NE); bbox(OK); bbox(WPPPpacks)
+  # bbox(cams_yr1); bbox(cams_yr2); bbox(cams_yr3)
+  # bb <- cbind(bbox(NE), bbox(OK), bbox(WPPPpacks), bbox(cams_yr1), bbox(cams_yr2))
+  # print(bb)
+  # #  Minimum and maximum longitude & latitude
+  # xbb <- c(min(bb[1,]), max(bb[1,])) # - 0.0200  + 0.0200
+  # ybb <- c(min(bb[2,]), max(bb[2,]))
+  # 
+  # plot.new()
+  # plot.window(xlim = xbb, ylim = ybb) # doesn't work 
+  
   #  Plot all camera locations
+  plot.new()
   plot(cams_yr1, pch = 1)
-  plot(cams_yr2, pch = 1, add = T)
+  #plot(cams_yr2, pch = 1, add = T)
   #plot(cams_yr3, pch = 1, add = T)
   plot(OK, add = T)
   plot(NE, add = T)
+  plot(WPPPpacks, add = T, col = alpha("#E0F3F8", 0.6))  
+  plot(cams_yr2, pch = 1, add = T)  
+  plot(cams_yr1, pch = 1, add = T)
   
   #  Pick a color palette for plotting
   #display.brewer.all()
@@ -764,14 +785,14 @@
   plot(cougar, add = T, col = "#FDAE61", pch = 8, cex = 1.1)
   #  Ungulates
   plot(wtd, add = T, col = "#D73027", pch = 17, cex = 1.2)
-  plot(mulies, add = T, col = "#4575B4", pch = 4, cex = 1.1)
+  plot(mulies, add = T, col = "#4575B4", pch = 4, cex = 1.2)
   plot(elk, add = T, col = "#FEE090", pch = 20)
   plot(moose, add = T, col = "#F46D43", pch = 10)
   #  Mesopredators
   plot(coy, add = T, col = "#F46D43", pch = 19, cex = 1.1)
   plot(bob, add = T, col = "#4575B4", pch = 10)
 
-  
+
   
   
   
