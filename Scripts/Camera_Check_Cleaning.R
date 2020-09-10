@@ -337,6 +337,11 @@
                                replaceData = other, from = "from", to = "to", 
                                exact = FALSE)
   
+  #  How many cameras actually collected data?
+  length(unique(focal_species$Cell_ID[focal_species$Year == "Year1",]))
+  length(unique(focal_species$Cell_ID[focal_species$Year == "Year2",]))
+  length(unique(focal_species$Cell_ID[focal_species$Year == "Year3",]))
+  
 ################################################################################  
   #### Consolidate observations  ####
   
