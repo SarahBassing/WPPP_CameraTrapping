@@ -753,6 +753,16 @@
   #  Create spatial df
   bear <- SpatialPointsDataFrame(coords = bear[,5:6], data = bear, proj4string = WGS84)
   
+  hum <- focal_species[which(focal_species$Spp_Obs == "Human activity"),] %>%
+    dplyr::select(-"Date") %>%
+    distinct() %>%
+    arrange(Study_area, Year) %>%
+    dplyr::select("Study_area", "Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  colnames(hum) <- c("Study_area", "Cam_Year", "Cell_ID", "Camera_ID", "Long", "Lat", "Spp_Obs")
+  #  Create spatial df
+  hum <- SpatialPointsDataFrame(coords = hum[,5:6], data = hum, proj4string = WGS84)
+  
+  
   
   # ##  Map out some general camera detections
   # #  Create bounding box
@@ -796,8 +806,8 @@
   #  Mesopredators
   plot(coy, add = T, col = "#F46D43", pch = 19, cex = 1.1)
   plot(bob, add = T, col = "#4575B4", pch = 10)
-
-
+  #  Humans
+  plot(hum, add = T, col = "#D73027", pch = 19)
   
   
   
