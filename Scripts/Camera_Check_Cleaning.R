@@ -338,9 +338,9 @@
                                exact = FALSE)
   
   #  How many cameras actually collected data?
-  length(unique(focal_species$Cell_ID[focal_species$Year == "Year1",]))
-  length(unique(focal_species$Cell_ID[focal_species$Year == "Year2",]))
-  length(unique(focal_species$Cell_ID[focal_species$Year == "Year3",]))
+  length(unique(focal_species$Cell_ID[focal_species$Year == "Year1"]))
+  length(unique(focal_species$Cell_ID[focal_species$Year == "Year2"]))
+  length(unique(focal_species$Cell_ID[focal_species$Year == "Year3"]))
   
 ################################################################################  
   #### Consolidate observations  ####
@@ -428,7 +428,8 @@
   
   
   #  And repeat with the condensed non-target species version
-  skinny_focal_spp <- focal_species %>%  # focal_species[focal_species$Year == "Year1",]
+  #  Year specific (for annual reports)
+  skinny_focal_spp <- focal_species[focal_species$Year == "Year2",] %>%  
     na.omit() %>%
     group_by(Cell_ID) %>%
     distinct(Spp_Obs) %>%
@@ -437,10 +438,22 @@
     arrange(Spp_Obs)
   # Get rid of etc. and such
   skinny_focal_spp <- skinny_focal_spp[!(skinny_focal_spp$Spp_Obs == "etc" |skinny_focal_spp$Spp_Obs == "etc."|skinny_focal_spp$Spp_Obs == "" |skinny_focal_spp$Spp_Obs == "none"),]
+
+  # # All years
+  # skinny_focal_spp <- focal_species %>% 
+  #   na.omit() %>%
+  #   group_by(Cell_ID) %>%
+  #   distinct(Spp_Obs) %>%
+  #   ungroup() %>%
+  #   count(Spp_Obs) %>%
+  #   arrange(Spp_Obs)
+  # # Get rid of etc. and such
+  # skinny_focal_spp <- skinny_focal_spp[!(skinny_focal_spp$Spp_Obs == "etc" |skinny_focal_spp$Spp_Obs == "etc."|skinny_focal_spp$Spp_Obs == "" |skinny_focal_spp$Spp_Obs == "none"),]
   
   
   #  Split it up by study area now
-  OK_spp <- focal_species %>%  # focal_species[focal_species$Year == "Year1",]
+  #  Year specific (for annual reports)
+  OK_spp <- focal_species[focal_species$Year == "Year2",] %>%  
     na.omit() %>%
     filter(Study_area == "OK") %>%
     group_by(Cell_ID) %>%
@@ -450,7 +463,7 @@
     arrange(Spp_Obs)
   OK_spp <- OK_spp[!(OK_spp$Spp_Obs == "etc" |OK_spp$Spp_Obs == "etc."|OK_spp$Spp_Obs == ""),]
   
-  NE_spp <- focal_species %>%  # focal_species[focal_species$Year == "Year1",]
+  NE_spp <- focal_species[focal_species$Year == "Year2",] %>% 
     na.omit() %>%
     filter(Study_area == "NE") %>%
     group_by(Cell_ID) %>%
@@ -459,6 +472,29 @@
     count(Spp_Obs) %>%
     arrange(Spp_Obs)
   NE_spp <- NE_spp[!(NE_spp$Spp_Obs == "etc" |NE_spp$Spp_Obs == "etc."|NE_spp$Spp_Obs == ""),]
+  
+  # # All years
+  # OK_spp <- focal_species %>%  # focal_species[focal_species$Year == "Year1",]
+  #   na.omit() %>%
+  #   filter(Study_area == "OK") %>%
+  #   group_by(Cell_ID) %>%
+  #   distinct(Spp_Obs) %>%
+  #   ungroup() %>%
+  #   count(Spp_Obs) %>%
+  #   arrange(Spp_Obs)
+  # OK_spp <- OK_spp[!(OK_spp$Spp_Obs == "etc" |OK_spp$Spp_Obs == "etc."|OK_spp$Spp_Obs == ""),]
+  # 
+  # NE_spp <- focal_species %>%  # focal_species[focal_species$Year == "Year1",]
+  #   na.omit() %>%
+  #   filter(Study_area == "NE") %>%
+  #   group_by(Cell_ID) %>%
+  #   distinct(Spp_Obs) %>%
+  #   ungroup() %>%
+  #   count(Spp_Obs) %>%
+  #   arrange(Spp_Obs)
+  # NE_spp <- NE_spp[!(NE_spp$Spp_Obs == "etc" |NE_spp$Spp_Obs == "etc."|NE_spp$Spp_Obs == ""),]
+  
+  
   
 ################################################################################
   ####  Visualize!  ####
@@ -523,7 +559,7 @@
   #  Plot OK and NE detections together
   ggplot(df2, aes(x=Spp_Obs, y=n, fill=SA)) + 
     geom_bar (stat="identity", position = position_dodge(width = 1)) +
-    scale_y_continuous(expand = c(0,0), limits = c(0, 150)) +  #limits = c(0, 60))
+    scale_y_continuous(expand = c(0,0), limits = c(0, 60)) +  #limits = c(0, 150))
     theme_bw() +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
@@ -533,12 +569,12 @@
     theme(axis.text.y = element_text(colour = "black",  size = 14),
           axis.title.y = element_text(colour = "black", size = 16)) +
           ylab("Number of Cameras") +
-    scale_fill_discrete(name = "Study Area", labels = c("Northeast", "Okanogan")) +
+    scale_fill_discrete(name = "Study Area", labels = c("Northeast (54)", "Okanogan (63)")) +  # 2019-2020 cams (update to correct number of camera/study area in a year)
     theme(legend.title = element_text(size = 14),
           legend.text = element_text(size = 14)) +
     theme(plot.title = element_text(hjust = 0.5, size = 18)) +
-    ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington 2018 - 2019")    
-    # ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington 2019 - 2020") 
+    # ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington 2018 - 2019")    
+    ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington July 2019 - June 2020")
     # ggtitle("Number of Cameras where a Species was Detected \n in Eastern Washington 2020 - 2021")
   
   
