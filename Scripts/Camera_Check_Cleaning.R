@@ -106,6 +106,7 @@
   #   ind_spp <- cbind(spp_checks[i,], spp[i])
   # }
   
+  #  BAD CODING PRACTICE ALERT! Have to run one spp_checks through animals1 one year at a time
   #  Update the spp_checks for each year (run through one at a time)
   spp_checks <- spp_checks1
   spp_checks <- spp_checks2
