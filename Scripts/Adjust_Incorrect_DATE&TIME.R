@@ -130,15 +130,6 @@
   # NOTE: shift btwn PDT & PST is accounted for during the addition above
   # (Only 6 hr difference during time period btwn WrgDateTime 11/4/18 & RgtDateTime 11/14/18)
 
-  # Previous version filtering on RgtDate instead of Date....
-  # # Extract new section that needs to shift to PST based on now correct dates
-  # NE3815_C125_PST <- NE3815_C125[NE3815_C125$RgtDate > "2018-11-03",] %>%
-  # # Minus 1 hour to put back on PST after real 11/4/18
-  #   mutate(RgtDateTime = RgtDateTime - 60*60, 
-  #          WrgDateTime = DateTime)
-  # # Combine so data have correct dates & times while appropriately accounting for PDT
-  # NE3815_C125 <- rbind(NE3815_C125[NE3815_C125$RgtDate < "2018-11-04",], NE3815_C125_PST)
-  
   NE5511_C168_C186 <- format_raw[[5]] 
   #  Card C186 is WAY off on date and time so need to adjust for that but also...
   #  It looks like camera did not adjust for daylight savings time
@@ -152,9 +143,10 @@
   #  Add images that have been adjusted to PST back to images that are currently in PDT
   #  in PDT and shift ALL images by the appropriate amount of time
   NE5511_C186_adj <- rbind(NE5511_C186[NE5511_C186$Date < "2018-11-04",], NE5511_PST) %>% 
+  #  Plus 163 days, minus 3 hours, 37 minutes (7/3/18 to 12/13/18)
     mutate(RgtDate = Date + 163,
            WrgDate = Date,
-           RgtDateTime = DateTime + 163*24*60*60 - 4*60*60 - 37*60, # plus 163 days, minus 3 hours, 37 minutes (7/3/18 to 12/13/18)
+           RgtDateTime = DateTime + 163*24*60*60 - 4*60*60 - 37*60, 
            WrgDateTime = DateTime)
   #  Note: this should match up with the dates and times recorded in the placards
   #  and datasheets. C186 deployed 12/13/18 10:11am, and pulled 7/15/19 08:25am
@@ -174,12 +166,12 @@
   #  Merge both adjusted NE5511 memory cards back together
   NE5511_C168_C186 <- rbind(NE5511_C168_adj, NE5511_C186_adj)
   
-
-  # OK4880_C175 <- format_raw[[6]] %>%
-  #   mutate(RgtDate = Date + 1,
-  #          WrgDate = Date,
-  #          RgtDateTime = DateTime + 24*60*60, # plus 1 day
-  #          WrgDateTime = DateTime)
+  OK4880_C175 <- format_raw[[6]] %>%
+  #  Plus 1 day
+    mutate(RgtDate = Date + 1,
+           WrgDate = Date,
+           RgtDateTime = DateTime + 24*60*60,
+           WrgDateTime = DateTime)
   
 
   ## ==========================================================
@@ -227,11 +219,6 @@
   NE3815_C125shift <- reformat_shiftdat[[1]] # update this number
   NE5511_C186shift <- reformat_shiftdat[[2]] # update this number
   
-  #  Add memory cards back in where the data & time were correct
-  NE5511_C168 <- NE5511_C168_C186 %>%
-    filter(str_detect(RelativePath, paste("C186"), negate = TRUE)) 
-  NE5511_C168_C186shift <- rbind(NE5511_C168, NE5511_C186shift)   #NOT QUITE RIGHT- I THINK DAYLIGHT SAVINGS TIME WAS NOT ADJUSTED FOR AT SOME POINT- NEED TO FIX
-
   
   #  From here, source this script to merge these corrected data sets in with 
   #  other processed & formatted image data
