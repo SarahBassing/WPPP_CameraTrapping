@@ -16,7 +16,7 @@
   
   
   #  Read in most recent camera deployment info
-  cams <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment &Checking_2020_082420.csv")
+  cams <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment &Checking_2020_082420.csv") 
   #cams <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Depoyment_and_Checking_090319.csv")
   #cams <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Depoyment_and_Checking_090119.csv")
 
