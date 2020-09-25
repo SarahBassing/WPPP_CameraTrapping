@@ -207,7 +207,9 @@
   
   
   #  Bind deploy and check dataframes together into single file
-  camera_master_2018 <- bind_rows(cameras18_slim, checks18_slim, checks18_19_slim)
+  camera_master_2018 <- bind_rows(cameras18_slim, checks18_slim, checks18_19_slim) %>%
+    mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+    arrange(Cell_ID, Date)
   camera_master_2019 <- bind_rows(cameras19_slim, checks19_slim, checks19_20_slim) %>%
     #  Reogranize columns so trail width is with other measurement data
     dplyr::select("Status", "Year", "Date", "Study_Area", "Cell_ID", 
@@ -215,14 +217,18 @@
                   "Distance_Focal_Point", "Height_frm_grnd", "Trail_Width", 
                   "Monitoring","Canopy_Cov", "Land_Mgnt", "Land_Owner", 
                   "Habitat_Type", "Condition", "Explain1", "Num_Images",
-                  "Adjustments", "Explain2", "Explain3", "Cam_Removed")
-  camera_master_2020 <- bind_rows(cameras20_slim, checks20_slim)  #  eventually create and add checks20_21_slim
-  
+                  "Adjustments", "Explain2", "Explain3", "Cam_Removed") %>%
+    mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+    arrange(Cell_ID, Date)
+  camera_master_2020 <- bind_rows(cameras20_slim, checks20_slim) %>%  #  eventually create and add checks20_21_slim
+    mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+    arrange(Cell_ID, Date)
+    
   ## ========================================
   #  Save these master files
-  # write.csv(camera_master_2018, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018_updated.9.24.20.csv")
-  # write.csv(camera_master_2019, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated.9.24.20.csv")
-  # write.csv(camera_master_2020, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2020_updated.9.24.20.csv")
+  # write.csv(camera_master_2018, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018_updated.9.25.20.csv")
+  # write.csv(camera_master_2019, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated.9.25.20.csv")
+  # write.csv(camera_master_2020, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2020_updated.9.25.20.csv")
   ## ========================================
   
   
@@ -270,5 +276,5 @@
   #  Problem dates will have to be extracted from image data (last image taken)
   #  and csv organized by hand in excel
   #  Camera deployment covariates will be propogated to relevant rows by hand in excel
-  # write.csv(all_cams, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_9.24.20.csv")
+  # write.csv(all_cams, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_9.25.20.csv")
   
