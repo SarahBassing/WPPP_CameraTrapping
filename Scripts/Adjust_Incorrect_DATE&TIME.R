@@ -178,14 +178,15 @@
   #  Step 3
   #  Function to reorganize shifted data to match other camera data
   #  REMEMBER that the Time column is incorrect and should not be used for further analyses
+  #  Date is also off 1 day for detections that were close to daylight savings shift
   reformat_csv <- function(x) {
     format_shiftdat <- x %>%
       transmute(
         File = as.character(File),
         RelativePath = as.character(RelativePath),
         Folder = as.character(Folder),
-        DateTime = RgtDateTime, 
-        Date = RgtDate, 
+        DateTime = as.POSIXct(RgtDateTime, format="%d-%b-%Y %H:%M:%S",tz="America/Los_Angeles"),
+        Date = RgtDate,
         Time = chron(times = Time),
         ImageQuality = as.factor(ImageQuality),
         CameraLocation = as.factor(as.character(CameraLocation)),
@@ -211,13 +212,17 @@
   }
 
   #  List dataframes that had date & time data shifted
-  #shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, NE5511_C186, OK4880_C175)
-  shift_list <- list(NE3815_C125, NE5511_C186)
+  shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, NE5511_C186, OK4880_C175)
+  #shift_list <- list(NE3815_C125, NE5511_C186)
   #  Run reformatting function
   reformat_shiftdat <- lapply(shift_list, reformat_csv)
   #  Separate out individual cameras
-  NE3815_C125shift <- reformat_shiftdat[[1]] # update this number
-  NE5511_C186shift <- reformat_shiftdat[[2]] # update this number
+  NE3000_C18shift <- reformat_shiftdat[[1]]
+  NE3109_S4shift <- reformat_shiftdat[[2]]
+  NE3815_C61shift <- reformat_shiftdat[[3]]
+  NE3815_C125shift <- reformat_shiftdat[[4]]
+  NE5511_C186shift <- reformat_shiftdat[[5]]
+  OK4880_C175shift <- reformat_shiftdat[[6]]
   
   
   #  From here, source this script to merge these corrected data sets in with 
@@ -326,41 +331,4 @@
   # #  Add memory cards back to cameras that had data from multiple cards where 
   # #  date & time were correct
   # #  NE3000 S3; NE3109 C31, C96, C131; NE3815 C26; NE5511 C168
-  
-  
-  
-  
-  ## ==========================================================
-  ####  DOES NOT WORK  ####
-  # #  The timeShiftImages function apparently ONLY works on raw images, not on the
-  # #  already processed image data recorded in a csv  :(
-  # 
-  # #library(camtrapR)
-  # #library(exifr)
-  # #  Make sure R can find ExifTool
-  # #  (Necessary for timeShiftImages funciton to work)
-  # #  Not sure how this all works but make sure the path leads to the exiftool.exe 
-  # #  file (remove (-k) if included in the file name). 
-  # #  More here: https://exiftool.org/#shift & https://groups.google.com/g/camtrapr/c/kAoUZuBUt8o
-  # system("exiftool")
-  # exiftool_dir <- "C:/exiftool-12.05"      
-  # exiftoolPath(exiftoolDir = exiftool_dir)
-  # grepl(exiftool_dir,  Sys.getenv("PATH"))
-  # 
-  # #  Read in data
-  # NE3815 <- read.csv("NE3815_28_C125_MSW_datetimeweird-cleaned.csv")
-  # OK4880 <- read.csv("OK4880_C175_TT_DATEOFF1DAY.csv")
-  # timeShift <- read.csv("G:/My Drive/1 Data/Image Processing/timeShiftTable.csv")
-  # 
-  # #  Attempting to use timeShiftTable to adjust the date and time of camera data
-  # #dat <- rbind(NE3815, OK4880)
-  # tst <- timeShiftImages(inDir = , 
-  #                       timeShiftTable = timeShift,
-  #                       stationCol = "Station",
-  #                       cameraCol = "camera",
-  #                       hasCameraFolders = FALSE,
-  #                       timeShiftColumn = "timeshift",
-  #                       timeShiftSignColumn = "sign",
-  #                       undo = FALSE)
-  # # no workie
   
