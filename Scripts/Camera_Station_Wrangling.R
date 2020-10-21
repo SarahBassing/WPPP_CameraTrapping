@@ -54,7 +54,7 @@
     cams19 <- cbind(deployed19, Year, cameras19)
     
     #  2020-2021 data
-    cameras20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_092420.csv")) %>%
+    cameras20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_100520.csv")) %>%
       dplyr::select("Date", "Study_Area",  "Cell_ID", "Cam_ID", "Memory_Card", 
                     "Cam_Lat", "Cam_Long",  
                     "Cam_Distance_Focal_Point", "Cam_Distance_Ground", 
@@ -127,7 +127,7 @@
   chks19 <- cbind(checked19, checks19)
   
   #  Pulling Year 2 (summer 2019) cameras in summer 2020
-  summchecks20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Checking_2020_092420.csv")) %>%
+  summchecks20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Checking_2020_100520.csv")) %>%
     dplyr::select("Date", "Study_Area", "Cell_ID",  
                   "Cam_ID", "Cam_Card", "Cam_Lat", "Cam_Long", 
                   "Cam_Condition", "Explain1", "Cam_Replaced", "Num_Images",
@@ -272,9 +272,66 @@
   all_cams <- rbind(master18_19, master19_20, master20_21) %>%
     arrange(Year, Name, Date)
   
+  ## ==========================================
   #  Save to create "problems" csv and camera deployment covariates csv
   #  Problem dates will have to be extracted from image data (last image taken)
   #  and csv organized by hand in excel
   #  Camera deployment covariates will be propogated to relevant rows by hand in excel
   # write.csv(all_cams, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_9.25.20.csv")
+  ## =========================================
+  
+  
+  #  Create final camera deployment covariate data set, including deployment & pull
+  #  dates, dates when camera had potential issues
+  #  Identify cameras that were damaged or went missing and hold out their checks
+  ugh <- filter(all_cams, Condition == "Disturbed" | Condition == "Damaged" | 
+                  Condition == "Disturbed/Damaged" | Condition == "Missing")
+  prob_cams <- all_cams[all_cams$Cell_ID %in% ugh$Cell_ID,] %>%
+    mutate(dbl_check = 1)
+  #  Last date damaged/missing camera was checked or removed
+  prob_last <- prob_cams %>%
+    group_by(Cell_ID) %>%
+    filter(Date == max(Date), na.rm = TRUE) %>%
+    ungroup()
+  #  Double check I didn't drop any grid cells
+  length(unique(ugh$Cell_ID)); length(unique(prob_cams$Cell_ID)); length(unique(prob_last$Cell_ID))
+  
+  #  Subset list of cameras to only ones that were not damaged or missing
+  good_cams <- all_cams[!(all_cams$Cell_ID %in% prob_cams$Cell_ID),] %>%
+    mutate(dbl_check = 0)
+  #  Deployment data
+  first <- filter(good_cams, Status == "Deployed")
+  #  Data from camera removal
+  pull <- filter(good_cams, Status == "Removed")
+  #  Last date camera was checked before removal 
+  #  Only cameras that were not damaged or missing
+  check <- good_cams %>%
+    group_by(Cell_ID) %>%
+    filter(Status == "Checked") %>%
+    filter(Date == max(Date), na.rm = TRUE) %>%
+    ungroup()
+  #  Keep data from last check if no official removal data was recorded
+  last <- rbind(check, pull) %>%
+    arrange(Cell_ID) %>%
+    group_by(Cell_ID) %>%
+    filter(Date == max(Date), na.rm = TRUE) %>%
+    ungroup()
+  #  Merge deployment and removal data, plus all check data for problem cameras
+  full <- rbind(first, last, prob_cams) %>%
+    arrange(Cell_ID)
+  #  Gather date of last check or removal for all cameras
+  end_prob <- select(prob_last, c(Cell_ID, Camera_ID, Status, Date))
+  end_good <- select(last, c(Cell_ID, Camera_ID, Status, Date))
+  end <- rbind(end_prob, end_good)
+  final_sites <- left_join(full, end, by = (c("Cell_ID", "Camera_ID"))) %>%
+    filter(Status.x != "Removed" | dbl_check == 1)
+  #  Keep an eye out for: 
+  #  1. Cameras that were removed but no pull data were recorded,
+  #  2. Cameras that were redeployed part way through season,
+  #  3. Memory cards that filled up before camera was checked,
+  #  4. Cameras that were removed by landowner and collected by us later.
+  
+  
+  
+  
   
