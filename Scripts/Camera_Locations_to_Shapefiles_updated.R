@@ -164,7 +164,7 @@
   ##  ==================================================
   ##  Bonus Version 3: Cameras and AudioMoths currently deployed
   #  Cameras deployed summer 2020
-  Cams <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_092420.csv") %>% 
+  Cams <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_100520.csv") %>% 
     dplyr::select("Date", "Study_Area", "Cell_ID", "Cam_ID", "Cam_Long", "Cam_Lat") %>%
     #  Add a column merging cell & camera, format date and camera removal data
     mutate(
@@ -184,7 +184,7 @@
   NE_Cams <- as.data.frame(Cams[Cams$Study_Area != "OK",]) %>%
     dplyr::select(-Study_Area)
   
-  AMs <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_092420.csv") %>% 
+  AMs <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_100520.csv") %>% 
     dplyr::select("AM_DeploymentDate", "Study_Area", "Cell_ID", "AM_Long", "AM_Lat") %>%
     #  Add a column merging cell & camera, format date and camera removal data
     mutate(
@@ -279,16 +279,16 @@
   writeOGR(OKcams_current19_20, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_currentlocs.OK_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
   writeOGR(NEcams_current19_20, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_currentlocs.NE_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
   
-  writeOGR(Cams_2020, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_2020locs_spdf_092420", driver = "ESRI Shapefile", overwrite = F )
-  writeOGR(AMs_2020, dsn = "./Shapefiles/Camera_Locations", layer = "AM_2020locs_spdf_092420", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(Cams_2020, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_2020locs_spdf_100520", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(AMs_2020, dsn = "./Shapefiles/Camera_Locations", layer = "AM_2020locs_spdf_100520", driver = "ESRI Shapefile", overwrite = F )
   
   #  Write GPX files
   #  Be sure spdf only includes NAME, LONG, LAT
   writeOGR(cams_current19_20, dsn="./Shapefiles/Camera_Locations/Cam_currentlocs_spdf_050220.gpx",
            dataset_options="GPX_USE_EXTENSIONS=yes",layer="waypoints",driver="GPX", overwrite_layer = T)
-  writeOGR(Cams_2020, dsn="./Shapefiles/Camera_Locations/Cam_2020locs_spdf_092420.gpx",
+  writeOGR(Cams_2020, dsn="./Shapefiles/Camera_Locations/Cam_2020locs_spdf_100520.gpx",
            dataset_options="GPX_USE_EXTENSIONS=yes",layer="waypoints",driver="GPX", overwrite_layer = T)
-  writeOGR(AMs_2020, dsn="./Shapefiles/Camera_Locations/AM_2020locs_spdf_092420.gpx",
+  writeOGR(AMs_2020, dsn="./Shapefiles/Camera_Locations/AM_2020locs_spdf_100520.gpx",
            dataset_options="GPX_USE_EXTENSIONS=yes",layer="waypoints",driver="GPX", overwrite_layer = T)
   
   
