@@ -325,13 +325,22 @@
   end <- rbind(end_prob, end_good)
   final_sites <- left_join(full, end, by = (c("Cell_ID", "Camera_ID"))) %>%
     filter(Status.x != "Removed" | dbl_check == 1)
+  colnames(final_sites) <- c("Status", "Year", "Date", "Study_Area", "Cell_ID", 
+                             "Camera_ID", "Card_ID", "Camera_Long", "Camera_Lat", 
+                             "Distance_Focal_Point", "Height_frm_grnd", "Trail_Width",
+                             "Monitoring", "Canopy_Cov", "Land_Mgnt", "Land_Owner", 
+                             "Habitat_Type", "Condition", "Explain1", "Num_Images",
+                             "Adjustments", "Explain2", "Explain3", "Cam_Removed",
+                             "Name", "dbl_check", "Pull_Status", "Last_Date")
   #  Keep an eye out for: 
   #  1. Cameras that were removed but no pull data were recorded,
   #  2. Cameras that were redeployed part way through season,
   #  3. Memory cards that filled up before camera was checked,
   #  4. Cameras that were removed by landowner and collected by us later.
+  #  Keep in mind Year 3 data are not complete
   
-  
+  #  Save
+  #write.csv(final_sites, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_10.21.20_skinny.csv")
   
   
   
