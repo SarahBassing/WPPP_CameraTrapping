@@ -199,6 +199,8 @@
   #   filter(Species == "Cougar")
   deer <- full.tbl %>%
     filter(Species == "White-tailed Deer" | Species == "Mule Deer")
+  meso <- full.tbl %>%
+    filter(Species == "Bobcat" | Species == "Coyote")
   
   #  Filter data to only contain wtd, human, and vehicle detections
   Drew.data <- full.tblNE %>%
@@ -218,4 +220,5 @@
   write.csv(cougar.data, "G:/My Drive/1 Volunteers/Capstone Projects/Kate/CougarData.csv")
   #write.csv(cougar.collars, "G:/My Drive/1 Volunteers/Capstone Projects/Kate/CougarCollars.csv")
   write.csv(deer, "G:/Shared drives/Doe Fawn Ratio/Data/DeerData.csv")
+  write.csv(meso, "G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/MesoDetections_11.3.20.csv")
   
