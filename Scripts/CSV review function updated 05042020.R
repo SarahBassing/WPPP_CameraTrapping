@@ -52,9 +52,8 @@ func <- function(set1, set2, output, stat){
   speciestable <- fulltable[as.character(fulltable$Species.x) != as.character(fulltable$Species.y),]
   speciestable <- mutate(speciestable, Difftype="species")
   
-  HumActable <- fulltable[as.character(fulltable$Human.x) != as.character(fulltable$Human.y),]  #Service.y
+  HumActable <- fulltable[as.character(fulltable$HumanActivity.x) != as.character(fulltable$HumanActivity.y),]
   HumActable <- mutate(HumActable, Difftype="human_activity")
-  
   
   counttable <- fulltable[fulltable$Count.x != fulltable$Count.y,]
   counttable <- mutate(counttable, Difftype="count")
