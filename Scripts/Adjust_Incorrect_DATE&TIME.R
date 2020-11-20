@@ -11,16 +11,17 @@
   ##  Libraries and data
   library(data.table)
   library(chron)
-  #library(lubridate)
+  library(lubridate)
   library(tidyverse)
+
   
   #  Read in data where date & time are incorrect
-  NE3000_S3_C18 <- read.csv("./Processed Image Data/NE3000_C18_S3_CH_REVIEWED_DATETIMEWRONG.csv")
-  NE3109_S4_C31_C96_C131 <- read.csv("./Processed Image Data/NE3109_113, Moultrie3_C31, C96, C131, S4_SBB_REVIEWED.csv") 
-  NE3815_C125 <- read.csv("./Processed Image Data/NE3815_28_C125_CH_REVIEWED_datetimeweird.csv")
-  NE3815_C26_C61 <- read.csv("./Processed Image Data/NE3815_28_C26_61_CH_REVIEWED.csv") 
-  NE5511_C168_C186 <- read.csv("./Processed Image Data/NE5511_54_C168_C186_CH_REVIEWED-DATETIMEWRONG.csv")
-  OK4880_C175 <- read.csv("./Processed Image Data/OK4880_C175_CH_REVIEWED.csv")
+  NE3000_S3_C18 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3000_C18_S3_CH_REVIEWED_DATETIMEWRONG.csv")
+  NE3109_S4_C31_C96_C131 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3109_113, Moultrie3_C31, C96, C131, S4_SBB_REVIEWED.csv") 
+  NE3815_C125 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3815_28_C125_CH_REVIEWED_datetimeweird.csv")
+  NE3815_C26_C61 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3815_28_C26_61_CH_REVIEWED_datetimewrongC61.csv") 
+  NE5511_C168_C186 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE5511_54_C168_C186_CH_REVIEWED-DATETIMEWRONG.csv")
+  OK4880_C175 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/OK4880_C175_CH_REVIEWED_DATEOFF1DAY.csv")
 
   #  Step 1
   #  Function to format raw csv data so date, time, and other values are in a 
@@ -77,20 +78,21 @@
 
   #  Separate each memory card out so individual date & time issues can be fixed
   #  Filter out memory cards with correct date & times
-  #  Shift date by adding or subtracting days
   #  Shift date and time but adding or subtracting seconds (24*60*60 = 1 full day)
-  #  Keep in mind that dates in Date vs DateTime may change when times are close to midnight
-  #  Adjusting for incorrect shifts btwn PST & PDT are tricky
+  #  Separate updated DateTime into new Date and Time columns
+  #  FYI, adjusting for incorrect shifts btwn PST & PDT is tricky
   
   NE3000_S3_C18 <- format_raw[[1]]
   NE3000_C18 <- NE3000_S3_C18 %>%
     filter(str_detect(RelativePath, paste("S3"), negate = TRUE)) %>%
   # Plus 1 day, munus 1 hour, 24 minutes
   # No need to worry about PDT vs PST here
-    mutate(RgtDate = Date + 1,
-           WrgDate = Date,
+    mutate(#RgtDate = Date + 1,
+           #WrgDate = Date,
+           WrgDateTime = DateTime,
            RgtDateTime = DateTime + 24*60*60 - 60*60 - 24*60, 
-           WrgDateTime = DateTime)
+           RgtDate = date(RgtDateTime),
+           RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   
   NE3109_S4_C31_C96_C131 <- format_raw[[2]]
   NE3109_S4 <- NE3109_S4_C31_C96_C131 %>%
@@ -98,10 +100,13 @@
     filter(str_detect(RelativePath, paste("C96"), negate = TRUE)) %>%
     filter(str_detect(RelativePath, paste("C131"), negate = TRUE)) %>%
   # Plus 6 years, 4 months, 20 days (1/1/12 to 5/21/18)
-    mutate(RgtDate = Date + 2323,  
-           WrgDate = Date,
+    mutate(#RgtDate = Date + 2323,  
+           #WrgDate = Date,
+           WrgDateTime = DateTime,
            RgtDateTime = DateTime + 6*365*24*60*60 + 133*24*60*60,
-           WrgDateTime = DateTime) %>%
+           RgtDate = date(RgtDateTime),
+           RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S")
+           ) %>%
   # Remove 2 servicing images with way different dates- too much work to correct & no need
     filter(File != "MFDC0001.JPG" & File != "MFDC0023.JPG" & File != "MFDC0024.JPG")
   
@@ -109,10 +114,12 @@
   NE3815_C61 <- NE3815_C26_C61 %>%
     filter(str_detect(RelativePath, paste("C26"), negate = TRUE)) %>%
   # Plus 21 days, 7 hours, 3 minutes    
-    mutate(RgtDate = Date + 21,
-           WrgDate = Date,
+    mutate(#RgtDate = Date + 21,
+           #WrgDate = Date,
+           WrgDateTime = DateTime,
            RgtDateTime = DateTime + 21*24*60*60 + 7*60*60 + 3*60, 
-           WrgDateTime = DateTime)
+           RgtDate = date(RgtDateTime),
+           RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   
   NE3815_C125 <- format_raw[[4]]
   # Extract section that shifted to PST based on incorrect dates
@@ -123,10 +130,12 @@
   NE3815_C125 <- rbind(NE3815_C125[NE3815_C125$Date < "2018-11-04",], NE3815_C125_PDT) %>% 
   # Shift all data to correct date and time based on placard info
   # Plus 21 days, 7 hours, 3 minutes
-    mutate(RgtDate = Date + 21,                                   
-           WrgDate = Date,
-           RgtDateTime = DateTime + 21*24*60*60 + 7*60*60 + 3*60, 
-           WrgDateTime = DateTime)
+    mutate(#RgtDate = Date + 21,                                   
+           #WrgDate = Date,
+           WrgDateTime = DateTime,
+           RgtDateTime = DateTime + 21*24*60*60 + 7*60*60 + 3*60,
+           RgtDate = date(RgtDateTime),
+           RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   # NOTE: shift btwn PDT & PST is accounted for during the addition above
   # (Only 6 hr difference during time period btwn WrgDateTime 11/4/18 & RgtDateTime 11/14/18)
 
@@ -144,10 +153,12 @@
   #  in PDT and shift ALL images by the appropriate amount of time
   NE5511_C186_adj <- rbind(NE5511_C186[NE5511_C186$Date < "2018-11-04",], NE5511_PST) %>% 
   #  Plus 163 days, minus 3 hours, 37 minutes (7/3/18 to 12/13/18)
-    mutate(RgtDate = Date + 163,
-           WrgDate = Date,
+    mutate(#RgtDate = Date + 163,
+           #WrgDate = Date,
+           WrgDateTime = DateTime,
            RgtDateTime = DateTime + 163*24*60*60 - 4*60*60 - 37*60, 
-           WrgDateTime = DateTime)
+           RgtDate = date(RgtDateTime),
+           RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   #  Note: this should match up with the dates and times recorded in the placards
   #  and datasheets. C186 deployed 12/13/18 10:11am, and pulled 7/15/19 08:25am
   #  Card C168 is also off by an hour- assuming the camera did not adjust for 
@@ -155,37 +166,40 @@
   NE5511_C168 <- NE5511_C168_C186 %>%
     filter(str_detect(RelativePath, paste("186"), negate = TRUE))
   NE5511_PST <- NE5511_C168[NE5511_C168$Date > "2018-11-03",] %>%
-    mutate(DateTime = DateTime - 60*60)
+    mutate(DateTime = DateTime - 60*60)  
   NE5511_C168_adj <- rbind(NE5511_C168[NE5511_C168$Date < "2018-11-04",], NE5511_PST) %>%
     #  Add these columns in for consistency
-    mutate(RgtDate = Date,
-           WrgDate = Date,          # Date is actually fine
+    mutate(#RgtDate = Date,
+           #WrgDate = Date,          
+           WrgDateTime = DateTime,  
            RgtDateTime = DateTime,
-           WrgDateTime = DateTime)  # DateTime are actually fine
+           RgtDate = date(RgtDateTime),  # Date is actually fine
+           RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))  
   
   #  Merge both adjusted NE5511 memory cards back together
-  NE5511_C168_C186 <- rbind(NE5511_C168_adj, NE5511_C186_adj)
+  NE5511_C168_C186 <- rbind(NE5511_C168_adj, NE5511_C186_adj) 
   
   OK4880_C175 <- format_raw[[6]] %>%
   #  Plus 1 day
-    mutate(RgtDate = Date + 1,
-           WrgDate = Date,
+    mutate(#RgtDate = Date + 1,
+           #WrgDate = Date,
+           WrgDateTime = DateTime,
            RgtDateTime = DateTime + 24*60*60,
-           WrgDateTime = DateTime)
+           RgtDate = date(RgtDateTime),  
+           RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   
 
   ## ==========================================================
   #  Step 3
   #  Function to reorganize shifted data to match other camera data
-  #  REMEMBER that the Time column is incorrect and should not be used for further analyses
-  #  Date is also off 1 day for detections that were close to daylight savings shift
   reformat_csv <- function(x) {
     format_shiftdat <- x %>%
       transmute(
         File = as.character(File),
         RelativePath = as.character(RelativePath),
         Folder = as.character(Folder),
-        DateTime = as.POSIXct(RgtDateTime, format="%d-%b-%Y %H:%M:%S",tz="America/Los_Angeles"),
+        DateTime = RgtDateTime,
+        #DateTime = as.POSIXct(RgtDateTime, format="%Y-%m-%d %H:%M:%S",tz="America/Los_Angeles"),
         Date = RgtDate,
         Time = chron(times = Time),
         ImageQuality = as.factor(ImageQuality),
@@ -211,9 +225,10 @@
     return(format_shiftdat)
   }
 
-  #  List dataframes that had date & time data shifted
-  shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, NE5511_C186, OK4880_C175)
-  #shift_list <- list(NE3815_C125, NE5511_C186)
+  #  List data frames that had date & time data shifted
+  shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, NE5511_C168_C186, OK4880_C175)
+  #shift_list <- list(NE5511_C168_C186)
+  #shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, OK4880_C175)
   #  Run reformatting function
   reformat_shiftdat <- lapply(shift_list, reformat_csv)
   #  Separate out individual cameras
@@ -221,12 +236,26 @@
   NE3109_S4shift <- reformat_shiftdat[[2]]
   NE3815_C61shift <- reformat_shiftdat[[3]]
   NE3815_C125shift <- reformat_shiftdat[[4]]
-  NE5511_C186shift <- reformat_shiftdat[[5]]
+  NE5511_C168_C186shift <- reformat_shiftdat[[5]]
   OK4880_C175shift <- reformat_shiftdat[[6]]
   
+  #  Add additional memory cards (with good date/times) back to adjusted cameras
+  NE3000_S3 <- NE3000_S3_C18 %>%
+    filter(str_detect(RelativePath, paste("C18"), negate = TRUE))
+  NE3000_S3_C18_DTGood <- rbind(NE3000_S3, NE3000_C18shift)
+  
+  NE3109_C31_C96_C131 <- NE3109_S4_C31_C96_C131 %>%
+    filter(str_detect(RelativePath, paste("S4"), negate = TRUE))
+  NE3109_S4_C31_C96_C131_DTGood <- rbind(NE3109_S4shift, NE3109_C31_C96_C131)
+  
+  NE3815_C26 <- NE3815_C26_C61 %>%
+    filter(str_detect(RelativePath, paste("C61"), negate = TRUE))
+  NE3815_C26_C61_DTGood <- rbind(NE3815_C26, NE3815_C61shift)
   
   #  From here, source this script to merge these corrected data sets in with 
   #  other processed & formatted image data
+  
+
   
   
   ## ====================================================
@@ -294,15 +323,23 @@
   #          WrgDateTime = DateTime) %>%
   #   select(-DateTime)
   # 
+  # #  Separate out Date and Time based on shifted DateTime
+  # require(lubridate)
+  # tstdate <- OK4880_C175 %>%
+  #   mutate(
+  #     NewDate = date(RgtDateTime),
+  #     NewTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S") 
+  #   )
+  # 
   # #  Reorganize entire dataframe to match other camera dataframes
   # #  REMEMBER that the Time column is incorrect and should not be used for further analyses
-  # NE3815_C125_tst <- NE3815 %>%
+  #NE3815_C125_tst <- NE3815 %>%
   #   transmute(
   #     File = as.character(File),
   #     RelativePath = as.character(RelativePath),
   #     Folder = as.character(Folder),
-  #     DateTime = RgtDateTime, 
-  #     Date = RgtDate, 
+  #     DateTime = RgtDateTime,
+  #     Date = RgtDate,
   #     Time = chron(times = Time),
   #     ImageQuality = as.factor(ImageQuality),
   #     CameraLocation = as.factor(as.character(CameraLocation)),
