@@ -252,6 +252,11 @@
     filter(str_detect(RelativePath, paste("C61"), negate = TRUE))
   NE3815_C26_C61_DTGood <- rbind(NE3815_C26, NE3815_C61shift)
   
+  #  Rename the rest of the cameras so they are consistent for later analyses
+  NE3815_C125_DTGood <- NE3815_C125shift
+  NE5511_C168_C186_DTGood <- NE5511_C168_C186shift
+  OK4880_C175_DTGood <- OK4880_C175shift
+  
   #  From here, source this script to merge these corrected data sets in with 
   #  other processed & formatted image data
   
