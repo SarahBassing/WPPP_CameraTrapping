@@ -57,7 +57,8 @@
         UNK = as.numeric(UNK),
         Collars = as.numeric(Collars),
         Tags = as.character(Tags),
-        Color = as.character(NaturalMarks)
+        Color = as.character(NaturalMarks),
+        SecondOp = as.factor(as.character(SecondOpinion))
       )
     return(format_raw)
   }
@@ -220,7 +221,8 @@
         UNK = as.numeric(UNK),
         Collars = as.numeric(Collars),
         Tags = as.character(Tags),
-        Color = as.character(Color)
+        Color = as.character(Color),
+        SecondOp = as.factor(as.character(SecondOp))
       )
     return(format_shiftdat)
   }
