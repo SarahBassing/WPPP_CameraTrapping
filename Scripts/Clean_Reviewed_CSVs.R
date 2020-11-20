@@ -6,6 +6,8 @@
   ##  This script reads in fully reviewed camera trap data from csv files and 
   ##  compiles them into a single MEGA data table. Note that camera data were 
   ##  processed by 2 independent individuals & reviewed by a third individual.
+  ##  Script sources "Adjust_Incorrect_DATE&TIME.R" script, which adjusts the
+  ##  Date and Time on cameras with known issues, & merges with MEGA data table.
   ##  Script then identifies which cameras had date & time errors and if any
   ##  images are still marked "Second Opinion". Script then filters service
   ##  and empty images out.
@@ -31,7 +33,8 @@
   ##  %y = year (2 digit); %Y = year (4 digit)
   
   #  Reads in data processed by 3 independent reviewers
-  mydir <- "G:/My Drive/1 Data/Image Processing/REVIEWING Processed Images/Proofed csvs & ddb" # update later
+  #mydir <- "G:/My Drive/1 Data/Image Processing/REVIEWING Processed Images/Proofed csvs & ddb" # update later
+  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1"
   myfiles <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE)
   full_csv <- ldply(myfiles, read_csv, col_names = TRUE) %>%
     transmute(
@@ -65,6 +68,18 @@
     )
   
   str(full_csv)
+  
+  
+  #  Source "Adjust_Incorrect_DATE&TIME.R" script to bring in cameras with known
+  #  and corrected date/time issues.
+  source("./Scripts/Adjust_Incorrect_DATE&TIME.R")
+  
+  #  Append sourced data to MEGA data file
+  full_csv <- rbind(full_csv, NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
+                    NE3815_C26_C61_DTGood, NE3815_C125_DTGood, NE5511_C168_C186_DTGood,
+                    OK4880_C175_DTGood)
+  
+  #  UH OH, dimensions don't match
   
   
   ####  FINAL CLEANING  ####
