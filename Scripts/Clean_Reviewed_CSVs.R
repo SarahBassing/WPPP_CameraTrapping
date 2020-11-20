@@ -79,8 +79,6 @@
                     NE3815_C26_C61_DTGood, NE3815_C125_DTGood, NE5511_C168_C186_DTGood,
                     OK4880_C175_DTGood)
   
-  #  UH OH, dimensions don't match
-  
   
   ####  FINAL CLEANING  ####
   ##  ---------------------------------------------------
@@ -88,28 +86,21 @@
   ##  Make sure date & times are correct and if not, make adjustments
   ##  Make sure all Second Opinion images have been reviewed
   
-  #  Identify which cameras MAY have date & time issues (DT_Good marked FALSE)
-  unique(full_csv$CameraLocation[which(full_csv$DT_Good == "FALSE")])
+  #  Identify which cameras & memory cards MAY have date & time issues 
+  #  DT_Good marked FALSE
+  droplevels(unique(full_csv$CameraLocation[which(full_csv$DT_Good == "FALSE" | full_csv$DT_Good == "false")]))
+  unique(full_csv$RelativePath[which(full_csv$DT_Good == "FALSE" | full_csv$DT_Good == "false")])
   
-  ##  FULL PAUSE  ##
+  ##  FULL STOP  ##
   
-  #  Use Adjust_Incorrect_DATE&TIME script to correct errors where needed
-  #  WARNING: TIME is incorrect and should not be used for further analyses
-  #  WARNING: DATE is incorrect for some detections close to daylight savings shift
-  source("./Scripts/Adjust_Incorrect_Date&TIME.R")
-  
-  #  Remove image data with incorrect times and append corrected data
-  #  figure out what to do about wrong date & times... split DateTime out? Is it possible to just pull out times?
-  
-  
-  
-  
-  
-  
+  #  Are these different from the ones you already adjusted?
+  #  NE3000_48_C231
+  #  NE4498_21_C6
+  #  NE5345_3_C16
   
   
   #  Identify which images still need a second review
-  unique(full_csv$CameraLocation[which(full_csv$SecondOp == "TRUE")])
+  unique(full_csv$CameraLocation[which(full_csv$SecondOp == "TRUE" | full_csv$SecondOp == "true")])
   #  BRB, gotta go check these
 
   
@@ -118,9 +109,9 @@
   
   #  Filter service and empty images out
   alldetections <- full_csv %>%
-    filter(Empty != "TRUE") %>%
-    filter(Service != "TRUE")
+    filter(Empty != "TRUE" & Empty != "true") %>%
+    filter(Service != "TRUE" & Service != "true")
 
   #  Save for later analyses
-  write.csv(alldetections, "./Output/Bassing_AllDetections.csv")
+  write.csv(alldetections, paste0('./Output/Bassing_AllDetections_', Sys.Date(), '.csv')) # "./Output/Bassing_AllDetections.csv"
 
