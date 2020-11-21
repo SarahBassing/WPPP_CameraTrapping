@@ -262,9 +262,8 @@
   #  From here, source this script to merge these corrected data sets in with 
   #  other processed & formatted image data
   #  Print the names of the cameras included here
-  print(c("NE3000_S3_C18_DTGood", "NE3109_S4_C31_C96_C131_DTGood", "NE3815_C26_C61_DTGood", 
+  print(adjusted <- c("NE3000_S3_C18_DTGood", "NE3109_S4_C31_C96_C131_DTGood", "NE3815_C26_C61_DTGood", 
           "NE3815_C125_DTGood", "NE5511_C168_C186_DTGood", "OK4880_C175_DTGood"))
-  
 
   
   
