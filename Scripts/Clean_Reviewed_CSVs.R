@@ -69,15 +69,87 @@
   
   str(full_csv)
   
+  #  Read in un-reviewed files
+  mydir2 <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/Format 1"
+  myfiles2 <- list.files(path = mydir2, pattern = "*.csv", full.names = TRUE)
+  partial_csv2 <- ldply(myfiles2, read_csv, col_names = TRUE) %>%
+    transmute(
+      File = as.character(File),
+      RelativePath = as.character(RelativePath),
+      Folder = as.character(Folder),
+      DateTime = as.POSIXct(paste(Date, Time),
+                            format="%d-%b-%Y %H:%M:%S",tz="America/Los_Angeles"), 
+      Date = as.Date(Date, format = "%d-%b-%Y"), 
+      Time = chron(times = Time),
+      ImageQuality = as.factor(ImageQuality),
+      CameraLocation = as.factor(as.character(CameraLocation)),
+      DT_Good = as.factor(as.character(DT_Good)),
+      Service = as.factor(as.character(Service)),
+      Empty = as.factor(as.character(Empty)),
+      Animal = as.factor(as.character(Animal)),
+      Human = as.factor(as.character(Human)),
+      Vehicle = as.factor(as.character(Vehicle)),
+      Species = as.factor(as.character(Species)),
+      HumanActivity = as.factor(as.character(HumanActivity)),
+      Count = as.numeric(Count),
+      AF = as.numeric(AdultFemale),
+      AM = as.numeric(AdultMale),
+      AU = as.numeric(AdultUnknown),
+      OS = as.numeric(Offspring),
+      UNK = as.numeric(UNK),
+      Collars = as.numeric(Collars),
+      Tags = as.character(Tags),
+      Color = as.character(NaturalMarks),
+      SecondOp = as.factor(as.character(SecondOpinion))
+    )
+  str(partial_csv2)
+  
+  mydir3 <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/Format 2"
+  myfiles3 <- list.files(path = mydir3, pattern = "*.csv", full.names = TRUE)
+  partial_csv3 <- ldply(myfiles3, read_csv, col_names = TRUE) %>%
+    transmute(
+      File = as.character(File),
+      RelativePath = as.character(RelativePath),
+      Folder = as.character(Folder),
+      DateTime = as.POSIXct(paste(Date, Time),
+                            format="%d-%b-%y %H:%M:%S",tz="America/Los_Angeles"), 
+      Date = as.Date(Date, format = "%d-%b-%y"), 
+      Time = chron(times = Time),
+      ImageQuality = as.factor(ImageQuality),
+      CameraLocation = as.factor(as.character(CameraLocation)),
+      DT_Good = as.factor(as.character(DT_Good)),
+      Service = as.factor(as.character(Service)),
+      Empty = as.factor(as.character(Empty)),
+      Animal = as.factor(as.character(Animal)),
+      Human = as.factor(as.character(Human)),
+      Vehicle = as.factor(as.character(Vehicle)),
+      Species = as.factor(as.character(Species)),
+      HumanActivity = as.factor(as.character(HumanActivity)),
+      Count = as.numeric(Count),
+      AF = as.numeric(AdultFemale),
+      AM = as.numeric(AdultMale),
+      AU = as.numeric(AdultUnknown),
+      OS = as.numeric(Offspring),
+      UNK = as.numeric(UNK),
+      Collars = as.numeric(Collars),
+      Tags = as.character(Tags),
+      Color = as.character(NaturalMarks),
+      SecondOp = as.factor(as.character(SecondOpinion))
+    )
+  str(partial_csv3)
+  
   
   #  Source "Adjust_Incorrect_DATE&TIME.R" script to bring in cameras with known
   #  and corrected date/time issues.
   source("./Scripts/Adjust_Incorrect_DATE&TIME.R")
   
   #  Append sourced data to MEGA data file
-  full_csv <- rbind(full_csv, NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
+  full_csv <- rbind(full_csv, partial_csv2, partial_csv3, NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
                     NE3815_C26_C61_DTGood, NE3815_C125_DTGood, NE5511_C168_C186_DTGood,
                     OK4880_C175_DTGood)
+  
+  #  Am I missing any cameras?
+  cams <- as.data.frame(unique(full_csv$CameraLocation))
   
   
   ####  FINAL CLEANING  ####
@@ -86,18 +158,21 @@
   ##  Make sure date & times are correct and if not, make adjustments
   ##  Make sure all Second Opinion images have been reviewed
   
+  ##  FULL STOP  ##
+  
   #  Identify which cameras & memory cards MAY have date & time issues 
+  #  Print cameras that have already been adjusted
+  print(adjusted)
   #  DT_Good marked FALSE
   droplevels(unique(full_csv$CameraLocation[which(full_csv$DT_Good == "FALSE" | full_csv$DT_Good == "false")]))
   unique(full_csv$RelativePath[which(full_csv$DT_Good == "FALSE" | full_csv$DT_Good == "false")])
   
-  ##  FULL STOP  ##
-  
-  #  Are these different from the ones you already adjusted?
+  #  Flagged as having incorrect DateTime but I have confirmed they are correct
   #  NE3000_48_C231
   #  NE4498_21_C6
   #  NE5345_3_C16
   
+  ##  Mmmk we're good  ##
   
   #  Identify which images still need a second review
   unique(full_csv$CameraLocation[which(full_csv$SecondOp == "TRUE" | full_csv$SecondOp == "true")])
