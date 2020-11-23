@@ -174,6 +174,13 @@
   
   ##  Mmmk we're good  ##
   
+  #  Identify which cameras have images that were never reviewed or where info
+  #  was incorrectly propogated across empty images
+  droplevels(unique(alldetections$CameraLocation[alldetections$Animal == "FALSE" & alldetections$Human == "FALSE" & alldetections$Vehicle == "FALSE"]))
+  droplevels(unique(alldetections$CameraLocation[alldetections$Animal == "false" & alldetections$Human == "false" & alldetections$Vehicle == "false"]))
+  trouble <- alldetections[alldetections$Animal == "FALSE" & alldetections$Human == "FALSE" & alldetections$Vehicle == "FALSE",]
+  #  BRB, gotta fix these
+  
   #  Identify which images still need a second review
   unique(full_csv$CameraLocation[which(full_csv$SecondOp == "TRUE" | full_csv$SecondOp == "true")])
   #  BRB, gotta go check these
@@ -186,6 +193,7 @@
   alldetections <- full_csv %>%
     filter(Empty != "TRUE" & Empty != "true") %>%
     filter(Service != "TRUE" & Service != "true")
+  
 
   #  Save for later analyses
   write.csv(alldetections, paste0('./Output/Bassing_AllDetections_', Sys.Date(), '.csv')) # "./Output/Bassing_AllDetections.csv"
