@@ -22,13 +22,13 @@
   ##  Version 1: Organize ALL camera locations, even if cameras were moved during season
   
   #  Cameras deployed summer 2018
-  master18_19 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018_updated.9.24.20.csv") %>%  # camera_master_2018_updated.5.1.20.csv
+  master18_19 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018_updated.9.25.20.csv") %>%  # camera_master_2018_updated.5.1.20.csv
     select("Status", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Camera_Long", "Camera_Lat", "Distance_Focal_Point", "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", "Habitat_Type") %>%
     #  Add a column merging cell & camera, format date
     mutate(
       Name = paste(Cell_ID, "_", Camera_ID),
       Name = gsub("[[:space:]]", "", Name),
-      Date = as.Date(Date, format = "%m/%d/%Y")
+      Date = as.Date(Date, format = "%Y-%m-%d") #"%m/%d/%Y"
     ) %>%
     arrange(Name, Date) %>%
     #  Remove entries when the camera was pulled
@@ -56,13 +56,13 @@
   nrow(NE_all18_19)   
   
   #  Cameras deployed summer 2019
-  master19_20 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated.9.24.20.csv") %>% #camera_master_2019.5.1.20.csv
+  master19_20 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated.9.25.20.csv") %>% #camera_master_2019.5.1.20.csv
     select("Status", "Date", "Study_Area", "Cell_ID", "Camera_ID","Camera_Long", "Camera_Lat",  "Distance_Focal_Point", "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", "Habitat_Type") %>%
     #  Add a column merging cell & camera, format date
     mutate(
       Name = paste(Cell_ID, "_", Camera_ID),
       Name = gsub("[[:space:]]", "", Name),
-      Date = as.Date(Date, format = "%m/%d/%Y")
+      Date = as.Date(Date, format = "%Y-%m-%d") #"%m/%d/%Y"
     ) %>%
     arrange(Name, Date) %>%
     #  Remove entries when the camera was pulled
@@ -89,13 +89,13 @@
   nrow(NE_all19_20)
   
   #  Cameras deployed summer 2020
-  master20_21 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2020_updated.9.24.20.csv") %>% # AudioMoth_and_Camera_Deployment_2020_092420.csv
+  master20_21 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2020_updated.9.25.20.csv") %>% # AudioMoth_and_Camera_Deployment_2020_092420.csv
     select("Status", "Date", "Study_Area", "Cell_ID", "Camera_ID","Camera_Long", "Camera_Lat",  "Distance_Focal_Point", "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", "Habitat_Type") %>%
     #  Add a column merging cell & camera, format date
     mutate(
       Name = paste(Cell_ID, "_", Camera_ID),
       Name = gsub("[[:space:]]", "", Name),
-      Date = as.Date(Date, format = "%m/%d/%Y")
+      Date = as.Date(Date, format = "%Y-%m-%d") #"%m/%d/%Y"
     ) %>%
     arrange(Name, Date) %>%
     #  Remove entries when the camera was pulled
