@@ -23,6 +23,8 @@
   NE5511_C168_C186 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE5511_54_C168_C186_CH_REVIEWED-DATETIMEWRONG.csv")
   OK4880_C175 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/OK4880_C175_CH_REVIEWED_DATEOFF1DAY.csv")
 
+  # OK5712 & OK4944 need to be adjusted for Yr 2 data
+  
   #  Step 1
   #  Function to format raw csv data so date, time, and other values are in a 
   #  consistent format that can be manipulated further
