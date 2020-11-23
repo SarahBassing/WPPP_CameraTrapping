@@ -144,10 +144,10 @@
                           "Cam_Removed", "Explain3", "Trail_Width", "Year")
   #  Identify & change Year designation for OK3940_47 
   #  Trent went to pull but didn't have the right key
-  #  Cam_Removed makes it look like a Year3 cam with the above code
+  #  Cam_Removed makes it look like a Year3 camera with the above code
   dim(summchecks20)
   which(summchecks20$Cell_ID == "OK3940" & summchecks20$Cam_Removed == "N")
-  summchecks20[48,20] <- "Year2"
+  summchecks20$Year[summchecks20$Cell_ID == "OK3940"] <- "Year2"
   #  Reorder so Year column is in correct spot
   summchecks20 <- dplyr::select(summchecks20, "Date", "Study_Area", "Year", "Cell_ID",
                             "Camera_ID", "Card_No", "Camera_Lat", "Camera_Long",
