@@ -23,6 +23,7 @@
   #'  ============================================
 
   #'  Load libraries
+  library(chron)  
   library(tidyverse)
   
   #'  Read in data, format, and filter
@@ -120,6 +121,7 @@
     filter(Species == "Cougar" | Species == "Elk")
   
   #'  Save for group project!
+  write.csv(full_dat, "G:/My Drive/1_Repositories/WPPP_Data_Integration/full_camdata.csv")
   write.csv(SEFS521_camdata, "G:/My Drive/1_Repositories/WPPP_Data_Integration/SEFS521_camdata.csv")
   
   
