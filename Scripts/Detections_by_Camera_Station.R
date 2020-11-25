@@ -53,7 +53,7 @@
     #filter(CameraLocation != "OK2145_3")
     
   #'  Species detection data  
-  alldetections <- read.csv("./Output/Bassing_AllDetections_2020-11-23.csv") %>%
+  alldetections <- read.csv("./Output/Bassing_AllDetections_2020-11-24.csv") %>%
     select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -77,6 +77,10 @@
     #  Remove Moultrie cameras from detection data
     #  Moultrie cameras not included in camera station data for now
     filter(!grepl("Moultrie", CameraLocation))
+
+  #'  Or to save myself the reformatting step...
+  # source("./Scripts/Clean_Reviewed_CSVs.R")
+  # alldetections <- alldetections %>% filter(!grepl("Moultrie", CameraLocation))
 
   #'  For now, subset to just 2018-2019 NE data for data integration project
   #'  Will need to do this on a larger scale for all data
@@ -109,10 +113,12 @@
       DeployDate = as.Date(Date.y, format = "%Y-%m-%d")
     ) %>%
     #'  Drop unnecessary columns
-    select(-c(Date.x, DT_Good, Service, Empty, SecondOp, Status, Year, Date.y)) %>%
+    select(-c(Date.x, DT_Good, Service, Empty, SecondOp, Status, Date.y)) %>%
     #'  Reorganize columns to put Date data in more useful locations
     relocate("Date", .after = DateTime) %>%
     relocate("DeployDate", .after = Color)
+  
+  cams <- distinct(full_dat, full_dat$CameraLocation)
   
   #'  Final set of detection data with camera locations included for each observation
   animal_det <- full_dat %>%
