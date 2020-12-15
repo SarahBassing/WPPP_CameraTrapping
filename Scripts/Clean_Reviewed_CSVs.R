@@ -15,7 +15,6 @@
   
   ## Load packages
   
-  #library(data.table)
   library(chron)
   library(plyr)
   library(readr)
@@ -140,9 +139,16 @@
   
   #  For some reason all Species classification data are changed to "NA"
   #  Read in separately and the problem doesn't occur
-  prob1 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1/NE5921_26_C84, 101, 174_CH_REVIEWED.csv")
-  prob2 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1/NE6491_34_C104&C126_CH_REVIEWED.csv")
-  probs <- rbind(prob1, prob2) %>%
+  proba <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/NE5921_26_C84, 101, 174_CH_REVIEWED.csv")
+  probb <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/NE6491_34_C104&C126_CH_REVIEWED.csv")
+  probc <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/OK3304_22_C28_C45_CH_REVIEWED.csv")
+  probd <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/OK2822_C43_C200_CH_REVIEWED.csv")
+  probe <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/OK3725_78_C246_TT_REVIEWED.csv")
+  probf <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/OK3725_C187_CH_REVIEWED.csv")  
+  probs <- rbind(proba, probb, probc, probd, probe, probf) %>% 
+  # mydir4 <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird"
+  # myfiles4 <- list.files(path = mydir4, pattern = "*.csv", full.names = TRUE)
+  # partial_csv4 <- ldply(myfiles4, read_csv, col_names = TRUE) %>%
     transmute(
       File = as.character(File),
       RelativePath = as.character(RelativePath),
@@ -173,7 +179,7 @@
       SecondOp = as.factor(as.character(SecondOpinion))
     )
   
-  prob3 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/Why_are_you_weird/NE3558_69_C88_C105_DM.csv") %>%
+  prob2 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/Why_are_you_weird/NE3558_69_C88_C105_DM.csv") %>%
     transmute(
       File = as.character(File),
       RelativePath = as.character(RelativePath),
@@ -204,12 +210,46 @@
       SecondOp = as.factor(as.character(SecondOpinion))
     )
   
+  prob3 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/NE1487_30_C178_SBB_REVIEWED.csv")
+  #  Date format of 1st row is weird, need to drop it (service image so no big loss)
+  prob3 <- prob3[-1,] %>%
+    transmute(
+      File = as.character(File),
+      RelativePath = as.character(RelativePath),
+      Folder = as.character(Folder),
+      DateTime = as.POSIXct(paste(Date, Time),
+                            format="%d-%b-%y %H:%M:%S",tz="America/Los_Angeles"), 
+      Date = as.Date(Date, format = "%d-%b-%y"), 
+      Time = chron(times = Time),
+      ImageQuality = as.factor(ImageQuality),
+      CameraLocation = as.factor(as.character(CameraLocation)),
+      DT_Good = as.factor(as.character(DT_Good)),
+      Service = as.factor(as.character(Service)),
+      Empty = as.factor(as.character(Empty)),
+      Animal = as.factor(as.character(Animal)),
+      Human = as.factor(as.character(Human)),
+      Vehicle = as.factor(as.character(Vehicle)),
+      Species = as.factor(as.character(Species)),
+      HumanActivity = as.factor(as.character(HumanActivity)),
+      Count = as.numeric(Count),
+      AF = as.numeric(AdultFemale),
+      AM = as.numeric(AdultMale),
+      AU = as.numeric(AdultUnknown),
+      OS = as.numeric(Offspring),
+      UNK = as.numeric(UNK),
+      Collars = as.numeric(Collars),
+      Tags = as.character(Tags),
+      Color = as.character(NaturalMarks),
+      SecondOp = as.factor(as.character(SecondOpinion))
+    )
+  
+  
   #  Source "Adjust_Incorrect_DATE&TIME.R" script to bring in cameras with known
   #  and corrected date/time issues.
   source("./Scripts/Adjust_Incorrect_DATE&TIME.R")
   
   #  Append sourced data to MEGA data file
-  full_csv <- rbind(full_csv, partial_csv2, partial_csv3, probs, prob3, 
+  full_csv <- rbind(full_csv, partial_csv2, partial_csv3, probs, prob2, prob3,
                     NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
                     NE3815_C26_C61_DTGood, NE3815_C125_DTGood, 
                     NE5511_C168_C186_DTGood, OK4880_C175_DTGood)
@@ -245,8 +285,14 @@
   droplevels(unique(full_csv$CameraLocation[is.na(full_csv$Species) & full_csv$Animal == "TRUE"]))
   droplevels(unique(full_csv$CameraLocation[is.na(full_csv$Species) & full_csv$Animal == "true"]))
   #  Why are there duplicate observations but one as NA for species?!
-  tst <- alldetections[alldetections$CameraLocation == "NE5921_26" & alldetections$File == "RCNX1616.JPG",]
-  tst <- alldetections[alldetections$CameraLocation == "NE5921_26" & alldetections$File == "RCNX0366.JPG",]
+  tst <- full_csv[full_csv$CameraLocation == "NE5921_26" & full_csv$File == "RCNX1616.JPG",]
+  tst <- full_csv[full_csv$CameraLocation == "NE5921_26" & full_csv$File == "RCNX0366.JPG",]
+  tst <- full_csv[full_csv$CameraLocation == "OK2822_107" & full_csv$File == "RCNX1876.JPG",]
+  tst <- full_csv[full_csv$CameraLocation == "OK3304_122" & full_csv$File == "RCNX4496.JPG",]
+  tst <- full_csv[full_csv$CameraLocation == "OK3725_78" & full_csv$File == "RCNX0735.JPG",]
+  
+  
+  
   #  Not sure what to do about this but at least the species is retained in one version
   
   
@@ -277,4 +323,11 @@
     filter(Service != "TRUE" & Service != "true")
 
   #  Save for later analyses
-  write.csv(alldetections, paste0('./Output/Bassing_AllDetections_', Sys.Date(), '.csv')) # "./Output/Bassing_AllDetections.csv"
+  write.csv(alldetections, paste0('./Output/Bassing_AllDetections_', Sys.Date(), '.csv'))
+
+  
+  #  Filter for capstone students
+  meso <- alldetections %>%
+    filter(Species == "Bobcat" | Species == "Coyote")
+  write.csv(meso, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/MesoDetections_', Sys.Date(), '.csv'))
+  
