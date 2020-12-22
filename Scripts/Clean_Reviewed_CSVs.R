@@ -32,10 +32,9 @@
   ##  %y = year (2 digit); %Y = year (4 digit)
   
   #  Reads in data processed by 3 independent reviewers
-  #mydir <- "G:/My Drive/1 Data/Image Processing/REVIEWING Processed Images/Proofed csvs & ddb" # update later
   mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1"
   myfiles <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE)
-  full_csv <- ldply(myfiles, read_csv, col_names = TRUE) %>%
+  partial_csv1 <- ldply(myfiles, read_csv, col_names = TRUE) %>%
     transmute(
       File = as.character(File),
       RelativePath = as.character(RelativePath),
@@ -249,10 +248,12 @@
   source("./Scripts/Adjust_Incorrect_DATE&TIME.R")
   
   #  Append sourced data to MEGA data file
-  full_csv <- rbind(full_csv, partial_csv2, partial_csv3, probs, prob2, prob3,
+  full_csv <- rbind(partial_csv1, partial_csv2, partial_csv3, probs, prob2, prob3,
                     NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
                     NE3815_C26_C61_DTGood, NE3815_C125_DTGood, 
-                    NE5511_C168_C186_DTGood, OK4880_C175_DTGood)
+                    NE5511_C168_C186_DTGood, OK4880_C175_DTGood) %>%
+    #  Drop service image with incorrect data/time before camera was fully set
+    filter(CameraLocation != "NE5853_Moultrie5" | File != "MFDC0001.JPG")
   
   #  Am I missing any cameras?
   cams <- as.data.frame(unique(full_csv$CameraLocation))
@@ -327,7 +328,24 @@
 
   
   #  Filter for capstone students
+  #  Coyote & bobcat detections
   meso <- alldetections %>%
     filter(Species == "Bobcat" | Species == "Coyote")
   write.csv(meso, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/MesoDetections_', Sys.Date(), '.csv'))
+
+  #  All study species detections for Jessalyn
+  allstudyspp <- alldetections %>%
+    filter(Species == "Elk" | Species == "Moose" | Species == "Mule Deer" | 
+           Species == "White-tailed Deer" | Species == "Cougar" | Species == "Wolf" | 
+           Species == "Black Bear" | Species == "Bobcat" | Species == "Coyote" | 
+           Species == "Turkey" | Species == "Snowshoe Hare" | Species == "Rabbit Spp")
+  write.csv(allstudyspp, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Jessalyn/Bassing_AllStudySpecies_', Sys.Date(), '.csv'))
+  
+  #  Cougar detections
+  cougar.data <- full.tbl %>%
+    filter(Species == "Cougar")
+  #  Double check that we noted all the collars
+  cougar.collars <- cougar.data %>%
+    filter(Collars == "1") %>%
+    select(CameraLocation, DateTime, Date, Time, Species, Count, Collars, Tags, AF, AM, AU, OS, UNK, File, RelativePath)
   
