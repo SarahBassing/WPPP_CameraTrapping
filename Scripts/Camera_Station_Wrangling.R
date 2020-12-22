@@ -5,7 +5,9 @@
   ##  ======================================================
   ##  Organize camera deployment and checking data. Must have created separate csv
   ##  files of the camera deployment and check information and added a column for
-  ##  which year the camera was deployed in.
+  ##  which year the camera was deployed in. Use to gather all site-specific
+  ##  location and deployment data. Final exports are used to generate "problems"
+  ##  data file for camtrapR to use when making encounter histories.
   ##  ======================================================
   
   #  Load packages
@@ -326,7 +328,7 @@
   final_sites <- left_join(full, end, by = (c("Cell_ID", "Camera_ID"))) %>%
     filter(Status.x != "Removed" | dbl_check == 1)
   colnames(final_sites) <- c("Status", "Year", "Date", "Study_Area", "Cell_ID", 
-                             "Camera_ID", "Card_ID", "Camera_Long", "Camera_Lat", 
+                             "Camera_ID", "Card_ID", "Camera_Lat", "Camera_Long", 
                              "Distance_Focal_Point", "Height_frm_grnd", "Trail_Width",
                              "Monitoring", "Canopy_Cov", "Land_Mgnt", "Land_Owner", 
                              "Habitat_Type", "Condition", "Explain1", "Num_Images",
@@ -340,7 +342,8 @@
   #  Keep in mind Year 3 data are not complete
   
   #  Save
-  #write.csv(final_sites, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_10.21.20_skinny.csv")
+  #  Use this to eventually create "problems" All_Camera_Stations files for camtrapR
+  # write.csv(final_sites, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_12.22.20_skinny.csv")
   
   
   
