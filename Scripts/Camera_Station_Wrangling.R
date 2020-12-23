@@ -228,9 +228,9 @@
     
   ## ========================================
   #  Save these master files
-  # write.csv(camera_master_2018, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018_updated.9.25.20.csv")
-  # write.csv(camera_master_2019, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated.9.25.20.csv")
-  # write.csv(camera_master_2020, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2020_updated.9.25.20.csv")
+  # write.csv(camera_master_2018, paste0(file = 'G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018_updated_', Sys.Date(), '.csv'))
+  # write.csv(camera_master_2019, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated_", Sys.Date(), ".csv"))
+  # write.csv(camera_master_2020, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2020_updated_", Sys.Date(), ".csv"))
   ## ========================================
   
   
@@ -279,7 +279,7 @@
   #  Problem dates will have to be extracted from image data (last image taken)
   #  and csv organized by hand in excel
   #  Camera deployment covariates will be propogated to relevant rows by hand in excel
-  # write.csv(all_cams, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_9.25.20.csv")
+  # write.csv(all_cams, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), ".csv"))
   ## =========================================
   
   
@@ -343,7 +343,7 @@
   
   #  Save
   #  Use this to eventually create "problems" All_Camera_Stations files for camtrapR
-  # write.csv(final_sites, file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_12.22.20_skinny.csv")
+  # write.csv(final_sites, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), "_skinny.csv"))
   
   
   
