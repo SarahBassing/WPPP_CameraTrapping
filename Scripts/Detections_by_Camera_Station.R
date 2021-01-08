@@ -30,7 +30,9 @@
   #'  6. Save that shit!
   #'  ============================================
 
-  #'  Load libraries
+  #'  Clean workspace & load libraries
+  rm(list = ls())
+
   library(chron)  
   library(tidyverse)
   
@@ -58,9 +60,10 @@
     filter(Cell_ID != "NE1990" | Status != "Checked") %>%    
     filter(Cell_ID != "NE2383" | Status != "Checked") %>%
     #  Remove duplicates where camera angle changed but location effectively did not
-    filter(Cell_ID != "OK2749" | Camera_Lat != "48.64027") %>%
-    filter(Cell_ID != "OK3667" | Camera_Lat != "48.54991") %>%
-    filter(Cell_ID != "OK7658" | Camera_Lat != "48.17755") %>%
+    #  Actually save this step for later down (match_coord step below)
+    # filter(Cell_ID != "OK2749" | Camera_Lat != "48.64027") %>%
+    # filter(Cell_ID != "OK3667" | Camera_Lat != "48.54991") %>%
+    # filter(Cell_ID != "OK7658" | Camera_Lat != "48.17755") %>%
     #  Remove camera station that did not change but camera # was changed due to damage
     filter(Cell_ID != "OK2145" | Camera_ID != "3") # DON'T FORGET TO CHANGE OK2145_3" to "OK2145_112 in detection data!!!
 
@@ -70,7 +73,7 @@
   deployed <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_18-19_updated_12.22.20.csv")
   
   #'  Species detection data  
-  alldetections <- read.csv("./Output/Bassing_AllDetections_2020-12-24.csv") %>%
+  alldetections <- read.csv("./Output/Bassing_AllDetections_2020-12-26.csv") %>%
     select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -129,7 +132,7 @@
   #'  Append correct camera location data to each image. Important for cameras
   #'  that moved part way through the season to a different location within the
   #'  grid cell so all site-specific variables & coordinates changed. 
-  #'  Year 1: NE2881_9, NE2902_22, NE3903_25, & NE5094_10
+  #'  Year 1: NE2881_9, NE2902_22, NE3903_25, NE5094_10, OK2749, OK3667, OK7658
   
   #'  First double check that all coordinates match up between databases!
   #'  The only NAs should occur with start/end dates for cameras that moved to 
@@ -139,7 +142,8 @@
   #'  data and no NAs.
   #'  Note: will end up with extra rows in my final data set (full_dat) as a 
   #'  result and need to drop them at the very end.
-  #'  Yr1 cams with OK NAs: NE3149_8, NE5740_15, NE5853_20, NE6491_34... should be more
+  #'  Yr1 cams with NAs that are ok: NE3149_8, NE5740_15, NE5853_20, NE6491_34, 
+  #'  OK2749_59, OK3667_92, & OK7858_43
   match_coord <- full_join(stations, deployed, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude"))
   
   #'  Join original stations (don't account for moves) with start/end data for all stations
@@ -255,8 +259,8 @@
   SEFS521_camdata <- full_dat %>%
     filter(Species == "Cougar" | Species == "Elk")
   
-  #'  Save for group project!
-  write.csv(full_dat, "G:/My Drive/1_Repositories/WPPP_Data_Integration/full_camdata.csv")
+  #'  Save for projects!
+  write.csv(full_dat, paste0("./Output/full_camdata_", Sys.Date(), ".csv"))
   write.csv(SEFS521_camdata, "G:/My Drive/1_Repositories/WPPP_Data_Integration/SEFS521_camdata.csv")
   
   
@@ -264,10 +268,35 @@
   #'  Make the species detection data spatial based on CameraLocation lat/long
   #'  Load required packages
   require(sf)
+  require(ggplot2)
   #'  Define coordinate projection
   wgs84 <- st_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
-  NEdat <- st_as_sf(full_dat, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
-
+  
+  #'  Read in and transform study area shapefiles
+  OK_SA <- st_read("./Shapefiles/fwdstudyareamaps", layer = "METHOW_SA")
+  NE_SA <- st_read("./Shapefiles/fwdstudyareamaps", layer = "NE_SA")
+  OK_wgs84 <- st_transform(OK_SA, wgs84)
+  NE_wgs84 <- st_transform(NE_SA, wgs84)
+  
+  #'  Create spatial objects from detection data
+  Yr1dat <- st_as_sf(full_dat, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  Yr1spp <- group_split(Yr1dat, Yr1dat$Species)
+  Yr1wolf <- Yr1dat[Yr1dat$Species == "Wolf",]
+  Yr1bear <- Yr1dat[Yr1dat$Species == "Black Bear",]
+  Yr1coug <- Yr1dat[Yr1dat$Species == "Cougar",]
+  Yr1elk <- Yr1dat[Yr1dat$Species == "Elk",]
+  Yr1moose <- Yr1dat[Yr1dat$Species == "Moose",]
+  Yr1md <- Yr1dat[Yr1dat$Species == "Mule Deer",]
+  Yr1wtd <- Yr1dat[Yr1dat$Species == "White-tailed Deer",]
+  
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = Yr1spp[[1]])
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = Yr1elk)
   
   
   
