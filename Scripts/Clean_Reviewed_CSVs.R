@@ -136,18 +136,14 @@
     )
   #str(partial_csv3)
   
-  #  For some reason all Species classification data are changed to "NA"
+  #  For some reason all classification data are changed to "NA" in these image 
+  #  sets. Likely to do with some data being recognized as logical vs characters.
+  #  Not sure why this is happening... very annoying.
   #  Read in separately and the problem doesn't occur
-  proba <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/NE5921_26_C84, 101, 174_CH_REVIEWED.csv")
-  probb <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/NE6491_34_C104&C126_CH_REVIEWED.csv")
-  probc <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/OK3304_22_C28_C45_CH_REVIEWED.csv")
-  probd <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/OK2822_C43_C200_CH_REVIEWED.csv")
-  probe <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/OK3725_78_C246_TT_REVIEWED.csv")
-  probf <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/OK3725_C187_CH_REVIEWED.csv")  
-  probs <- rbind(proba, probb, probc, probd, probe, probf) %>% 
-  # mydir4 <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird"
-  # myfiles4 <- list.files(path = mydir4, pattern = "*.csv", full.names = TRUE)
-  # partial_csv4 <- ldply(myfiles4, read_csv, col_names = TRUE) %>%
+  mydir4 <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird"
+  partial_weird1 <- list.files(path = mydir4, pattern = "*.csv", full.names = TRUE) %>% 
+    lapply(read.csv, stringsAsFactors = F) %>% 
+    bind_rows %>%
     transmute(
       File = as.character(File),
       RelativePath = as.character(RelativePath),
@@ -178,7 +174,11 @@
       SecondOp = as.factor(as.character(SecondOpinion))
     )
   
-  prob2 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/Why_are_you_weird/NE3558_69_C88_C105_DM.csv") %>%
+  #  Same deal with un-reviewed files
+  mydir5 <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/Why_are_you_weird"
+  partial_weird2 <- list.files(path = mydir5, pattern = "*.csv", full.names = TRUE) %>% 
+    lapply(read.csv, stringsAsFactors = F) %>% 
+    bind_rows %>%
     transmute(
       File = as.character(File),
       RelativePath = as.character(RelativePath),
@@ -209,9 +209,15 @@
       SecondOp = as.factor(as.character(SecondOpinion))
     )
   
-  prob3 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Why_are_you_weird/NE1487_30_C178_SBB_REVIEWED.csv")
+  #  This one really doesn't want to get with the program so reading in separately
+  prob1 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Problems/NE1487_30_C178_SBB_REVIEWED.csv")
   #  Date format of 1st row is weird, need to drop it (service image so no big loss)
-  prob3 <- prob3[-1,] %>%
+  #  And drop extra empty column at end of data frame
+  prob1 <- prob1[-1,-34]
+  prob2 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/Problems/OK6771_16_C147_CB.csv")
+  prob3 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Problems/NE5022_56_C115_KB-vehicles_REVIEWED.csv")
+  prob3 <- prob3[,-34]
+  probs <- rbind(prob1, prob2, prob3) %>%
     transmute(
       File = as.character(File),
       RelativePath = as.character(RelativePath),
@@ -248,7 +254,8 @@
   source("./Scripts/Adjust_Incorrect_DATE&TIME.R")
   
   #  Append sourced data to MEGA data file
-  full_csv <- rbind(partial_csv1, partial_csv2, partial_csv3, probs, prob2, prob3,
+  full_csv <- rbind(partial_csv1, partial_csv2, partial_csv3, partial_weird1, 
+                    partial_weird2, probs,
                     NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
                     NE3815_C26_C61_DTGood, NE3815_C125_DTGood, 
                     NE5511_C168_C186_DTGood, OK4880_C175_DTGood) %>%
@@ -291,13 +298,11 @@
   tst <- full_csv[full_csv$CameraLocation == "OK2822_107" & full_csv$File == "RCNX1876.JPG",]
   tst <- full_csv[full_csv$CameraLocation == "OK3304_122" & full_csv$File == "RCNX4496.JPG",]
   tst <- full_csv[full_csv$CameraLocation == "OK3725_78" & full_csv$File == "RCNX0735.JPG",]
+  #  Has to do with mystery formating of original csv files. As long as I read
+  #  these weird ones in separately the problem seems to go away...
   
-  
-  
-  #  Not sure what to do about this but at least the species is retained in one version
-  
-  
-  ####  Eventually need to deal with these duplicate observations....  ####
+  #  Which ones are reading in as lower-cased "true"/"false"? This is causing problems
+  droplevels(unique(full_csv$CameraLocation[full_csv$Animal == "true"]))
   
   
   #  Identify which cameras have images that were never reviewed or where info
@@ -306,9 +311,6 @@
   droplevels(unique(full_csv$CameraLocation[full_csv$Animal == "false" & full_csv$Human == "false" & full_csv$Vehicle == "false"]))
   trouble <- full_csv[full_csv$Animal == "FALSE" & full_csv$Human == "FALSE" & full_csv$Vehicle == "FALSE",]
   #  BRB, gotta fix these
-
-  #  Which ones are reading in as lower-cased "true"/"false"? This is causing problems
-  droplevels(unique(full_csv$CameraLocation[full_csv$Animal == "true"]))
 
   #  Identify which images still need a second review
   unique(full_csv$CameraLocation[which(full_csv$SecondOp == "TRUE" | full_csv$SecondOp == "true")])
@@ -321,7 +323,7 @@
   #  Filter service and empty images out
   alldetections <- full_csv %>%
     filter(Empty != "TRUE" & Empty != "true") %>%
-    filter(Service != "TRUE" & Service != "true")
+    filter(Service != "TRUE" & Service != "true") 
 
   #  Save for later analyses
   write.csv(alldetections, paste0('./Output/Bassing_AllDetections_', Sys.Date(), '.csv'))
@@ -330,7 +332,8 @@
   #  Filter for capstone students
   #  Coyote & bobcat detections
   meso <- alldetections %>%
-    filter(Species == "Bobcat" | Species == "Coyote")
+    filter(Species == "Bobcat" | Species == "Coyote") %>%
+    filter(!grepl("Moultrie", CameraLocation))
   write.csv(meso, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/MesoDetections_', Sys.Date(), '.csv'))
 
   #  All study species detections for Jessalyn
@@ -338,7 +341,8 @@
     filter(Species == "Elk" | Species == "Moose" | Species == "Mule Deer" | 
            Species == "White-tailed Deer" | Species == "Cougar" | Species == "Wolf" | 
            Species == "Black Bear" | Species == "Bobcat" | Species == "Coyote" | 
-           Species == "Turkey" | Species == "Snowshoe Hare" | Species == "Rabbit Spp")
+           Species == "Turkey" | Species == "Snowshoe Hare" | Species == "Rabbit Spp") %>%
+    filter(!grepl("Moultrie", CameraLocation))
   write.csv(allstudyspp, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Jessalyn/Bassing_AllStudySpecies_', Sys.Date(), '.csv'))
   
   #  Cougar detections
