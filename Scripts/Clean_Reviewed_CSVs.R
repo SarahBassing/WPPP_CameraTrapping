@@ -13,7 +13,9 @@
   ##  and empty images out.
   ##  ------------------------------------------------------------
   
-  ## Load packages
+  ## Clean workspace & Load packages
+  
+  rm(list = ls())
   
   library(chron)
   library(plyr)
@@ -214,10 +216,10 @@
   #  Date format of 1st row is weird, need to drop it (service image so no big loss)
   #  And drop extra empty column at end of data frame
   prob1 <- prob1[-1,-34]
-  prob2 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/Problems/OK6771_16_C147_CB.csv")
+  prob2 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/Problems/NE4771_95_C95&C24_AMR-vehicles.csv")
   prob3 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Problems/NE5022_56_C115_KB-vehicles_REVIEWED.csv")
   prob3 <- prob3[,-34]
-  probs <- rbind(prob1, prob2, prob3) %>%
+  probs <- rbind(prob1, prob2, prob3) %>%  # 
     transmute(
       File = as.character(File),
       RelativePath = as.character(RelativePath),
@@ -280,7 +282,6 @@
   #  DT_Good marked FALSE
   droplevels(unique(full_csv$CameraLocation[which(full_csv$DT_Good == "FALSE" | full_csv$DT_Good == "false")]))
   unique(full_csv$RelativePath[which(full_csv$DT_Good == "FALSE" | full_csv$DT_Good == "false")])
-
   #  Flagged as having incorrect DateTime but I have confirmed they are correct
   #  NE3000_48_C231
   #  NE4498_21_C6
@@ -294,11 +295,8 @@
   droplevels(unique(full_csv$CameraLocation[is.na(full_csv$Species) & full_csv$Animal == "true"]))
   #  Why are there duplicate observations but one as NA for species?!
   tst <- full_csv[full_csv$CameraLocation == "NE5921_26" & full_csv$File == "RCNX1616.JPG",]
-  tst <- full_csv[full_csv$CameraLocation == "NE5921_26" & full_csv$File == "RCNX0366.JPG",]
-  tst <- full_csv[full_csv$CameraLocation == "OK2822_107" & full_csv$File == "RCNX1876.JPG",]
-  tst <- full_csv[full_csv$CameraLocation == "OK3304_122" & full_csv$File == "RCNX4496.JPG",]
-  tst <- full_csv[full_csv$CameraLocation == "OK3725_78" & full_csv$File == "RCNX0735.JPG",]
-  #  Has to do with mystery formating of original csv files. As long as I read
+  tst <- full_csv[full_csv$CameraLocation == "OK6562_66",]
+  #  Has to do with mystery formatting of original csv files. As long as I read
   #  these weird ones in separately the problem seems to go away...
   
   #  Which ones are reading in as lower-cased "true"/"false"? This is causing problems
@@ -306,7 +304,7 @@
   
   
   #  Identify which cameras have images that were never reviewed or where info
-  #  was incorrectly propogated across empty images
+  #  was incorrectly propagated across empty images
   droplevels(unique(full_csv$CameraLocation[full_csv$Animal == "FALSE" & full_csv$Human == "FALSE" & full_csv$Vehicle == "FALSE"]))
   droplevels(unique(full_csv$CameraLocation[full_csv$Animal == "false" & full_csv$Human == "false" & full_csv$Vehicle == "false"]))
   trouble <- full_csv[full_csv$Animal == "FALSE" & full_csv$Human == "FALSE" & full_csv$Vehicle == "FALSE",]
@@ -330,11 +328,19 @@
 
   
   #  Filter for capstone students
-  #  Coyote & bobcat detections
+  #  Coyote, bobcat & human detections for Alyssa
   meso <- alldetections %>%
     filter(Species == "Bobcat" | Species == "Coyote") %>%
     filter(!grepl("Moultrie", CameraLocation))
-  write.csv(meso, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/MesoDetections_', Sys.Date(), '.csv'))
+  #  Human detections (on foot and vehicle)
+  humans <- alldetections %>%
+    filter(Human == "TRUE" | Human == "true" | Vehicle == "TRUE" | Vehicle == "true") %>%
+    filter(!grepl("Moultrie", CameraLocation)) %>%
+    mutate(
+      Species = ifelse(Species == "Human", NA, as.character(Species))
+    )
+  Alyssa_data <- rbind(meso, humans)
+  write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_data_', Sys.Date(), '.csv'))
 
   #  All study species detections for Jessalyn
   allstudyspp <- alldetections %>%
