@@ -30,8 +30,104 @@
   ##
   ##  SCREW YOU POSIXct
   ##  %d = day of month (decimal number)
-  ##  %m = month (decimal number); %b month (abreviated); %B = month (full name)
+  ##  %m = month (decimal number); %b month (abbreviated); %B = month (full name)
   ##  %y = year (2 digit); %Y = year (4 digit)
+  
+  
+  #  Read in each file, identify the structure of the date and factor columns,
+  #  identify problem image sets, reformat columns, and bind together in final
+  #  dataset
+  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Test"
+  myfiles <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE)
+  file_list <- lapply(myfiles, read_csv)
+  
+  
+  hm <- file_list[[2]]
+  
+  
+  tst <- file_list[[9]] %>%
+    mutate(
+      #DateNew = ifelse(nchar(Date) == 11, as.Date(Date, format = "%d-%b-%Y"), Date)
+      #DateNew = ifelse(nchar(Date) <= 9, as.Date(Date, format = "%d-%b-%y"), Date)
+      #DateNew = ifelse(nchar(Date) == 11, format(as.Date(Date, format = "%d-%b-%Y"), "%Y-%m-%d"), Date)
+      #DateNew = ifelse(nchar(Date) <= 9, format(as.Date(Date, format = "%d-%b-%y"), "%Y-%m-%d"), Date)
+      DateNew = ifelse(nchar(Date) == 11, format(as.Date(parse_date_time(Date,"dbY")), "%Y-%m-%d"), Date),
+      DateNew = ifelse(nchar(Date) <= 9, format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), Date)
+      # DateNew = format(as.Date(Date, format = "%d-%b-%Y"), "%Y-%m-%d"),
+      # DateNew = as.Date(DateNew, format = "%Y-%m-%d")
+    )
+ 
+
+  for(i in 1:nrow(file_list[[9]])){
+    if (nchar(file_list[[9]]$Date) == 11) tst = format(as.Date(file_list[[9]]$Date, format = "%d-%b-%Y"), "%Y-%m-%d")
+    else(if (nchar(file_list[[9]]$Date) <= 9) tst = format(as.Date(file_list[[9]]$Date, format = "%d-%b-%y"), "%Y-%m-%d")
+         else tst = file_list[[9]]$Date)
+  }
+  
+  format_date <- function(dat) {
+    tst <- c()
+    for(i in 1:nrow(dat)){
+      if (nchar(dat$Date) == 11) tst = format(as.Date(dat$Date, format = "%d-%b-%Y"), "%Y-%m-%d")
+        else(if (nchar(dat$Date) <= 9) tst = format(as.Date(dat$Date, format = "%d-%b-%y"), "%Y-%m-%d")
+             else tst = dat$Date)
+    }
+    GoodDate <- as.data.frame(tst)  
+    datfinal <- cbind(dat, GoodDate)
+    return(datfinal)
+  }
+  
+  format_date <- function(dat) {
+    tst <- c()
+    for(i in 1:nrow(dat)){
+      if (nchar(dat$Date) == 11) tst = format(as.Date(parse_date_time(dat$Date,"dbY")), "%Y-%m-%d")
+      else(if (nchar(dat$Date) <= 9) tst = format(as.Date(parse_date_time(dat$Date,"dby")), "%Y-%m-%d")
+           else tst = dat$Date)
+    }
+    GoodDate <- as.data.frame(tst)  
+    datfinal <- cbind(dat, GoodDate)
+    return(datfinal)
+  }
+  
+  format_date <- function(dat) {
+      tst <- dat %>%
+        mutate(
+          DateNew = ifelse(nchar(Date) == 11, format(as.Date(parse_date_time(Date,"dbY")), "%Y-%m-%d"), Date),
+          DateNew = ifelse(nchar(Date) <= 9, format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), DateNew),
+          #  Correct date format should have 10 characters (YYYY-MM-DD)
+          Date_10char = ifelse(nchar(DateNew) != 10, "Fail", "Good"),
+          #  Correct date format should be in the 2000's (not 0018, etc.)
+          Date_2000 = ifelse(year(DateNew) == 0018 | year(DateNew) == 0019 | year(DateNew) == 0020, "Fail", "Good")
+        )
+    return(tst)
+  }
+  
+  mylist <- list(file_list[[1]], file_list[[2]], file_list[[3]], file_list[[9]]) #file_list[[1]], file_list[[2]], file_list[[3]], file_list[[8]], file_list[[9]]
+  wah <- lapply(file_list, format_date)
+  wah1 <- wah[[1]]
+  wah2 <- wah[[2]]
+  wah3 <- wah[[3]]
+  wah4 <- wah[[4]]
+  wah5 <- wah[[5]]
+  wah6 <- wah[[6]]
+  wah7 <- wah[[7]]
+  wah8 <- wah[[8]]
+  wah9 <- wah[[9]]
+  wah10 <- wah[[10]]
+    
+    mutate(
+      #DateNew = ifelse(nchar(Date) == 11, as.Date(Date, format = "%d-%b-%Y"), Date)
+      #DateNew = ifelse(nchar(Date) <= 9, as.Date(Date, format = "%d-%b-%y"), Date)
+      tst = ifelse(nchar(Date) == 11, format(as.Date(Date, format = "%d-%b-%Y"), "%Y-%m-%d"), Date)
+      #tst = ifelse(nchar(Date) <= 9, format(as.Date(Date, format = "%d-%b-%y"), "%Y-%m-%d"), Date)
+      # DateNew = format(as.Date(Date, format = "%d-%b-%Y"), "%Y-%m-%d"),
+      # DateNew = as.Date(DateNew, format = "%Y-%m-%d")
+    ) 
+  
+  
+    
+  
+  
+  
   
   #  Reads in data processed by 3 independent reviewers
   mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1"
@@ -41,10 +137,10 @@
       File = as.character(File),
       RelativePath = as.character(RelativePath),
       Folder = as.character(Folder),
-      DateTime = as.POSIXct(paste(Date, Time),
-                            format="%d-%b-%Y %H:%M:%S",tz="America/Los_Angeles"),
       Date = as.Date(Date, format = "%d-%b-%Y"),
       Time = chron(times = Time),
+      DateTime = as.POSIXct(paste(Date, Time),
+                            format="%d-%b-%Y %H:%M:%S",tz="America/Los_Angeles"),
       ImageQuality = as.factor(ImageQuality),
       CameraLocation = as.factor(as.character(CameraLocation)),
       DT_Good = as.factor(as.character(DT_Good)),
@@ -225,7 +321,7 @@
       RelativePath = as.character(RelativePath),
       Folder = as.character(Folder),
       DateTime = as.POSIXct(paste(Date, Time),
-                            format="%d-%b-%y %H:%M:%S",tz="America/Los_Angeles"), 
+                            format="%d-%b-%y %H:%M:%S",tz="America/Los_Angeles"),
       Date = as.Date(Date, format = "%d-%b-%y"), 
       Time = chron(times = Time),
       ImageQuality = as.factor(ImageQuality),
@@ -322,9 +418,20 @@
   alldetections <- full_csv %>%
     filter(Empty != "TRUE" & Empty != "true") %>%
     filter(Service != "TRUE" & Service != "true") 
+  
+  #  Consider adding this to alldetections to make for a cleaner data set
+  #  Every detection would have something listed under the Species column
+  #  But need to make sure it's not hiding errors in the data
+  #  Need to have something in the Species column for each detection
+  # mutate(
+  #   Species = ifelse(Human == "TRUE" | Human == "true", "Human", Species),
+  #   Species = ifelse(Vehicle == "TRUE" | Vehicle == "true", "Vehicle", Species),
+  #   Species = ifelse(Species == "", "NA", Species),
+  #   HumanActivity = ifelse(HumanActivity == "", "NA", HumanActivity)
+  # )
 
   #  Save for later analyses
-  write.csv(alldetections, paste0('./Output/Bassing_AllDetections_', Sys.Date(), '.csv'))
+  # write.csv(alldetections, paste0('./Output/Bassing_AllDetections_', Sys.Date(), '.csv'))
 
   
   #  Filter for capstone students
@@ -340,7 +447,7 @@
       Species = ifelse(Species == "Human", NA, as.character(Species))
     )
   Alyssa_data <- rbind(meso, humans)
-  write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_data_', Sys.Date(), '.csv'))
+  # write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_data_', Sys.Date(), '.csv'))
 
   #  All study species detections for Jessalyn
   allstudyspp <- alldetections %>%
@@ -349,7 +456,7 @@
            Species == "Black Bear" | Species == "Bobcat" | Species == "Coyote" | 
            Species == "Turkey" | Species == "Snowshoe Hare" | Species == "Rabbit Spp") %>%
     filter(!grepl("Moultrie", CameraLocation))
-  write.csv(allstudyspp, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Jessalyn/Bassing_AllStudySpecies_', Sys.Date(), '.csv'))
+  # write.csv(allstudyspp, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Jessalyn/Bassing_AllStudySpecies_', Sys.Date(), '.csv'))
   
   #  Cougar detections
   cougar.data <- full.tbl %>%
