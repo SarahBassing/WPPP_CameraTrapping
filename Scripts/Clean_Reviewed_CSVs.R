@@ -37,12 +37,104 @@
   #  Read in each file, identify the structure of the date and factor columns,
   #  identify problem image sets, reformat columns, and bind together in final
   #  dataset
+  # mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Test"
+  # myfiles <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE)
+  # file_list <- lapply(myfiles, read_csv)
+  # file_list <- ldply(myfiles, read_csv, col_names = TRUE)
   mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Test"
-  myfiles <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE)
-  file_list <- lapply(myfiles, read_csv)
+  csv_files <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>% 
+    #  col_types forces all columns to be characters
+    #  try ~fread instead of ~read.csv too
+    map_df(~read_csv(., col_types = cols(.default = "c"))) %>%
+    mutate(
+      #  Reformat dates based on the structure of the character string
+      DateNew = ifelse(nchar(Date) == 11, 
+                       format(as.Date(parse_date_time(Date,"dbY")), "%Y-%m-%d"), Date),
+      DateNew = ifelse(nchar(Date) <= 9, 
+                       format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), DateNew),
+      #  Correct date format should have 10 characters (YYYY-MM-DD)
+      Date_10char = ifelse(nchar(DateNew) != 10, "Fail", "Good"),
+      #  Correct date format should be in the 2000's (not 0018, etc.)
+      Date_2000 = ifelse(year(DateNew) == 0018 | year(DateNew) == 0019 | year(DateNew) == 0020, 
+                         "Fail", "Good"),
+      CameraLocation = as.factor(as.character(CameraLocation)),
+      DT_Good = ifelse(DT_Good == "true", "TRUE", DT_Good),
+      DT_Good = ifelse(DT_Good == "false", "FALSE", DT_Good),
+      DT_Good = as.factor(as.character(DT_Good)),
+      Service = ifelse(Service == "true", "TRUE", Service),
+      Service = ifelse(Service == "false", "FALSE", Service),
+      Service = as.factor(as.character(Service)),
+      Empty = ifelse(Empty == "true", "TRUE", Empty),
+      Empty = ifelse(Empty == "false", "FALSE", Empty),
+      Empty = as.factor(as.character(Empty)),
+      Animal = ifelse(Animal == "true", "TRUE", Animal),
+      Animal = ifelse(Animal == "false", "FALSE", Animal),
+      Animal = as.factor(as.character(Animal)),
+      Human = ifelse(Human == "true", "TRUE", Human),
+      Human = ifelse(Human == "false", "FALSE", Human),
+      Human = as.factor(as.character(Human)),
+      Vehicle = ifelse(Vehicle == "true", "TRUE", Vehicle),
+      Vehicle = ifelse(Vehicle == "false", "FALSE", Vehicle),
+      Vehicle = as.factor(as.character(Vehicle)),
+      Species = as.character(Species),
+      HumanActivity = as.character(HumanActivity),
+      Count = as.numeric(Count),
+      AdultFemale = as.numeric(AdultFemale),
+      AdultMale = as.numeric(AdultMale), 
+      AdultUnknown = as.numeric(AdultUnknown),
+      Offspring = as.numeric(Offspring),
+      UNK = as.numeric(UNK),
+      Collars = as.numeric(Collars),
+      Tags = as.character(Tags),
+      NaturalMarks = as.character(NaturalMarks),
+      SecondOpinion = as.numeric(SecondOpinion),
+      Comments = as.character(Comments)
+    )
+  
+  fail_10char <- csv_files[csv_files$Date_10char == "Fail",]
+  fail_2000 <- csv_files[csv_files$Date_2000 == "Fail",]
   
   
-  hm <- file_list[[2]]
+  megadata <- as.data.frame(csv_files) %>%
+      transmute(
+        File = as.character(File),
+        RelativePath = as.character(RelativePath),
+        Folder = as.character(Folder),
+        Date = DateNew,
+        # Date = as.Date(Date, format = "%d-%b-%Y"),
+        Time = chron(times = Time),
+        DateTime = as.POSIXct(paste(DateNew, Time),
+                              format="%Y-%m-%d %H:%M:%S",tz="America/Los_Angeles"),
+        ImageQuality = as.factor(ImageQuality),
+        CameraLocation = as.factor(as.character(CameraLocation)),
+        DT_Good = as.factor(as.character(DT_Good)),
+        Service = as.factor(as.character(Service)),
+        Empty = as.factor(as.character(Empty)),
+        Animal = as.factor(as.character(Animal)),
+        Human = as.factor(as.character(Human)),
+        Vehicle = as.factor(as.character(Vehicle)),
+        Species = as.factor(as.character(Species)),
+        HumanActivity = as.factor(as.character(HumanActivity)),
+        Count = as.numeric(Count),
+        AF = as.numeric(AdultFemale),
+        AM = as.numeric(AdultMale),
+        AU = as.numeric(AdultUnknown),
+        OS = as.numeric(Offspring),
+        UNK = as.numeric(UNK),
+        Collars = as.numeric(Collars),
+        Tags = as.character(Tags),
+        Color = as.character(NaturalMarks),
+        SecondOp = as.factor(as.character(SecondOpinion))
+    )
+  
+  
+  
+  
+  
+  
+  
+  NE2947 <- read.csv("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Test/NE2947_12_C24_C81_CH_REVIEWED.csv")
+  hm <- file_list[[6]]
   
   
   tst <- file_list[[9]] %>%
@@ -52,7 +144,7 @@
       #DateNew = ifelse(nchar(Date) == 11, format(as.Date(Date, format = "%d-%b-%Y"), "%Y-%m-%d"), Date)
       #DateNew = ifelse(nchar(Date) <= 9, format(as.Date(Date, format = "%d-%b-%y"), "%Y-%m-%d"), Date)
       DateNew = ifelse(nchar(Date) == 11, format(as.Date(parse_date_time(Date,"dbY")), "%Y-%m-%d"), Date),
-      DateNew = ifelse(nchar(Date) <= 9, format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), Date)
+      DateNew = ifelse(nchar(Date) <= 9, format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), DateNew)
       # DateNew = format(as.Date(Date, format = "%d-%b-%Y"), "%Y-%m-%d"),
       # DateNew = as.Date(DateNew, format = "%Y-%m-%d")
     )
@@ -91,18 +183,47 @@
   format_date <- function(dat) {
       tst <- dat %>%
         mutate(
-          DateNew = ifelse(nchar(Date) == 11, format(as.Date(parse_date_time(Date,"dbY")), "%Y-%m-%d"), Date),
-          DateNew = ifelse(nchar(Date) <= 9, format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), DateNew),
+          #  Reformat dates based on the structure of the character string
+          DateNew = ifelse(nchar(Date) == 11, 
+                           format(as.Date(parse_date_time(Date,"dbY")), "%Y-%m-%d"), Date),
+          DateNew = ifelse(nchar(Date) <= 9, 
+                           format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), DateNew),
           #  Correct date format should have 10 characters (YYYY-MM-DD)
           Date_10char = ifelse(nchar(DateNew) != 10, "Fail", "Good"),
           #  Correct date format should be in the 2000's (not 0018, etc.)
-          Date_2000 = ifelse(year(DateNew) == 0018 | year(DateNew) == 0019 | year(DateNew) == 0020, "Fail", "Good")
+          Date_2000 = ifelse(year(DateNew) == 0018 | year(DateNew) == 0019 | year(DateNew) == 0020, 
+                             "Fail", "Good")
         )
     return(tst)
   }
   
-  mylist <- list(file_list[[1]], file_list[[2]], file_list[[3]], file_list[[9]]) #file_list[[1]], file_list[[2]], file_list[[3]], file_list[[8]], file_list[[9]]
+  format_TF <- function(dat) {
+    tst <- dat %>%
+      mutate(
+        Service = ifelse(Service == "true", "TRUE", Service),
+        Service = ifelse(Service == "false", "FALSE", Service),
+        Service = as.factor(as.character(Service)),
+        Empty = ifelse(Empty == "true", "TRUE", Empty),
+        Empty = ifelse(Empty == "false", "FALSE", Empty),
+        Empty = as.factor(as.character(Empty)),
+        # Animal = ifelse(Animal == "true", "TRUE", Animal),
+        # Animal = ifelse(Animal == "false", "FALSE", Animal),
+        # Animal = as.factor(as.character(Animal)),
+        # Human = ifelse(Human == "true", "TRUE", Human),
+        # Human = ifelse(Human == "false", "FALSE", Human),
+        # Human = as.factor(as.character(Human)),
+        # Vehicle = ifelse(Vehicle == "true", "TRUE", Vehicle),
+        # Vehicle = ifelse(Vehicle == "false", "FALSE", Vehicle),
+        # Vehicle = as.factor(as.character(Vehicle)),
+        Species = as.character(Species),
+        HumanActivity = as.character(HumanActivity)
+      )
+  }
+  
+  
+  # mylist <- list(file_list[[1]], file_list[[2]], file_list[[3]], file_list[[9]]) #file_list[[1]], file_list[[2]], file_list[[3]], file_list[[8]], file_list[[9]]
   wah <- lapply(file_list, format_date)
+  wah <- lapply(file_list, format_TF)
   wah1 <- wah[[1]]
   wah2 <- wah[[2]]
   wah3 <- wah[[3]]
