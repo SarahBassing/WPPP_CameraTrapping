@@ -16,32 +16,94 @@
 
   
   #  Read in data where date & time are incorrect
-  NE3000_S3_C18 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3000_C18_S3_CH_REVIEWED_DATETIMEWRONG.csv")
-  NE3109_S4_C31_C96_C131 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3109_113, Moultrie3_C31, C96, C131, S4_SBB_REVIEWED.csv") 
-  NE3815_C125 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3815_28_C125_CH_REVIEWED_datetimeweird.csv")
-  NE3815_C26_C61 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3815_28_C26_61_CH_REVIEWED_datetimewrongC61.csv") 
-  NE5511_C168_C186 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE5511_54_C168_C186_CH_REVIEWED-DATETIMEWRONG.csv")
-  OK4880_C175 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/OK4880_C175_CH_REVIEWED_DATEOFF1DAY.csv")
+  # NE3000_S3_C18 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3000_C18_S3_CH_REVIEWED_DATETIMEWRONG.csv")
+  # NE3109_S4_C31_C96_C131 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3109_113, Moultrie3_C31, C96, C131, S4_SBB_REVIEWED.csv") 
+  # NE3815_C125 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3815_28_C125_CH_REVIEWED_datetimeweird.csv")
+  # NE3815_C26_C61 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3815_28_C26_61_CH_REVIEWED_datetimewrongC61.csv") 
+  # NE5511_C168_C186 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE5511_54_C168_C186_CH_REVIEWED-DATETIMEWRONG.csv")
+  # OK4880_C175 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/OK4880_C175_CH_REVIEWED_DATEOFF1DAY.csv")
+  #OK4306_78
+  #OK4944_96
+  #OK5719_96
   #OK7237_C159_C241 <- read.csv("./Processed Image Data/Year 1/Format 1/OK7237_99_C159_C241_SZ.csv")
-  
+
   
   # OK5712 & OK4944 need to be adjusted for Yr 2 data
   
+  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/DATETIMEWRONG"
+  csv_files <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>% 
+    #  col_types forces all columns to be characters
+    #  Forcing to character addresses issue w/ inconsistent typecasting of columns
+    map_df(~read_csv(., col_types = cols(.default = "c"))) %>%
+    mutate(
+      #  Reformat dates based on the structure of the character string
+      DateNew = ifelse(nchar(Date) == 11, 
+                       format(as.Date(parse_date_time(Date,"dbY")), "%Y-%m-%d"), Date),
+      DateNew = ifelse(nchar(Date) <= 9, 
+                       format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), DateNew),
+      #  Add extra columns to identify potential errors in date conversion
+      #  Correct date format should have 10 characters (YYYY-MM-DD)
+      Date_10char = ifelse(nchar(DateNew) != 10, "Fail", "Good"),
+      #  Correct date format should be in the 2000's (not 0018, etc.)
+      Date_2000 = ifelse(year(DateNew) == 0018 | year(DateNew) == 0019 | year(DateNew) == 0020, 
+                         "Fail", "Good"),
+      CameraLocation = as.factor(as.character(CameraLocation)),
+      #  Reformat columns to the desired format
+      DT_Good = ifelse(DT_Good == "true", "TRUE", DT_Good),
+      DT_Good = ifelse(DT_Good == "false", "FALSE", DT_Good),
+      DT_Good = as.factor(as.character(DT_Good)),
+      Service = ifelse(Service == "true", "TRUE", Service),
+      Service = ifelse(Service == "false", "FALSE", Service),
+      Service = as.factor(as.character(Service)),
+      Empty = ifelse(Empty == "true", "TRUE", Empty),
+      Empty = ifelse(Empty == "false", "FALSE", Empty),
+      Empty = as.factor(as.character(Empty)),
+      Animal = ifelse(Animal == "true", "TRUE", Animal),
+      Animal = ifelse(Animal == "false", "FALSE", Animal),
+      Animal = as.factor(as.character(Animal)),
+      Human = ifelse(Human == "true", "TRUE", Human),
+      Human = ifelse(Human == "false", "FALSE", Human),
+      Human = as.factor(as.character(Human)),
+      Vehicle = ifelse(Vehicle == "true", "TRUE", Vehicle),
+      Vehicle = ifelse(Vehicle == "false", "FALSE", Vehicle),
+      Vehicle = as.factor(as.character(Vehicle)),
+      Species = as.character(Species),
+      HumanActivity = as.character(HumanActivity),
+      Count = as.numeric(Count),
+      AdultFemale = as.numeric(AdultFemale),
+      AdultMale = as.numeric(AdultMale), 
+      AdultUnknown = as.numeric(AdultUnknown),
+      Offspring = as.numeric(Offspring),
+      UNK = as.numeric(UNK),
+      Collars = as.numeric(Collars),
+      Tags = as.character(Tags),
+      NaturalMarks = as.character(NaturalMarks),
+      SecondOpinion = ifelse(SecondOpinion == "true", "TRUE", SecondOpinion),
+      SecondOpinion = ifelse(SecondOpinion == "false", "FALSE", SecondOpinion),
+      SecondOpinion = as.factor(as.character(SecondOpinion)),
+      Comments = as.character(Comments)
+    )
+  
   #  Step 1
-  #  Function to format raw csv data so date, time, and other values are in a 
-  #  consistent format that can be manipulated further
+  #  Re-format raw csv data so date, time, and other values are in a consistent 
+  #  format that can be manipulated further. Somewhat repetitive from above.
   #  Important time zones: 
   #  "America/Los_Angeles" = "PST8PDT" accounts for daylight savings, UTC/GMT -7 offset
   #  "America/Alaska" = "AKST9AKDT" accounts for daylight savings time, UTC/GMT -8 offset
-  format_csv <- function(x) {
-    format_raw <- x %>%
+  #  Un-comment commented rows below to turn this back into a function
+  # format_csv <- function(x) {
+  #   format_raw <- x %>%
+  format_csv <- as.data.frame(csv_files) %>%
       transmute(
         File = as.character(File),
         RelativePath = as.character(RelativePath),
         Folder = as.character(Folder),
-        DateTime = as.POSIXct(paste(Date, Time),  
-                              format="%d-%b-%Y %H:%M:%S",tz="America/Los_Angeles"), # %d-%b-%y depending on date structure 
-        Date = as.Date(Date, format = "%d-%b-%Y"), # %d-%b-%y same here
+        DateTime = as.POSIXct(paste(DateNew, Time),
+                              format="%Y-%m-%d %H:%M:%S",tz="America/Los_Angeles"),
+        Date = as.Date(DateNew, format = "%Y-%m-%d"),
+        # DateTime = as.POSIXct(paste(Date, Time),  
+        #                       format="%d-%b-%Y %H:%M:%S",tz="America/Los_Angeles"), # %d-%b-%y depending on date structure 
+        # Date = as.Date(Date, format = "%d-%b-%Y"), # %d-%b-%y same here
         Time = chron(times = Time),
         ImageQuality = as.factor(ImageQuality),
         CameraLocation = as.factor(as.character(CameraLocation)),
@@ -64,15 +126,16 @@
         Color = as.character(NaturalMarks),
         SecondOp = as.factor(as.character(SecondOpinion))
       )
-    return(format_raw)
-  }
+  #   return(format_raw)
+  # }
+  # 
+  # #  Bundle data that need to be reformatted in a list
+  # raw_list <- list(NE3000_S3_C18, NE3109_S4_C31_C96_C131, NE3815_C26_C61,
+  #                  NE3815_C125, NE5511_C168_C186, OK4880_C175)
+  # #raw_list <- list(NE5511_C168_C186)
+  # #  Run formatting function
+  # format_raw <- lapply(raw_list, format_csv)
   
-  #  Bundle data that need to be reformatted in a list
-  raw_list <- list(NE3000_S3_C18, NE3109_S4_C31_C96_C131, NE3815_C26_C61,
-                   NE3815_C125, NE5511_C168_C186, OK4880_C175)
-  #raw_list <- list(NE5511_C168_C186)
-  #  Run formatting function
-  format_raw <- lapply(raw_list, format_csv)
 
 
   ## ============================================================  
@@ -87,7 +150,8 @@
   #  Separate updated DateTime into new Date and Time columns
   #  FYI, adjusting for incorrect shifts btwn PST & PDT is tricky
   
-  NE3000_S3_C18 <- format_raw[[1]]
+  NE3000_S3_C18 <- format_csv[format_csv$CameraLocation == "NE3000_Moultrie9" | 
+                                format_csv$CameraLocation == "NE3000_17",]  #format_raw[[1]]
   NE3000_C18 <- NE3000_S3_C18 %>%
     filter(str_detect(RelativePath, paste("S3"), negate = TRUE)) %>%
   # Plus 1 day, munus 1 hour, 24 minutes
@@ -99,7 +163,8 @@
            RgtDate = date(RgtDateTime),
            RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   
-  NE3109_S4_C31_C96_C131 <- format_raw[[2]]
+  NE3109_S4_C31_C96_C131 <- format_csv[format_csv$CameraLocation == "NE3109_Moultrie3" |
+                                         format_csv$CameraLocation == "NE3109_113",]  #format_raw[[2]]
   NE3109_S4 <- NE3109_S4_C31_C96_C131 %>%
     filter(str_detect(RelativePath, paste("C31"), negate = TRUE)) %>%
     filter(str_detect(RelativePath, paste("C96"), negate = TRUE)) %>%
@@ -112,12 +177,13 @@
            RgtDate = date(RgtDateTime),
            RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S")
            ) %>%
-  # Remove 2 servicing images with way different dates- too much work to correct & no need
+  # Remove 3 servicing images with way different dates- too much work to correct & no need
     filter(File != "MFDC0001.JPG" & File != "MFDC0023.JPG" & File != "MFDC0024.JPG")
   
-  NE3815_C26_C61 <- format_raw[[3]]
-  NE3815_C61 <- NE3815_C26_C61 %>%
+  NE3815_C26_C61_C125 <- format_csv[format_csv$CameraLocation == "NE3815_28",]  #format_raw[[3]]
+  NE3815_C61 <- NE3815_C26_C61_C125 %>%
     filter(str_detect(RelativePath, paste("C26"), negate = TRUE)) %>%
+    filter(str_detect(RelativePath, paste("C125"), negate = TRUE)) %>%
   # Plus 21 days, 7 hours, 3 minutes    
     mutate(#RgtDate = Date + 21,
            #WrgDate = Date,
@@ -126,7 +192,9 @@
            RgtDate = date(RgtDateTime),
            RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   
-  NE3815_C125 <- format_raw[[4]]
+  NE3815_C125 <- NE3815_C26_C61_C125 %>%   #format_raw[[4]]
+    filter(str_detect(RelativePath, paste("C26"), negate = TRUE)) %>% 
+    filter(str_detect(RelativePath, paste("C61"), negate = TRUE)) 
   # Extract section that shifted to PST based on incorrect dates
   NE3815_C125_PDT <- NE3815_C125[NE3815_C125$Date > "2018-11-03",] %>% 
   # Move forward 1 hour to put this section back into PDT
@@ -144,7 +212,7 @@
   # NOTE: shift btwn PDT & PST is accounted for during the addition above
   # (Only 6 hr difference during time period btwn WrgDateTime 11/4/18 & RgtDateTime 11/14/18)
 
-  NE5511_C168_C186 <- format_raw[[5]] 
+  NE5511_C168_C186 <- format_csv[format_csv$CameraLocation == "NE5511_54",] #format_raw[[5]] 
   #  Card C186 is WAY off on date and time so need to adjust for that but also...
   #  It looks like camera did not adjust for daylight savings time
   NE5511_C186 <- NE5511_C168_C186 %>%
@@ -184,7 +252,7 @@
   #  Merge both adjusted NE5511 memory cards back together
   NE5511_C168_C186 <- rbind(NE5511_C168_adj, NE5511_C186_adj) 
   
-  OK4880_C175 <- format_raw[[6]] %>%
+  OK4880_C175 <- format_csv[format_csv$CameraLocation == "OK4880_94",] %>%  #format_raw[[6]] %>%
   #  Plus 1 day
     mutate(#RgtDate = Date + 1,
            #WrgDate = Date,
@@ -254,8 +322,9 @@
     filter(str_detect(RelativePath, paste("S4"), negate = TRUE))
   NE3109_S4_C31_C96_C131_DTGood <- rbind(NE3109_S4shift, NE3109_C31_C96_C131)
   
-  NE3815_C26 <- NE3815_C26_C61 %>%
-    filter(str_detect(RelativePath, paste("C61"), negate = TRUE))
+  NE3815_C26 <- NE3815_C26_C61_C125 %>%
+    filter(str_detect(RelativePath, paste("C61"), negate = TRUE)) %>%
+    filter(str_detect(RelativePath, paste("C125"), negate = TRUE))
   NE3815_C26_C61_DTGood <- rbind(NE3815_C26, NE3815_C61shift)
   
   #  Rename the rest of the cameras so they are consistent for later analyses
