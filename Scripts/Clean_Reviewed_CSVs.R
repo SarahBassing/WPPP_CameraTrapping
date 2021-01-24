@@ -21,6 +21,7 @@
   library(plyr)
   library(readr)
   library(tidyverse)
+  library(lubridate)
 
   
   ####  READ IN REVIEWED CAMERA DATA  ####
@@ -177,9 +178,11 @@
         DateTime = as.POSIXct(paste(DateNew, Time),
                               format="%Y-%m-%d %H:%M:%S",tz="America/Los_Angeles"),
         Date = as.Date(DateNew, format = "%Y-%m-%d"),
-        # Date = as.Date(Date, format = "%d-%b-%Y"),
         Time = chron(times = Time),
         ImageQuality = as.factor(ImageQuality),
+        #' Change camera number where camera station stayed the same but camera number
+        #' was changed part way through season due to damage- only applies to YR2
+        CameraLocation = ifelse(CameraLocation == "OK2145_3", "OK2145_112", as.character(CameraLocation)),
         CameraLocation = as.factor(as.character(CameraLocation)),
         DT_Good = as.factor(as.character(DT_Good)),
         Service = as.factor(as.character(Service)),
@@ -227,6 +230,7 @@
     #  Drop service image with incorrect data/time before camera was fully set
     filter(CameraLocation != "NE5853_Moultrie5" | File != "MFDC0001.JPG")
   
+
   #'  Am I missing any cameras?
   cams <- as.data.frame(unique(full_csv$CameraLocation))
   
@@ -345,8 +349,8 @@
   
   #'  Filter service and empty images out 
   alldetections <- allimgs %>%
-    filter(Empty != "TRUE") %>% # & Empty != "true"
-    filter(Service != "TRUE")  # & Service != "true"
+    filter(Empty != "TRUE") %>% 
+    filter(Service != "TRUE")  
   
   
   #'  Save for later analyses
@@ -386,13 +390,13 @@
   NEmoose <- alldetections %>%
     filter(Species == "Moose") %>%
     filter(str_detect(CameraLocation, paste("OK"), negate = TRUE))
-  # write.csv(NEmoose, paste0('./Output/NEMoose_allimgs_', Sys.Date(), '.csv'))
+  write.csv(NEmoose, paste0('./Output/NEMoose_allimgs_', Sys.Date(), '.csv'))
   
   #'  Bird detections for Microsoft 
   bird_detections <- alldetections %>%
     filter(Species == "Bird Spp" | Species == "Common Raven" | Species == "Grouse Spp" | 
            Species == "Raptor Spp" | Species == "Turkey")
-  # write.csv(bird_detections, paste0('./Output/Bassing_BirdImages_', Sys.Date(), '.csv'))
+  write.csv(bird_detections, paste0('./Output/Bassing_BirdImages_', Sys.Date(), '.csv'))
   
   
   
