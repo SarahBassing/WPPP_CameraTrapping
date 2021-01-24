@@ -65,23 +65,21 @@
     # filter(Cell_ID != "OK3667" | Camera_Lat != "48.54991") %>%
     # filter(Cell_ID != "OK7658" | Camera_Lat != "48.17755") %>%
     #  Remove camera station that did not change but camera # was changed due to damage
-    filter(Cell_ID != "OK2145" | Camera_ID != "3") # DON'T FORGET TO CHANGE OK2145_3" to "OK2145_112 in detection data!!!
+    filter(Cell_ID != "OK2145" | Camera_ID != "3") 
 
   #'  Camera deployment, retrieval, and problem dates for each station
   #'  This includes the locations and date ranges of camera stations that moved
   #'  part way through the season!
-  deployed <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_18-19_updated_12.22.20.csv")
+  deployed <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_18-19_updated_1.21.21.csv")
   
   #'  Species detection data  
-  alldetections <- read.csv("./Output/Bassing_AllDetections_2020-12-26.csv") %>%
+  alldetections <- read.csv("./Output/Bassing_AllDetections_2021-01-21.csv") %>%
     select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
                             format="%Y-%m-%d %H:%M:%S",tz="America/Los_Angeles"),
       Date = as.Date(Date, format = "%Y-%m-%d"),
       Time = chron(times = Time),
-      # #  Change camera location name to match camera station data
-      # CameraLocation = ifelse(CameraLocation == "OK2145_3", "OK2145_112", CameraLocation),
       CameraLocation = as.factor(as.character(CameraLocation)),
       Species = as.factor(as.character(Species)),
       HumanActivity = as.factor(as.character(HumanActivity)),
@@ -99,6 +97,7 @@
     #  Remove Moultrie cameras from detection data
     #  Moultrie cameras not included in camera station data for now
     filter(!grepl("Moultrie", CameraLocation)) %>%
+    filter(!grepl("Moultire", CameraLocation)) %>%
     droplevels()
 
   #'  Or to save myself the reformatting step...
@@ -251,7 +250,9 @@
   #'  spot (coordinates changed by a few meters).
   filter(!is.na(File))
   
+
   cams <- distinct(full_dat, full_dat$CameraLocation)
+
   
   #'  Final set of detection data with camera locations included for each observation
   animal_det <- full_dat %>%
@@ -261,8 +262,45 @@
   
   #'  Save for projects!
   write.csv(full_dat, paste0("./Output/full_camdata_", Sys.Date(), ".csv"))
-  write.csv(SEFS521_camdata, "G:/My Drive/1_Repositories/WPPP_Data_Integration/SEFS521_camdata.csv")
+  # write.csv(SEFS521_camdata, "G:/My Drive/1_Repositories/WPPP_Data_Integration/SEFS521_camdata.csv")
   
+
+  #'  Extract independent detections
+  #'  Create a column identifying whether each image is an "independent" event
+  #'  If camera site is diff from previous row then give unique value. If not then...
+  #'  If species detected is diff from previous row at same site then give unique value. If not then...
+  #'  If DateTime is >30 min from previous DateTime at same site for same species then give unique value. If not then...
+  #'  Capture value is the same as that in the previous row.
+  dat <- full_dat %>%
+    #'  Remove all Service and Empty images for this to work
+    filter(!is.na(Species)) %>%
+    arrange(CameraLocation, DateTime)
+  caps <- c()
+  caps[1] <- 1
+  for (i in 2:nrow(dat)){
+    if (dat$CameraLocation[i-1] != dat$CameraLocation[i]) caps[i] = i
+    else (if (dat$Species[i-1] != dat$Species[i]) caps[i] = i
+          else (if (difftime(dat$DateTime[i], dat$DateTime[i-1], units = c("mins")) > 30) caps[i] = i
+                else caps[i] = caps[i-1]))
+  }
+  
+  caps <- as.factor(caps)
+  
+  #'  Add new column to larger data set
+  capdata <- cbind(as.data.frame(dat), caps)
+  
+  #'  Retain only the first image from each unique detection event  
+  detections <- capdata %>% 
+    group_by(caps) %>% 
+    slice(1L) %>%
+    ungroup()
+  
+  #'  Moose detections for WDFW
+  NEmoose <- detections %>%
+    filter(Species == "Moose") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
+    dplyr::select(-caps)
+  write.csv(NEmoose, paste0('./Output/NEMoose_indcaps_', Sys.Date(), '.csv'))
   
   #'  =============================================
   #'  Make the species detection data spatial based on CameraLocation lat/long
@@ -288,6 +326,7 @@
   Yr1moose <- Yr1dat[Yr1dat$Species == "Moose",]
   Yr1md <- Yr1dat[Yr1dat$Species == "Mule Deer",]
   Yr1wtd <- Yr1dat[Yr1dat$Species == "White-tailed Deer",]
+  NEYr1moose <- st_as_sf(NEmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
@@ -297,6 +336,14 @@
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OK_wgs84, fill = NA) +
     geom_sf(data = Yr1elk)
-  
-  
+  ggplot() +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = Yr1wtd, shape  = 23, size = 3, fill = "darkred") +
+    geom_sf(data = Yr1md, shape = 8, size = 2) 
+
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEYr1moose, shape  = 23, size = 3, fill = "darkred")
+  # make a lay of just unique camera trap locations to show with moose detections
   
