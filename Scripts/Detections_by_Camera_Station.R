@@ -302,6 +302,12 @@
     dplyr::select(-caps)
   write.csv(NEmoose, paste0('./Output/NEMoose_indcaps_', Sys.Date(), '.csv'))
   
+  #'  Moose detections for WDFW
+  wolf <- detections %>%
+    filter(Species == "Wolf") %>%
+    dplyr::select(-caps)
+  write.csv(wolf, paste0('./Output/wolf_inddet_', Sys.Date(), '.csv'))
+  
   #'  =============================================
   #'  Make the species detection data spatial based on CameraLocation lat/long
   #'  Load required packages
@@ -317,6 +323,10 @@
   NE_wgs84 <- st_transform(NE_SA, wgs84)
   
   #'  Create spatial objects from detection data
+  cams <- st_as_sf(deployed[,1:5], coords = c("Longitude", "Latitude"), crs = wgs84)
+  NEcams <- cams[grepl("NE", cams$CameraLocation),]
+  OKcams <- cams[grepl("OK", cams$CameraLocation),]
+  
   Yr1dat <- st_as_sf(full_dat, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   Yr1spp <- group_split(Yr1dat, Yr1dat$Species)
   Yr1wolf <- Yr1dat[Yr1dat$Species == "Wolf",]
@@ -336,14 +346,57 @@
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OK_wgs84, fill = NA) +
     geom_sf(data = Yr1elk)
+  
+  pdf(file = "./Output/wolf_camera_detection_18-19.pdf")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = Yr1wolf)
+  dev.off()
+  
+  
+  #'  Plot mule deer vs white-taile deer detections
   ggplot() +
     geom_sf(data = OK_wgs84, fill = NA) +
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = Yr1wtd, shape  = 23, size = 3, fill = "darkred") +
     geom_sf(data = Yr1md, shape = 8, size = 2) 
 
+  #'  Plot NE moose detections
+  #'  Count the number of independent detections per camera station
+  NEYr1moose <- NEYr1moose %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  #'  Plot moose detections based on the number of independent detections/camera
+  pdf(file = "./Output/NE_moose_camera_detection.pdf")
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
-    geom_sf(data = NEYr1moose, shape  = 23, size = 3, fill = "darkred")
-  # make a lay of just unique camera trap locations to show with moose detections
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEYr1moose, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Independent \ndetections") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Moose Detections \n(2018 - 2019)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+    
+  #' #'  More basic plot
+  #' ggplot() +
+  #'   geom_sf(data = NE_wgs84, fill = NA) +
+  #'   geom_sf(data = NEcams, aes(fill = "A"), size = 3, shape = 1, show.legend = "point") + 
+  #'   geom_sf(data = NEYr1moose, aes(fill = "B"), size = 3, shape  = 21, show.legend = "point") + 
+  #'   scale_fill_manual(values = c("A" = "transparent", "B" = "darkred"),
+  #'                     labels = c("Camera Traps", "Moose Detections"), name = "") +
+  #'   labs(x = "Longitude", y = "Latitude") +
+  #'   ggtitle("WPPP Camera Trap Moose Detections \n(2018 - 2019)") +
+  #'   theme_classic() +
+  #'   theme(legend.position = c(0.875, 0.9)) +
+  #'   theme(plot.title = element_text(hjust = 0.5)) 
+    
+
+  
+  
   
