@@ -34,7 +34,7 @@
   #'  Read in all csv files together, force all columns to characters, reformat
   #'  columns so all are consistent & of desired format
   #'  REVIEWED DATA
-  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/TEST"
+  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1"
   # mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Test"
   csv_files <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>% 
     #  col_types forces all columns to be characters
@@ -102,7 +102,7 @@
   #'  BRB gotta go fix these!
   
   #'  PROCESSED DATA BUT NOT REVIEWED YET
-  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1/TEST"
+  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1"
   csv_files2 <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>% 
     #  col_types forces all columns to be characters
     #  Forcing to character addresses issue w/ inconsistent typecasting of columns
@@ -228,7 +228,11 @@
                     NE3815_C26_C61_DTGood, NE3815_C125_DTGood, 
                     NE5511_C168_C186_DTGood, OK4880_C175_DTGood) %>%
     #  Drop service image with incorrect data/time before camera was fully set
-    filter(CameraLocation != "NE5853_Moultrie5" | File != "MFDC0001.JPG")
+    filter(CameraLocation != "NE5853_Moultrie5" | File != "MFDC0001.JPG") %>%
+    #  Drop this one cow image w/ bizarre incorrect date/time- camera malfunction
+    #  (plenty of cow pix before & after it so no real loss of data)
+    #  FYI, this filtering also drops an empty image with the same file number
+    filter(CameraLocation != "NE7394_117" | File != "RCNX2117.JPG")
   
 
   #'  Am I missing any cameras?
@@ -249,7 +253,6 @@
   print(adjusted)
   #'  DT_Good marked FALSE
   droplevels(unique(full_csv$CameraLocation[which(full_csv$DT_Good == "FALSE" | full_csv$DT_Good == "false")]))
-  probs <- unique(full_csv$RelativePath[which(full_csv$DT_Good == "FALSE" | full_csv$DT_Good == "false")])
   #'  Hang tight, gotta double check any I haven't already fixed...
 
   ##  Mmmk we're good  ##
@@ -270,15 +273,15 @@
   
   #'  Identify which cameras have images that were never reviewed or where info
   #'  was incorrectly propagated across empty images
-  droplevels(unique(full_csv$CameraLocation[full_csv$Service == "FALSE" & 
-                                              full_csv$Empty == "FALSE" & 
-                                              full_csv$Animal == "FALSE" & 
-                                              full_csv$Human == "FALSE" & 
-                                              full_csv$Vehicle == "FALSE"]))
+  # droplevels(unique(full_csv$CameraLocation[full_csv$Service == "FALSE" & 
+  #                                             full_csv$Empty == "FALSE" & 
+  #                                             full_csv$Animal == "FALSE" & 
+  #                                             full_csv$Human == "FALSE" & 
+  #                                             full_csv$Vehicle == "FALSE"]))
   ##  BRB, gotta fix these  ##
 
   #'  Identify which images still need a second review
-  unique(full_csv$CameraLocation[which(full_csv$SecondOp == "TRUE" | full_csv$SecondOp == "true")])
+  # unique(full_csv$CameraLocation[which(full_csv$SecondOp == "TRUE" | full_csv$SecondOp == "true")])
   ##  BRB, gotta go check these  ##
 
   
@@ -341,6 +344,7 @@
   #'  Make sure there are no rows with no species or human activity but count data
   missing_obs <- allimgs[is.na(allimgs$Species) & is.na(allimgs$HumanActivity) & allimgs$Count > 0,]
   print(droplevels(unique(missing_obs$CameraLocation)))
+  #  OK3599 currently flagged but this image set is still being reviewed
   
   
   
@@ -367,7 +371,7 @@
     filter(Human == "TRUE" | Vehicle == "TRUE") %>%
     filter(!grepl("Moultrie", CameraLocation))
   Alyssa_data <- rbind(meso, humans)
-  write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_data_', Sys.Date(), '.csv'))
+  # write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_data_', Sys.Date(), '.csv'))
 
   #'  All study species detections for Jessalyn
   allstudyspp <- alldetections %>%
@@ -390,13 +394,21 @@
   NEmoose <- alldetections %>%
     filter(Species == "Moose") %>%
     filter(str_detect(CameraLocation, paste("OK"), negate = TRUE))
-  write.csv(NEmoose, paste0('./Output/NEMoose_allimgs_', Sys.Date(), '.csv'))
+  # write.csv(NEmoose, paste0('./Output/NEMoose_allimgs_', Sys.Date(), '.csv'))
+  
+  #'  Wolf detections for Trent
+  wolves <- alldetections %>%
+    filter(Species == "Wolf")
+  # write.csv(wolves, paste0('./Output/Wolf_allimgs_', Sys.Date(), '.csv'))
   
   #'  Bird detections for Microsoft 
   bird_detections <- alldetections %>%
     filter(Species == "Bird Spp" | Species == "Common Raven" | Species == "Grouse Spp" | 
-           Species == "Raptor Spp" | Species == "Turkey")
-  write.csv(bird_detections, paste0('./Output/Bassing_BirdImages_', Sys.Date(), '.csv'))
+           Species == "Raptor Spp" | Species == "Turkey") %>%
+    mutate(
+      Animal = ifelse(Animal == "FALSE", "TRUE", as.character(Animal))
+    )
+  # write.csv(bird_detections, paste0('./Output/Bassing_BirdImages_', Sys.Date(), '.csv'))
   
   
   
