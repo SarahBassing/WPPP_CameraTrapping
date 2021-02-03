@@ -38,8 +38,13 @@
   
   #'  Read in data, format, and filter
   #'  Camera station data:
-  allstations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_2020-12-22_skinny.csv") %>% 
-    select("Status", "Year", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Name", "Camera_Lat", "Camera_Long", "Distance_Focal_Point", "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", "Habitat_Type", "Pull_Status") %>%
+  source("./Scripts/Camera_Station_Covariate_Wrangling.R") 
+  # allstations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_2020-12-22_skinny.csv") %>% 
+  allstations <- allstations %>%
+    select("Status", "Year", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Name", 
+           "Camera_Lat", "Camera_Long", "Distance_Focal_Point", "Height_frm_grnd", 
+           "Monitoring", "Canopy_Cov", "Land_Mgnt", "Land_Owner", "Habitat_Type", 
+           "Pull_Status") %>%
     mutate(
       Date = as.Date(Date, format = "%Y-%m-%d"),
       CameraLocation = as.factor(as.character(Name))
@@ -73,7 +78,7 @@
   deployed <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_18-19_updated_1.21.21.csv")
   
   #'  Species detection data  
-  alldetections <- read.csv("./Output/Bassing_AllDetections_2021-01-21.csv") %>%
+  alldetections <- read.csv("./Output/Bassing_AllDetections_2021-01-27.csv") %>%
     select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -264,6 +269,10 @@
   write.csv(full_dat, paste0("./Output/full_camdata_", Sys.Date(), ".csv"))
   # write.csv(SEFS521_camdata, "G:/My Drive/1_Repositories/WPPP_Data_Integration/SEFS521_camdata.csv")
   
+  wolves <- full_dat %>%
+    filter(Species == "Wolf")
+  write.csv(wolves, paste0('./Output/Wolf_allimgs_', Sys.Date(), '.csv'))
+  
 
   #'  Extract independent detections
   #'  Create a column identifying whether each image is an "independent" event
@@ -300,13 +309,19 @@
     filter(Species == "Moose") %>%
     filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
     dplyr::select(-caps)
-  write.csv(NEmoose, paste0('./Output/NEMoose_indcaps_', Sys.Date(), '.csv'))
+  # write.csv(NEmoose, paste0('./Output/NEMoose_indcaps_', Sys.Date(), '.csv'))
+  OKmoose <- detections %>%
+    filter(Species == "Moose") %>%
+    filter(str_detect(CameraLocation, paste("NE"), negate = TRUE)) %>%
+    dplyr::select(-caps)
+  # write.csv(NEmoose, paste0('./Output/OKMoose_indcaps_', Sys.Date(), '.csv'))
   
   #'  Moose detections for WDFW
   wolf <- detections %>%
     filter(Species == "Wolf") %>%
+    # filter(str_detect(CameraLocation, paste("NE"), negate = TRUE)) %>%
     dplyr::select(-caps)
-  write.csv(wolf, paste0('./Output/wolf_inddet_', Sys.Date(), '.csv'))
+  # write.csv(wolf, paste0('./Output/wolf_inddet_', Sys.Date(), '.csv'))
   
   #'  =============================================
   #'  Make the species detection data spatial based on CameraLocation lat/long
@@ -337,6 +352,8 @@
   Yr1md <- Yr1dat[Yr1dat$Species == "Mule Deer",]
   Yr1wtd <- Yr1dat[Yr1dat$Species == "White-tailed Deer",]
   NEYr1moose <- st_as_sf(NEmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  OKYr1moose <- st_as_sf(OKmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  Yr1wolf <- st_as_sf(wolf, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
@@ -368,6 +385,14 @@
     group_by(CameraLocation) %>%
     summarise(count = n()) %>%
     ungroup()
+  OKYr1moose <- OKYr1moose %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  Yr1wolf <- Yr1wolf %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
   #'  Plot moose detections based on the number of independent detections/camera
   pdf(file = "./Output/NE_moose_camera_detection.pdf")
   ggplot() +
@@ -379,6 +404,24 @@
     labs(size = "Independent \ndetections") +
     labs(x = "Longitude", y = "Latitude") +
     ggtitle("WPPP Camera Trap Moose Detections \n(2018 - 2019)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  
+  pdf(file = "./Output/wolf_camera_detections_18-19.pdf")
+  ggplot() +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OKcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    # geom_sf(data = OKYr1moose, aes(size = count), shape  = 21, fill = "darkred") + 
+    # geom_sf(data = NEYr1moose, aes(size = count), shape  = 21, fill = "darkred") +
+    geom_sf(data = Yr1wolf, aes(size = count), shape = 21, fill = "orange") +
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "") +
+    labs(size = "Independent \ndetections") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Wolf Detections \n(2018 - 2019)") +
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5))
   dev.off()
