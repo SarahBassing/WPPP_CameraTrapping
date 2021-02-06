@@ -6,8 +6,13 @@
   #'  ============================================
   #'  Script to format camera station data, particularly the categorical
   #'  site-specific covariate data. This is super tedious but note taking in the
-  #'  field was very inconsistent and verbous. Need to reduce habitat/site
+  #'  field was very inconsistent and verbose. Need to reduce habitat/site
   #'  descriptions down to simple categorical variables for further analyses.
+  #'  
+  #'  Uses:
+  #'  "camera_master_2018-2021_updated_DATE_skinny.csv" from Camera_Station_Wrangling.R
+  #'       This script is sourced into Detections_by_Camera_Station.R & others
+
 
   #'  Load libraries
   library(chron)  
