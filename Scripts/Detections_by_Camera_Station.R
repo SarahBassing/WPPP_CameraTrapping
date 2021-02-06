@@ -15,7 +15,9 @@
   #'  "Bassing_AllDetections_DATE.csv" from Clean_Review_CSVs.R
   #'     -Contains ALL detections of animals, humans, & vehicles (no empties)
   #'  "camera_master_2018-2021_updated_DATE_skinny.csv" from Camera_Station_Wrangling.R
-  #'     -Contains ALL deployment, check, and pulling data for each camera
+  #'     Sourced here through Camera_Station_Covariate_Wrangling.R
+  #'     -Contains ALL deployment, check, and pulling data for each camera with
+  #'     cleaned camera station covariate data
   #'  "All_Camera_Stations_18-19_updated_DATE.csv"
   #'     -Contains camera locations (including updated names/locations when a
   #'     camera was moved), deployment & pull dates, and problem dates; this is 
@@ -259,19 +261,43 @@
   cams <- distinct(full_dat, full_dat$CameraLocation)
 
   
+  #'  Save for projects!
+  write.csv(full_dat, paste0("./Output/full_camdata_", Sys.Date(), ".csv"))
+
+  #'  Camera station covariates with updated CameraLocation names (b cameras)
+  stations <- clean_deployed %>%
+    dplyr::select("Year", "Study_Area", "Cell_ID", "Camera_ID.y",   
+                  "CameraLocation.y", "Latitude", "Longitude", "Distance_Focal_Point", 
+                  "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", 
+                  "Land_Owner", "Habitat_Type")
+  colnames(stations) <- c("Year", "Study_Area", "Cell_ID", "Camera_ID", 
+                          "CameraLocation", "Latitude", "Longitude", "Distance_Focal_Point", 
+                          "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", 
+                          "Land_Owner", "Habitat_Type")
+  # write.csv(stations, paste0("./Output/Camera_Station_Covariates_", Sys.Date(), ".csv"))
+  
   #'  Final set of detection data with camera locations included for each observation
   animal_det <- full_dat %>%
     filter(Animal == "true" | Animal == "TRUE")
   SEFS521_camdata <- full_dat %>%
     filter(Species == "Cougar" | Species == "Elk")
-  
-  #'  Save for projects!
-  write.csv(full_dat, paste0("./Output/full_camdata_", Sys.Date(), ".csv"))
   # write.csv(SEFS521_camdata, "G:/My Drive/1_Repositories/WPPP_Data_Integration/SEFS521_camdata.csv")
   
+  #'  All wolf detections
   wolves <- full_dat %>%
     filter(Species == "Wolf")
-  write.csv(wolves, paste0('./Output/Wolf_allimgs_', Sys.Date(), '.csv'))
+  # write.csv(wolves, paste0('./Output/Wolf_allimgs_', Sys.Date(), '.csv'))
+  
+  #'  Coyote, bobcat & human detections for Alyssa
+  meso <- full_dat %>%
+    filter(Species == "Bobcat" | Species == "Coyote") %>%
+    filter(!grepl("Moultrie", CameraLocation))
+  #'  Human detections (on foot and vehicle)
+  humans <- full_dat %>%
+    filter(Human == "TRUE" | Vehicle == "TRUE") %>%
+    filter(!grepl("Moultrie", CameraLocation))
+  Alyssa_data <- rbind(meso, humans)
+  # write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_data_', Sys.Date(), '.csv'))
   
 
   #'  Extract independent detections
