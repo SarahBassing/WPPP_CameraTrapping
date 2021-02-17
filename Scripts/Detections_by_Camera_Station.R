@@ -283,10 +283,25 @@
     filter(Species == "Cougar" | Species == "Elk")
   # write.csv(SEFS521_camdata, "G:/My Drive/1_Repositories/WPPP_Data_Integration/SEFS521_camdata.csv")
   
+  #'  All moose detections
+  OKmoose <- full_dat %>%
+    filter(Species == "Moose") %>%
+    filter(str_detect(CameraLocation, paste("NE"), negate = TRUE))
+  # write.csv(OKmoose, paste0('./Output/OKMoose_allimgs_', Sys.Date(), '.csv'))
+  NEmoose <- full_dat %>%
+    filter(Species == "Moose") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE))
+  # write.csv(NEmoose, paste0('./Output/NEMoose_allimgs_', Sys.Date(), '.csv'))
+  
   #'  All wolf detections
   wolves <- full_dat %>%
     filter(Species == "Wolf")
   # write.csv(wolves, paste0('./Output/Wolf_allimgs_', Sys.Date(), '.csv'))
+  
+  #'  All cougar detections
+  cougars <- full_dat %>%
+    filter(Species == "Cougar")
+  # write.csv(cougars, paste0('./Output/Cougars_allimgs_', Sys.Date(), '.csv'))
   
   #'  Coyote, bobcat & human detections for Alyssa
   meso <- full_dat %>%
@@ -342,7 +357,13 @@
     dplyr::select(-caps)
   # write.csv(NEmoose, paste0('./Output/OKMoose_indcaps_', Sys.Date(), '.csv'))
   
-  #'  Moose detections for WDFW
+  #'  Cougar detections for WDFW
+  Cougs <- detections %>%
+    filter(Species == "Cougar") %>%
+    dplyr::select(-caps)
+  # write.csv(Cougs, paste0('./Output/Cougar_inddet_', Sys.Date(), '.csv'))
+  
+  #'  Wolf detections for Lisanne
   wolf <- detections %>%
     filter(Species == "Wolf") %>%
     # filter(str_detect(CameraLocation, paste("NE"), negate = TRUE)) %>%
@@ -380,6 +401,8 @@
   NEYr1moose <- st_as_sf(NEmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   OKYr1moose <- st_as_sf(OKmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   Yr1wolf <- st_as_sf(wolf, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  Yr1coug <- st_as_sf(Cougs, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  
   
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
@@ -419,6 +442,10 @@
     group_by(CameraLocation) %>%
     summarise(count = n()) %>%
     ungroup()
+  Yr1coug <- Yr1coug %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
   #'  Plot moose detections based on the number of independent detections/camera
   pdf(file = "./Output/NE_moose_camera_detection.pdf")
   ggplot() +
@@ -448,6 +475,22 @@
     labs(size = "Independent \ndetections") +
     labs(x = "Longitude", y = "Latitude") +
     ggtitle("WPPP Camera Trap Wolf Detections \n(2018 - 2019)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  
+  pdf(file = "./Output/cougar_camera_detections_18-19.pdf")
+  ggplot() +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OKcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = Yr1coug, aes(size = count), shape = 21, fill = "orange") +
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "") +
+    labs(size = "Independent \ndetections") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Cougar Detections \n(2018 - 2019)") +
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5))
   dev.off()
