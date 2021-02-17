@@ -714,7 +714,11 @@
   wolf <- wolf[!(wolf$Cell_ID == "OKbonus"),]  # 42 sites detected wolves
   #  Create spatial df
   wolf <- SpatialPointsDataFrame(coords = wolf[,5:6], data = wolf, proj4string = WGS84)
-  plot(wolf[wolf@data$Cam_Year == "Year1",], col = "blue", add= T, pch = 6)
+  plot(packs)
+  plot(OK, add = T)
+  plot(NE, add = T)
+  plot(wolf[wolf@data$Cam_Year == "Year1",], col = "blue", add = T, pch = 6)
+  plot(wolf[wolf@data$Cam_Year == "Year2",], col = "red", add = T, pch = 19)
     
   mulies <- focal_species[which(focal_species$Spp_Obs == "Mule deer"),] %>%
     dplyr::select(-"Date") %>%
