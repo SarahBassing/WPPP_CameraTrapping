@@ -3,9 +3,26 @@
   ##  The World is on Fire 2020
   ##  ==========================================================
   ##  This script reads in processed image sets where the date and/or time is
-  ##  incorrect as a result of camera malfuction or inappropriate programming
+  ##  incorrect as a result of camera malfunction or inappropriate programming
   ##  during deployment. Once corrected, these image sets can be added to the 
   ##  larger database of processed images.
+  ##
+  ##  Year 1 cameras
+  ## NE3000_Moultrie9_S3_17_C18
+  ## NE3109_Moultrie3_S4_113_C31_C96_C131
+  ## NE3815_28_C125
+  ## NE3815_28_C26_C61
+  ## NE5511_54_C168_C186
+  ## OK4880_94_C175
+  ## OK7237_99_C159_C241
+  ##
+  ##  Year 2 cameras
+  ## OK4306_78_C23 (C60 is correct, C198 only end servicing images are off & not worth changing)- time did not shift from PDT to PST
+  ## OK4489_102_C132 (C174 is correct)- time did not shift from PDT to PST (subtract 1 hour from camera time in winter months)
+  ## OK4489_102_C104 same as above
+  ## OK4944_96_C97- time off 1 hour during PST- subtract 1 hour in winter months
+  ## OK5719_96_C116- time did not shift from PDT to PST??? (subtract 1 hour in fall)
+  ## OK7545_51_C110 (C13 is correct, C197 only end servicing images are off & not worth changing)
   ##  ==========================================================
     
   ##  Libraries and data
@@ -14,22 +31,9 @@
   library(lubridate)
   library(tidyverse)
 
-  
-  #  Read in data where date & time are incorrect
-  # NE3000_S3_C18 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3000_C18_S3_CH_REVIEWED_DATETIMEWRONG.csv")
-  # NE3109_S4_C31_C96_C131 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3109_113, Moultrie3_C31, C96, C131, S4_SBB_REVIEWED.csv") 
-  # NE3815_C125 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3815_28_C125_CH_REVIEWED_datetimeweird.csv")
-  # NE3815_C26_C61 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE3815_28_C26_61_CH_REVIEWED_datetimewrongC61.csv") 
-  # NE5511_C168_C186 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/NE5511_54_C168_C186_CH_REVIEWED-DATETIMEWRONG.csv")
-  # OK4880_C175 <- read.csv("./Reviewed Image Data/DATETIMEWRONG/OK4880_C175_CH_REVIEWED_DATEOFF1DAY.csv")
-  #OK4306_78
-  #OK4944_96
-  #OK5719_96
-  #OK7237_C159_C241 <- read.csv("./Processed Image Data/Year 1/Format 1/OK7237_99_C159_C241_SZ.csv")
 
-  
-  # OK5712 & OK4944 need to be adjusted for Yr 2 data
-  
+
+  #  Read in data with incorrect date/times and reformat
   mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/DATETIMEWRONG"
   csv_files <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>% 
     #  col_types forces all columns to be characters
@@ -146,15 +150,18 @@
 
   #  Separate each memory card out so individual date & time issues can be fixed
   #  Filter out memory cards with correct date & times
-  #  Shift date and time but adding or subtracting seconds (24*60*60 = 1 full day)
+  #  Shift date and time by adding or subtracting seconds (24*60*60 = 1 full day)
   #  Separate updated DateTime into new Date and Time columns
   #  FYI, adjusting for incorrect shifts btwn PST & PDT is tricky
+  
+  
+  ####  YEAR 1  ####
   
   NE3000_S3_C18 <- format_csv[format_csv$CameraLocation == "NE3000_Moultrie9" | 
                                 format_csv$CameraLocation == "NE3000_17",]  #format_raw[[1]]
   NE3000_C18 <- NE3000_S3_C18 %>%
     filter(str_detect(RelativePath, paste("S3"), negate = TRUE)) %>%
-  # Plus 1 day, munus 1 hour, 24 minutes
+  # Plus 1 day, minus 1 hour, 24 minutes
   # No need to worry about PDT vs PST here
     mutate(#RgtDate = Date + 1,
            #WrgDate = Date,
@@ -261,6 +268,78 @@
            RgtDate = date(RgtDateTime),  
            RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   
+  OK7237_C159_C241 <- format_csv[format_csv$CameraLocation == "OK7237_99",]
+  #  It looks like camera did not adjust for daylight savings time
+  #  Pull out dates that correspond with when camera SHOULD have shifted its
+  #  time from PDT to PST (fall back 11/4/18 02:00:00, spring forward 03/10/2019 02:00:00)
+  OK7237_PST <- OK7237_C159_C241[OK7237_C159_C241$Date > "2018-11-03" & OK7237_C159_C241$Date < "2019-03-10",] %>%
+    mutate(DateTime = DateTime - 60*60)  
+  OK7237_C159_C241 <- rbind(OK7237_C159_C241[OK7237_C159_C241$Date < "2018-11-04" | OK7237_C159_C241$Date > "2019-03-09",], OK7237_PST) %>%
+    #  Add these columns in for consistency
+    mutate(          
+      WrgDateTime = DateTime,       # Same as RgtDateTime since it was adjusted by 1 hour above
+      RgtDateTime = DateTime,
+      RgtDate = date(RgtDateTime),  # Date is actually fine
+      RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
+  
+  
+  ####  YEAR 2  ####
+  
+  OK4306_C23 <- format_csv[format_csv$CameraLocation == "OK4306_78",]
+  #  Needs to fall back 1 hour for PST (fall back 11/3/19 02:00:00, spring forward 03/8/2020 02:00:00)
+  OK4306_PST <- OK4306_C23[OK4306_C23$Date < "2020-03-08",] %>%
+    mutate(DateTime = DateTime - 60*60) 
+  OK4306_C23 <- rbind(OK4306_PST, OK4306_C23[OK4306_C23$Date > "2020-03-07",]) %>%
+    mutate(          
+      WrgDateTime = DateTime,       # Same as RgtDateTime since it was adjusted by 1 hour above
+      RgtDateTime = DateTime,
+      RgtDate = date(RgtDateTime),  # Date is actually fine
+      RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
+  
+  OK4489_C104_C132 <- format_csv[format_csv$CameraLocation == "OK4489_102",]
+  #  Needs to fall back 1 hour for PST (fall back 11/3/19 02:00:00, spring forward 03/8/2020 02:00:00)
+  OK4489_PST <- OK4489_C104_C132[OK4489_C104_C132$Date > "2019-11-02" & OK4489_C104_C132$Date < "2020-03-08",] %>%
+    mutate(DateTime = DateTime - 60*60) 
+  OK4489_C104_C132 <- rbind(OK4489_C104_C132[OK4489_C104_C132$Date < "2019-11-03" | OK4489_C104_C132$Date > "2020-03-07",], OK4489_PST) %>%
+    mutate(          
+      WrgDateTime = DateTime,       # Same as RgtDateTime since it was adjusted by 1 hour above
+      RgtDateTime = DateTime,
+      RgtDate = date(RgtDateTime),  # Date is actually fine
+      RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
+    
+  OK4944_C97 <- format_csv[format_csv$CameraLocation == "OK4944_96",]
+  #  Needs to fall back 1 hour for PST (fall back 11/3/19 02:00:00, spring forward 03/8/2020 02:00:00)
+  OK4944_PST <- OK4944_C97[OK4944_C97$Date < "2020-03-08",] %>%
+    mutate(DateTime = DateTime - 60*60) 
+  OK4944_C97 <- rbind(OK4944_PST, OK4944_C97[OK4944_C97$Date > "2020-03-07",]) %>%
+    mutate(          
+      WrgDateTime = DateTime,       # Same as RgtDateTime since it was adjusted by 1 hour above
+      RgtDateTime = DateTime,
+      RgtDate = date(RgtDateTime),  # Date is actually fine
+      RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
+  
+  OK5719_C116 <- format_csv[format_csv$CameraLocation == "OK5719_96",]
+  #  Needs to fall back 1 hour for PST (fall back 11/3/19 02:00:00, spring forward 03/8/2020 02:00:00)
+  OK5719_PST <- OK5719_C116[OK5719_C116$Date > "2019-11-02",] %>%
+    mutate(DateTime = DateTime - 60*60) 
+  OK5719_C116 <- rbind(OK5719_C116[OK5719_C116$Date < "2019-11-03",], OK5719_PST) %>%
+    mutate(          
+      WrgDateTime = DateTime,       # Same as RgtDateTime since it was adjusted by 1 hour above
+      RgtDateTime = DateTime,
+      RgtDate = date(RgtDateTime),  # Date is actually fine
+      RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
+  
+  OK7545_C110 <- format_csv[format_csv$CameraLocation == "OK7545_51",]
+  #  Needs to fall back 1 hour for PST (fall back 11/3/19 02:00:00, spring forward 03/8/2020 02:00:00)
+  OK7545_PST <- OK7545_C110[OK7545_C110$Date < "2020-03-08",] %>%
+    mutate(DateTime = DateTime - 60*60) 
+  OK7545_C110 <- rbind(OK7545_PST, OK7545_C110[OK7545_C110$Date > "2020-03-07",]) %>%
+    mutate(          
+      WrgDateTime = DateTime,       # Same as RgtDateTime since it was adjusted by 1 hour above
+      RgtDateTime = DateTime,
+      RgtDate = date(RgtDateTime),  # Date is actually fine
+      RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
+  
 
   ## ==========================================================
   #  Step 3
@@ -300,7 +379,9 @@
   }
 
   #  List data frames that had date & time data shifted
-  shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, NE5511_C168_C186, OK4880_C175)
+  shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, 
+                     NE5511_C168_C186, OK4880_C175, OK7237_C159_C241, 
+                     OK4306_C23, OK4489_C104_C132,  OK4944_C97, OK5719_C116, OK7545_C110)
   #shift_list <- list(NE5511_C168_C186)
   #shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, OK4880_C175)
   #  Run reformatting function
@@ -312,6 +393,12 @@
   NE3815_C125shift <- reformat_shiftdat[[4]]
   NE5511_C168_C186shift <- reformat_shiftdat[[5]]
   OK4880_C175shift <- reformat_shiftdat[[6]]
+  OK7237_C159_C241shift <- reformat_shiftdat[[7]]
+  OK4306_C23shift <- reformat_shiftdat[[8]]
+  OK4489_C104_C132shift <- reformat_shiftdat[[9]]
+  OK4944_C97shift <- reformat_shiftdat[[10]]
+  OK5719_C116shift <- reformat_shiftdat[[11]]
+  OK7545_C110shift <- reformat_shiftdat[[12]]
   
   #  Add additional memory cards (with good date/times) back to adjusted cameras
   NE3000_S3 <- NE3000_S3_C18 %>%
@@ -331,12 +418,22 @@
   NE3815_C125_DTGood <- NE3815_C125shift
   NE5511_C168_C186_DTGood <- NE5511_C168_C186shift
   OK4880_C175_DTGood <- OK4880_C175shift
+  OK7237_C159_C241_DTGood <- OK7237_C159_C241shift
+  OK4306_C23_DTGood <- OK4306_C23shift
+  OK4489_C104_C132_DTGood <- OK4489_C104_C132shift
+  OK4944_C97_DTGood <- OK4944_C97shift
+  OK5719_C116_DTGood <- OK5719_C116shift
+  OK7545_C110_DTGood <- OK7545_C110shift
   
   #  From here, source this script to merge these corrected data sets in with 
   #  other processed & formatted image data
   #  Print the names of the cameras included here
-  print(adjusted <- c("NE3000_S3_C18_DTGood", "NE3109_S4_C31_C96_C131_DTGood", "NE3815_C26_C61_DTGood", 
-          "NE3815_C125_DTGood", "NE5511_C168_C186_DTGood", "OK4880_C175_DTGood"))
+  print(adjusted <- c("NE3000_S3_C18_DTGood", "NE3109_S4_C31_C96_C131_DTGood", 
+                      "NE3815_C26_C61_DTGood", "NE3815_C125_DTGood", 
+                      "NE5511_C168_C186_DTGood", "OK4880_C175_DTGood",
+                      "OK7237_C159_C241_DTGood", "OK4306_C23_DTGood",
+                      "OK4489_C104_C132_DTGood", "OK4944_C97_DTGood",
+                      "OK5719_C116_DTGood", "OK7545_C110_DTGood"))
 
   
   
