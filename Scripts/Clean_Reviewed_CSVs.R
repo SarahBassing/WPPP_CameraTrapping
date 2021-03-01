@@ -238,7 +238,7 @@
   full_csv <- rbind(megadata,
                     OK4306_C23_DTGood, OK4489_C104_C132_DTGood,
                     OK4944_C97_DTGood, OK5719_C116_DTGood, 
-                    OK7545_C110_DTGood)
+                    OK7545_C110_DTGood, OK8226_C206_MSD2001_DTGood)
   
 
   #'  Am I missing any cameras?
