@@ -23,6 +23,8 @@
   ## OK4944_96_C97- time off 1 hour during PST- subtract 1 hour in winter months
   ## OK5719_96_C116- time did not shift from PDT to PST??? (subtract 1 hour in fall)
   ## OK7545_51_C110 (C13 is correct, C197 only end servicing images are off & not worth changing)
+  ## OK8226_103_MSD2001 (C134 is correct)- time off 1 hour during PST- subtract 1 hour in winter 
+  ## OK8226_103_C206- time off 1 hour during PST
   ##  ==========================================================
     
   ##  Libraries and data
@@ -340,6 +342,17 @@
       RgtDate = date(RgtDateTime),  # Date is actually fine
       RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   
+  OK8226_103 <- format_csv[format_csv$CameraLocation == "OK8226_103",]
+  #  Needs to fall back 1 hour for PST (fall back 11/3/19 02:00:00, spring forward 03/8/2020 02:00:00)
+  OK8226_PST <- OK8226_103[OK8226_103$Date > "2019-11-02" & OK8226_103$Date < "2020-03-08",] %>%
+    mutate(DateTime = DateTime - 60*60) 
+  OK8226_103 <- rbind(OK8226_PST, OK8226_103[OK8226_103$Date < "2019-11-03" | OK8226_103$Date > "2020-03-07",]) %>%
+    mutate(          
+      WrgDateTime = DateTime,       # Same as RgtDateTime since it was adjusted by 1 hour above
+      RgtDateTime = DateTime,
+      RgtDate = date(RgtDateTime),  # Date is actually fine
+      RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
+  
 
   ## ==========================================================
   #  Step 3
@@ -381,7 +394,8 @@
   #  List data frames that had date & time data shifted
   shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, 
                      NE5511_C168_C186, OK4880_C175, OK7237_C159_C241, 
-                     OK4306_C23, OK4489_C104_C132,  OK4944_C97, OK5719_C116, OK7545_C110)
+                     OK4306_C23, OK4489_C104_C132,  OK4944_C97, OK5719_C116, 
+                     OK7545_C110, OK8226_103)
   #shift_list <- list(NE5511_C168_C186)
   #shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, OK4880_C175)
   #  Run reformatting function
@@ -399,6 +413,7 @@
   OK4944_C97shift <- reformat_shiftdat[[10]]
   OK5719_C116shift <- reformat_shiftdat[[11]]
   OK7545_C110shift <- reformat_shiftdat[[12]]
+  OK8226_103shift <- reformat_shiftdat[[13]]
   
   #  Add additional memory cards (with good date/times) back to adjusted cameras
   NE3000_S3 <- NE3000_S3_C18 %>%
@@ -424,6 +439,7 @@
   OK4944_C97_DTGood <- OK4944_C97shift
   OK5719_C116_DTGood <- OK5719_C116shift
   OK7545_C110_DTGood <- OK7545_C110shift
+  OK8226_C206_MSD2001_DTGood <- OK8226_103shift
   
   #  From here, source this script to merge these corrected data sets in with 
   #  other processed & formatted image data
@@ -433,7 +449,8 @@
                       "NE5511_C168_C186_DTGood", "OK4880_C175_DTGood",
                       "OK7237_C159_C241_DTGood", "OK4306_C23_DTGood",
                       "OK4489_C104_C132_DTGood", "OK4944_C97_DTGood",
-                      "OK5719_C116_DTGood", "OK7545_C110_DTGood"))
+                      "OK5719_C116_DTGood", "OK7545_C110_DTGood",
+                      "OK8226_C206_MSD2001_DTGood"))
 
   
   
