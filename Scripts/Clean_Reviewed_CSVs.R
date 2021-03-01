@@ -34,7 +34,7 @@
   #'  Read in all csv files together, force all columns to characters, reformat
   #'  columns so all are consistent & of desired format
   #'  REVIEWED DATA
-  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1"
+  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 2"  #Year 1
   # mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Test"
   csv_files <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>% 
     #  col_types forces all columns to be characters
@@ -102,7 +102,7 @@
   #'  BRB gotta go fix these!
   
   #'  PROCESSED DATA BUT NOT REVIEWED YET
-  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1"
+  mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 2" #Year 1
   csv_files2 <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>% 
     #  col_types forces all columns to be characters
     #  Forcing to character addresses issue w/ inconsistent typecasting of columns
@@ -223,16 +223,22 @@
   
   
   #'  Append sourced data to MEGA data file
+  # full_csv <- rbind(megadata,
+  #                   NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
+  #                   NE3815_C26_C61_DTGood, NE3815_C125_DTGood,
+  #                   NE5511_C168_C186_DTGood, OK4880_C175_DTGood, 
+  #                   OK7237_C159_C241_DTGood) %>%
+  #   #  Drop service image with incorrect data/time before camera was fully set
+  #   filter(CameraLocation != "NE5853_Moultrie5" | File != "MFDC0001.JPG") %>%
+  #   #  Drop this one cow image w/ bizarre incorrect date/time- camera malfunction
+  #   #  (plenty of cow pix before & after it so no real loss of data)
+  #   #  FYI, this filtering also drops an empty image with the same file number
+  #   filter(CameraLocation != "NE7394_117" | File != "RCNX2117.JPG")
+  
   full_csv <- rbind(megadata,
-                    NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
-                    NE3815_C26_C61_DTGood, NE3815_C125_DTGood, 
-                    NE5511_C168_C186_DTGood, OK4880_C175_DTGood) %>%
-    #  Drop service image with incorrect data/time before camera was fully set
-    filter(CameraLocation != "NE5853_Moultrie5" | File != "MFDC0001.JPG") %>%
-    #  Drop this one cow image w/ bizarre incorrect date/time- camera malfunction
-    #  (plenty of cow pix before & after it so no real loss of data)
-    #  FYI, this filtering also drops an empty image with the same file number
-    filter(CameraLocation != "NE7394_117" | File != "RCNX2117.JPG")
+                    OK4306_C23_DTGood, OK4489_C104_C132_DTGood,
+                    OK4944_C97_DTGood, OK5719_C116_DTGood, 
+                    OK7545_C110_DTGood)
   
 
   #'  Am I missing any cameras?
@@ -273,10 +279,10 @@
   
   #'  Identify which cameras have images that were never reviewed or where info
   #'  was incorrectly propagated across empty images
-  # droplevels(unique(full_csv$CameraLocation[full_csv$Service == "FALSE" & 
-  #                                             full_csv$Empty == "FALSE" & 
-  #                                             full_csv$Animal == "FALSE" & 
-  #                                             full_csv$Human == "FALSE" & 
+  # droplevels(unique(full_csv$CameraLocation[full_csv$Service == "FALSE" &
+  #                                             full_csv$Empty == "FALSE" &
+  #                                             full_csv$Animal == "FALSE" &
+  #                                             full_csv$Human == "FALSE" &
   #                                             full_csv$Vehicle == "FALSE"]))
   ##  BRB, gotta fix these  ##
 
