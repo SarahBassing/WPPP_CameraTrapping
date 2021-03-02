@@ -130,7 +130,8 @@
   extent(H2O)
   dim(H2O)
   summary(H2O)
-  plot(H2O)
+  plot(H2O, main = "Water Density (km water/1 sq-km)")
+  plot(cams_reproj, add = TRUE, col = "black", pch = 6)
 
   #'  KEEP IN MIND: the original hydrology gdb lacks any data in the NE corner of 
   #'  the extended WPPP boundary (outside of watershed so no data included in 
@@ -153,7 +154,8 @@
   #'  Albers Equal Area projection good for measuring area
   
   #'  Read in camera location data
-  camera_stations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_18-19_updated_1.21.21.csv")
+  camera_stations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_19-20.csv")
+  # camera_stations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_18-19_updated_1.21.21.csv")
   xy <- camera_stations[,c(5,4)]
   cams <- SpatialPointsDataFrame(coords = xy, data = camera_stations, 
                                  proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
@@ -174,7 +176,7 @@
   dist2water$CameraLocation <- camera_stations$CameraLocation
   
   #'  Save save save
-  write.csv(dist2water, "./Output/dist2water.csv")
+  write.csv(dist2water, "./Output/dist2waterYr2.csv")
 
   
  
