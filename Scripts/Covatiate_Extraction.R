@@ -47,14 +47,26 @@
   library(raster)
   
   #'  Read in camera locations
-  station_covs <- read.csv("./Output/Camera_Station_Covariates_2021-02-05.csv")
+  # station_covs <- read.csv("./Output/Camera_Station_Covariates_2021-02-05.csv")
+  # station_covs <- read.csv("./Output/Camera_StationYr2_Covariates_2021-03-02.csv")
+  station_covs <- read.csv("./Output/Camera_Station18-20_Covariates_2021-03-04.csv")
   CameraLocation <- station_covs$CameraLocation
   
   #'  Read in covariate data extracted from other sources
-  dist2water <- read.csv("./Output/dist2water.csv") %>%
+  dist2water18 <- read.csv("./Output/dist2water.csv") %>%
     mutate(
       km2water = dist2water/1000
     )
+  dist2water19 <- read.csv("./Output/dist2waterYr2.csv") %>%
+    mutate(
+      km2water = dist2water/1000
+    )
+  dist2water <- rbind(dist2water18, dist2water19) %>%
+    arrange(CameraLocation) %>%
+    mutate(
+      ID = seq(1:nrow(.))
+    ) %>%
+    dplyr::select(-X)
   # dist2road <- read.csv("./Output/dist2road.csv") %>%
   #   mutate(
   #     km2road = dist2road/1000
@@ -126,7 +138,7 @@
   cams_reproj <- st_transform(cams, crs(crs(waterden)))
   water_density <- raster::extract(waterden, cams_reproj, df = TRUE)
   colnames(water_density) <- c("ID", "water_density")
-  #'  Replace NAs with 0's because no water features within 1 km of camera station
+  #'  Replace NAs with 0's because no water features within pixel camera fell in
   water_density[is.na(water_density[])] <- 0
   
   
@@ -197,7 +209,7 @@
     full_join(landcov_nlcd, by = "ID") %>%
     full_join(canopy_cov, by = "ID") %>%
     full_join(water_density, by = "ID") %>%
-    full_join(km2water, by = c("ID" = "X")) %>% # use nearest eventually
+    full_join(km2water, by = "ID") %>% # use nearest eventually
     full_join(station_covs, by = "CameraLocation") %>%
     #  Slight rearranging of columns
     relocate(c(Year, Study_Area, CameraLocation), .before = ID) %>%
@@ -206,10 +218,61 @@
     relocate(c(Latitude, Longitude), .after = last_col()) %>%
     dplyr::select(-c(ID, X, Cell_ID, Camera_ID))
 
-  #'  Remove annual data from 2019 (only working with 2018 cameras right now)
-  covs18_df <- covs_df %>%
-    dplyr::select(-c(landcov19, ndvi_sp19, ndvi_sm19, dnbr_sp19, dnbr_sm19, disturb19, burnPerim19))
+  #'  Save annual covariate data
+  covs18_df <- covs_df[covs_df$Year == "Year1",] #%>%
+    # dplyr::select(-c(landcov19, ndvi_sp19, ndvi_sm19, dnbr_sp19, dnbr_sm19, disturb19, burnPerim19, canopy19))
+  covs19_df <- covs_df[covs_df$Year == "Year2",] #%>%
+    # dplyr::select(-c(landcov18, ndvi_sp18, ndvi_sm18, dnbr_sp18, dnbr_sm18, disturb18, canopy18))
+  
+  #'  Merge annual data into a larger complete covariate dataframe
+  #'  Requires renaming columns so variables from different years have same header
+  #'  Keep in mind each year has slightly different number of covariates so need to add NA columns
+  covs18 <- covs18_df %>%
+    mutate(
+      landcov = landcov18,
+      ndvi_sp = ndvi_sp18,
+      ndvi_sm = ndvi_sm18,
+      dnbr_sp = dnbr_sp18,
+      dnbr_sm = dnbr_sm18, 
+      disturb = disturb18,
+      burnPerim = burnPerim18,
+      canopy = canopy18, 
+      landcov19 = "NA", 
+      ndvi_sp19 = "NA", 
+      ndvi_sm19 = "NA",
+      dnbr_sp19 = "NA",
+      dnbr_sm19 = "NA",
+      disturb19 = "NA",
+      burnPerim19 = "NA",
+      canopy19 = "NA"
+    )
+  
+  covs19 <- covs19_df %>%
+    mutate(
+      landcov = landcov19,
+      ndvi_sp = ndvi_sp19,
+      ndvi_sm = ndvi_sm19,
+      dnbr_sp = dnbr_sp19,
+      dnbr_sm = dnbr_sm19, 
+      disturb = disturb19,
+      burnPerim = burnPerim19,
+      canopy = canopy19, 
+      landcov18 = "NA", 
+      ndvi_sp18 = "NA", 
+      ndvi_sm18 = "NA",
+      dnbr_sp18 = "NA",
+      dnbr_sm18 = "NA",
+      disturb18 = "NA",
+      burnPerim18 = "NA",
+      canopy18 = "NA"
+    )
+  
+  covs_df <- rbind(covs18, covs19)
+    
 
   #'  Save for occupancy analyses
-  write.csv(covs18_df, paste0('./Output/CameraLocation_Covariates18_', Sys.Date(), '.csv'))  
+  # write.csv(covs18_df, paste0('./Output/CameraLocation_Covariates18_', Sys.Date(), '.csv'))  
+  # write.csv(covs19_df, paste0('./Output/CameraLocation_Covariates19_', Sys.Date(), '.csv'))
+  write.csv(covs_df, paste0('./Output/CameraLocation_Covariates18-20_', Sys.Date(), '.csv')) 
+  
   
