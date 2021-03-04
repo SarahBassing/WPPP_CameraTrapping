@@ -77,13 +77,15 @@
   #'  Camera deployment, retrieval, and problem dates for each station
   #'  This includes the locations and date ranges of camera stations that moved
   #'  part way through the season!
-  deployedYr1 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_18-19_updated_1.21.21.csv")
-  deployedYr2 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_19-20.csv")
+  deployedYr1 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_18-19_updated_1.21.21.csv", header = TRUE)
+  deployedYr2 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_19-20.csv", header = TRUE)
+  deployed <- rbind(deployedYr1, deployedYr2)
   
   #'  Species detection data  
   # alldetections <- read.csv("./Output/Bassing_AllDetections_2021-01-27.csv") %>%
-  alldetections <- read.csv("./Output/Bassing_AllDetectionsYr2_2021-03-01.csv") %>%
-    select(-c(X, Folder, ImageQuality)) %>%
+  # alldetections <- read.csv("./Output/Bassing_AllDetectionsYr2_2021-03-01.csv") %>%
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-03.csv") %>%
+    dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
                             format="%Y-%m-%d %H:%M:%S",tz="America/Los_Angeles"),
@@ -116,12 +118,15 @@
   
   #'  For now, subset to just 2018-2019 data
   #'  Will need to do this on a larger scale for all data
-  stationsYr1 <- allstations[allstations$Year == "Year1",]  
-  stationsYr2 <- allstations[allstations$Year == "Year2",]
+  # stationsYr1 <- allstations[allstations$Year == "Year1",]  
+  # stationsYr2 <- allstations[allstations$Year == "Year2",]
+  stations <- allstations[allstations$Year != "Year3",]
+  
   #'  Toss duplicate camera stations that moved to new locations
   #'  THIS IS NOT A PERMINANT FIX!!!!!
-  og_stations <- stationsYr1[!duplicated(stationsYr1$CameraLocation),]
-  og_stations <- stationsYr2[!duplicated(stationsYr2$CameraLocation),]
+  # og_stations <- stationsYr1[!duplicated(stationsYr1$CameraLocation),]
+  # og_stations <- stationsYr2[!duplicated(stationsYr2$CameraLocation),]
+  og_stations <- stations[!duplicated(stations$CameraLocation),]
 
   #'  Double check I have the same camera location information in each database
   #'  NA's indicate that CameraLocation is missing (there should be none!)
@@ -136,7 +141,7 @@
   #'  Join detection and camera station data into one messy massive data frame
   #'  Each version should have the same number of observations if they match
   dim(right_join(alldetections, og_stations, by = "CameraLocation"))
-  dim(left_join(alldetections, og_stations, by = "CameraLocation"))
+  dim(left_join(alldetections, og_stations, by = "CameraLocation"))  #off by 1 right now b/c no data for NE6078
   dim(full_join(alldetections, og_stations, by = "CameraLocation"))
   
   #'  Append correct camera location data to each image. Important for cameras
@@ -157,11 +162,11 @@
   #'  OK2749_59, OK3667_92, & OK7858_43
   #'  Yr2 cams with NAs that are ok: NE1380_106, NE1538_6, OK8420_71
   match_coord <- full_join(stations, deployed, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude"))
-  match_coord <- full_join(stationsYr2, deployedYr2, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude"))
+  # match_coord <- full_join(stationsYr2, deployedYr2, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude"))
   
   #'  Join original stations (don't account for moves) with start/end data for all stations
   # messy <- full_join(og_stations, deployedYr1, by = c("Cell_ID")) %>% 
-  messy <- full_join(og_stations, deployedYr2, by = c("Cell_ID")) %>%
+  messy <- full_join(og_stations, deployed, by = c("Cell_ID")) %>%
     #'  Drop Camera_Lat & Camera_Long since these don't account for camera locations
     #'  that moved part way through season
     dplyr::select(-c(Camera_Lat, Camera_Long))
@@ -200,7 +205,7 @@
   cams3 <- cbind(cams3, rep("Detection Data", nrow(cams3)))
   colnames(cams3) <- c("CameraLocation", "Data Source C")
   diff <- full_join(cams3, cams1, by = "CameraLocation")
-  diff <- full_join(diff, cams2, by = "CameraLocation")
+  diff <- full_join(diff, cams2, by = "CameraLocation")   # Currently NA for NE6078 w/ Date Source C is OK
   
   
   
@@ -208,7 +213,7 @@
   ####  KEEP IN MIND I DID THIS AND REMOVE THIS FIX ONCE NE6078 IS PROCESSED!!!  ####
   #'  Remove camera station info for camera with no processed data
   clean_deployed <- droplevels(clean_deployed[clean_deployed$Cell_ID != "NE6078",])
-  stationsYr2 <- droplevels(stationsYr2[stationsYr2$Cell_ID != "NE6078",])
+  stations <- droplevels(stations[stations$Cell_ID != "NE6078",])
   
   
   
@@ -255,7 +260,7 @@
     filter(FinalLocation != "NE2902_22" | !grepl("C69", RelativePath))
 
   #'  Add camera station covariate data to detection data
-  full_dat <- full_join(squeeky_clean, stationsYr2, by = c("Camera_Lat", "Camera_Long")) %>%
+  full_dat <- full_join(squeeky_clean, stations, by = c("Camera_Lat", "Camera_Long")) %>%
     #'  Rename Date columns to make it clearer how these differ; rename location name
     mutate(
       Date = as.Date(Date.x, format = "%Y-%m-%d"),
@@ -281,7 +286,7 @@
 
   
   #'  Save for projects!
-  write.csv(full_dat, paste0("./Output/full_camdataYr2_", Sys.Date(), ".csv"))
+  write.csv(full_dat, paste0("./Output/full_camdata18-20_", Sys.Date(), ".csv"))
 
   #'  Camera station covariates with updated CameraLocation names (b cameras)
   stations <- clean_deployed %>%
@@ -293,7 +298,7 @@
                           "CameraLocation", "Latitude", "Longitude", "Distance_Focal_Point", 
                           "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", 
                           "Land_Owner", "Habitat_Type")
-  write.csv(stations, paste0("./Output/Camera_StationYr2_Covariates_", Sys.Date(), ".csv"))
+  write.csv(stations, paste0("./Output/Camera_Station18-20_Covariates_", Sys.Date(), ".csv"))  # don't forget to deal with NE6078!
   
   #'  Final set of detection data with camera locations included for each observation
   animal_det <- full_dat %>%
