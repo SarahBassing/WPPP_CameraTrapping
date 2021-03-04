@@ -20,7 +20,7 @@
   
   #'  Read in data, format, and filter
   allstations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_2020-12-22_skinny.csv") %>% 
-    select("Status", "Year", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Name", 
+    dplyr::select("Status", "Year", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Name", 
            "Camera_Lat", "Camera_Long", "Distance_Focal_Point", "Height_frm_grnd", 
            "Monitoring", "Canopy_Cov", "Land_Mgnt", "Land_Owner", "Habitat_Type", "Pull_Status") %>%
     mutate(
@@ -125,9 +125,9 @@
       Habitat_Type2 = ifelse(grepl("Sagebrush", Habitat_Type), "Shrub-steppe", Habitat_Type2),
       Habitat_Type2 = ifelse(grepl("sagebrush", Habitat_Type), "Shrub-steppe", Habitat_Type2),
       Habitat_Type2 = ifelse(grepl("bitterbrush", Habitat_Type), "Shrub-steppe", Habitat_Type2),
-      Habitat_Type2 = ifelse(grepl("Grassland", Habitat_Type2), "Grassland", Habitat_Type2),
-      Habitat_Type2 = ifelse(grepl("Grassand", Habitat_Type2), "Grassland", Habitat_Type2),
-      Habitat_Type2 = ifelse(grepl("grassland", Habitat_Type2), "Grassland", Habitat_Type2),
+      Habitat_Type2 = ifelse(grepl("Grassland", Habitat_Type2), "Grassland", Habitat_Type2),      # note: looking to new column here
+      Habitat_Type2 = ifelse(grepl("Grassand", Habitat_Type2), "Grassland", Habitat_Type2),       # otherwise end up overwriting
+      Habitat_Type2 = ifelse(grepl("grassland", Habitat_Type2), "Grassland", Habitat_Type2),      # some habitat types
       Habitat_Type2 = ifelse(grepl("Agricultre", Habitat_Type2), "Agriculture", Habitat_Type2),
       Habitat_Type2 = ifelse(grepl("agriculture", Habitat_Type2), "Agriculture", Habitat_Type2),
       Habitat_Type2 = ifelse(grepl("Burn", Habitat_Type2), "Burned", Habitat_Type2),
