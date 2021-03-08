@@ -18,25 +18,35 @@
   #'  Rasters include:
   #'       -DEM (Cascadia, 30m res)
   #'         Calculate elevation, slope, aspect, roughness, terrain ruggedness index
-  #'       -Landcover type 1 (Cascadia, 30m res)
-  #'         Annual landcover type
-  #'       -Landcover type 2 (2016 National Landcover Database, 30m res)
+  #'       -Landcover type 1 (2016 National Landcover Database, 30m res)
   #'       -Percent canopy cover (Global Forest Change, 0.00025 res in degrees)
   #'         Raster created with Covariate_GFC_TreeCanopyCover.R
+  #'       -Landcover type 2 (Cascadia, 30m res)
+  #'         Annual landcover type
   #'       -vegIndicies (Cascadia, 30m res)
   #'         Band 1: Annual NDVI values for both Spring & Summer
   #'         Band 2: Annual dNBR (burn severity) values for both Spring & Summer 
   #'         Helpful background on dNBR: https://www.earthdatascience.org/courses/earth-analytics/multispectral-remote-sensing-modis/normalized-burn-index-dNBR/
-  #'       -Road density (Raster created by L.Satterfield, 1km res)
+  #'       -vegDisturbance (Cascadia, 30m res)
+  #'         Band 1: Annual disturbance types include burned, timber harvest, or other
+  #'         Band 3: Annual burn perimeters 
+  #'       -Road density (Cascadia, 1km res)
+  #'         Raster created with Covariate_Road_Density.R
+  #'         sum_km: total kilometers of roads (primary, secondary, logging, etc.)
+  #'         within a given 1 sq-km pixel (units are in kilometers even though
+  #'         sum_km says "[m]")
   #'       -Water density (Raster derived from WA Dept. Ecology shapefile, 1km res)
   #'         Raster created with Covariate_Hydro_Density.R
   #'         sum_km: total kilometers of flowlines (streams, rivers, etc.) within
   #'         a given 1 sq-km pixel (even though sum_km says "[m]" the units are 
   #'         in kilometers)
   #'         Metadata found here: https://fortress.wa.gov/ecy/gispublic/DataDownload/ECY_WAT_NHDWA.htm
-  #'       -vegDisturbance (Cascadia, 30m res)
-  #'         Band 1: Annual disturbance types include burned, timber harvest, or other
-  #'         Band 3: Annual burn perimeters 
+  #'       -Landfire Percent Canopy Cover (USGS, 30m res, excludes Canada)
+  #'         Data found here: https://landfire.gov/getdata.php
+  #'       -Human population (WorldPop, prepared by T. Ganz, 1km res)
+  #'         Pixels represent number of people per 1 sq-km based on country totals
+  #'         and adjusted to match UN population estimates
+  #'         Data found here: https://www.worldpop.org/geodata/listing?id=77
   #'  ============================================
 
   
@@ -45,6 +55,7 @@
   library(stars)
   library(rgeos)
   library(raster)
+  library(tidyverse)
   
   #'  Read in camera locations
   # station_covs <- read.csv("./Output/Camera_Station_Covariates_2021-02-05.csv")
@@ -63,14 +74,17 @@
     )
   dist2water <- rbind(dist2water18, dist2water19) %>%
     arrange(CameraLocation) %>%
+    dplyr::select(-X)
+  
+  dist2road <- read.csv("./Output/dist2road18-20.csv") %>%
     mutate(
-      ID = seq(1:nrow(.))
+      km2road = dist2road/1000
     ) %>%
     dplyr::select(-X)
-  # dist2road <- read.csv("./Output/dist2road.csv") %>%
-  #   mutate(
-  #     km2road = dist2road/1000
-  #   )
+  nearest <- full_join(dist2water, dist2road, by = "CameraLocation") %>%
+    mutate(
+      ID = seq(1:nrow(.))
+    )
   
   #'  Read in spatial data
   wppp_bound <- st_read("./Shapefiles/WPPP_CovariateBoundary", layer = "WPPP_CovariateBoundary")
@@ -84,9 +98,12 @@
   nlcd <- raster("./Shapefiles/Land_cover/NLCD_2016_Land_Cover/NLCD_2016_Land_Cover_L48_20190424.img")
   #'  Water density raster
   waterden <- raster("./Shapefiles/WA_DeptEcology_HydroWA/WaterDensity_1km.tif")
-  #'  Percent canopy cover raster
+  #'  Road density raster
+  roadden <- raster("./Shapefiles/Cascadia_layers/roadsForTaylor/RoadDensity_1km.tif")
+  #'  Percent canopy cover rasters
   canopy18 <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/treecov_2018.tif")
   canopy19 <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/treecov_2019.tif")
+  landfire <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_landfire_CC_2019.tif")
   #'  Cascadia Biodiveristy Watch rasters
   landcov18 <- raster("./Shapefiles/Cascadia_layers/landcover_2018.tif")
   landcov19 <- raster("./Shapefiles/Cascadia_layers/landcover_2019.tif")
@@ -102,6 +119,8 @@
   burnPerim18 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2018.tif", band = 3)
   disturb19 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2019.tif")
   burnPerim19 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2019.tif", band = 3)
+  #'  Human density
+  human <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_pop.tif")
   
   #'  Identify projections & resolutions of relevant features
   sa_proj <- projection("+proj=lcc +lat_1=48.73333333333333 +lat_2=47.5 +lat_0=47 +lon_0=-120.8333333333333 +x_0=500000 +y_0=0 +ellps=GRS80 +units=m +no_defs ")
@@ -110,16 +129,21 @@
   projection(dem)
   projection(nlcd)
   projection(waterden)
+  projection(roadden)
   projection(canopy18)
+  projection(landfire)
   projection(landcov18)
   projection(ndvi_sp18)
   projection(burnPerim18)
+  projection(human)
 
   res(dem)
   res(nlcd)
   res(waterden)
+  res(landfire)
   res(landcov18)
   res(ndvi_sp18)
+  res(human)
   
   #'  Make camera location data spatial
   cams <- st_as_sf(station_covs[,6:8], coords = c("Longitude", "Latitude"), crs = wgs84)
@@ -141,11 +165,27 @@
   #'  Replace NAs with 0's because no water features within pixel camera fell in
   water_density[is.na(water_density[])] <- 0
   
+  #'  Extract road density (km of roads/1 sq-km)
+  #'  Remember this is in same projection as water density
+  road_density <- raster::extract(roadden, cams_reproj, df = TRUE)
+  colnames(road_density) <- c("ID", "road_density")
+  #'  Replace NAs with 0's because no road features within pixel camera fell in
+  road_density[is.na(road_density[])] <- 0
+  
   
   #'  Extract percent canopy cover from GFC-derived raster
   canopy_stack <- stack(canopy18, canopy19)
   canopy_cov <- raster::extract(canopy_stack, cams, df = TRUE)
   colnames(canopy_cov) <- c("ID", "canopy18", "canopy19")
+  
+  #'  Extract percent canopy cover from Landfire data
+  landfire <- raster::extract(landfire, cams, df = TRUE)
+  colnames(landfire) <- c("ID", "landfire")
+  
+  #'  Extract human population
+  human_density <- raster::extract(human, cams, df = TRUE)
+  colnames(human_density) <- c("ID", "human_density")
+  
   
   
   #'  Stack Cascadia rasters
@@ -202,14 +242,15 @@
   
 
   #'  Create dataframe with extracted covariate values
-  km2water <- dplyr::select(dist2water, -dist2water)
-  # km2road <- dplyr::select(dist2road, -dist2road)
-  # nearest <- full_join(km2water, km2road, by = "CameraLocation")
+  nearest <- dplyr::select(nearest, -c(dist2water, dist2road))
   covs_df <- full_join(cascadia_covs, terrain, by = "ID") %>%
     full_join(landcov_nlcd, by = "ID") %>%
     full_join(canopy_cov, by = "ID") %>%
+    full_join(landfire, by = "ID") %>%
     full_join(water_density, by = "ID") %>%
-    full_join(km2water, by = "ID") %>% # use nearest eventually
+    full_join(road_density, by = "ID") %>%
+    full_join(nearest, by = "ID") %>%
+    full_join(human_density, by = "ID") %>%
     full_join(station_covs, by = "CameraLocation") %>%
     #  Slight rearranging of columns
     relocate(c(Year, Study_Area, CameraLocation), .before = ID) %>%
