@@ -84,7 +84,7 @@
   #'  Species detection data  
   # alldetections <- read.csv("./Output/Bassing_AllDetections_2021-01-27.csv") %>%
   # alldetections <- read.csv("./Output/Bassing_AllDetectionsYr2_2021-03-01.csv") %>%
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-03.csv") %>%
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-09.csv") %>%
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -319,8 +319,9 @@
   
   #'  All wolf detections
   wolves <- full_dat %>%
-    filter(Species == "Wolf")
-  # write.csv(wolves, paste0('./Output/Wolf_allimgs_', Sys.Date(), '.csv'))
+    filter(Species == "Wolf") %>%
+    filter(Year == "Year2")
+  # write.csv(wolves, paste0('./Output/Wolf_allimgsYr2_', Sys.Date(), '.csv'))
   
   #'  All cougar detections
   cougars <- full_dat %>%
@@ -390,9 +391,10 @@
   #'  Wolf detections for Lisanne
   wolf <- detections %>%
     filter(Species == "Wolf") %>%
+    filter(Year == "Year2") %>%
     # filter(str_detect(CameraLocation, paste("NE"), negate = TRUE)) %>%
     dplyr::select(-caps)
-  # write.csv(wolf, paste0('./Output/wolf_inddet_', Sys.Date(), '.csv'))
+  # write.csv(wolf, paste0('./Output/wolf_inddetYr2_', Sys.Date(), '.csv'))
   
   #'  =============================================
   #'  Make the species detection data spatial based on CameraLocation lat/long
