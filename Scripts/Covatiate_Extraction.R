@@ -47,6 +47,11 @@
   #'         Pixels represent number of people per 1 sq-km based on country totals
   #'         and adjusted to match UN population estimates
   #'         Data found here: https://www.worldpop.org/geodata/listing?id=77
+  #'       -Human Modification (Kennedy et al. 2019; 1 km res)
+  #'         Pixels represent cumulative measure of human modification of 
+  #'         terrestrial lands, values range 0-1 & represent proportion of 
+  #'         landscape modified based on 13 anthropogenic stressors & estimated 
+  #'         impacts, Data: https://figshare.com/articles/dataset/Global_Human_Modification/7283087
   #'  ============================================
 
   
@@ -119,8 +124,9 @@
   burnPerim18 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2018.tif", band = 3)
   disturb19 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2019.tif")
   burnPerim19 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2019.tif", band = 3)
-  #'  Human density
+  #'  Human density and human modified landscapes
   human <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_pop.tif")
+  HM <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_gHM.tif")
   
   #'  Identify projections & resolutions of relevant features
   sa_proj <- projection("+proj=lcc +lat_1=48.73333333333333 +lat_2=47.5 +lat_0=47 +lon_0=-120.8333333333333 +x_0=500000 +y_0=0 +ellps=GRS80 +units=m +no_defs ")
@@ -136,6 +142,7 @@
   projection(ndvi_sp18)
   projection(burnPerim18)
   projection(human)
+  projection(HM)
 
   res(dem)
   res(nlcd)
@@ -144,6 +151,7 @@
   res(landcov18)
   res(ndvi_sp18)
   res(human)
+  res(HM)
   
   #'  Make camera location data spatial
   cams <- st_as_sf(station_covs[,6:8], coords = c("Longitude", "Latitude"), crs = wgs84)
@@ -185,6 +193,10 @@
   #'  Extract human population
   human_density <- raster::extract(human, cams, df = TRUE)
   colnames(human_density) <- c("ID", "human_density")
+  
+  #'  Extract human modified lands
+  modified <- raster::extract(HM, cams, df = TRUE)
+  colnames(modified) <- c("ID", "modified")
   
   
   
@@ -250,7 +262,8 @@
     full_join(water_density, by = "ID") %>%
     full_join(road_density, by = "ID") %>%
     full_join(nearest, by = "ID") %>%
-    full_join(human_density, by = "ID") %>%
+    full_join(human_density, by = "ID") %>% 
+    full_join(modified, by  = "ID") %>%
     full_join(station_covs, by = "CameraLocation") %>%
     #  Slight rearranging of columns
     relocate(c(Year, Study_Area, CameraLocation), .before = ID) %>%
