@@ -84,7 +84,7 @@
   #'  Species detection data  
   # alldetections <- read.csv("./Output/Bassing_AllDetections_2021-01-27.csv") %>%
   # alldetections <- read.csv("./Output/Bassing_AllDetectionsYr2_2021-03-01.csv") %>%
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-09.csv") %>%
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-16.csv") %>%
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -141,7 +141,7 @@
   #'  Join detection and camera station data into one messy massive data frame
   #'  Each version should have the same number of observations if they match
   dim(right_join(alldetections, og_stations, by = "CameraLocation"))
-  dim(left_join(alldetections, og_stations, by = "CameraLocation"))  #off by 1 right now b/c no data for NE6078
+  dim(left_join(alldetections, og_stations, by = "CameraLocation"))  
   dim(full_join(alldetections, og_stations, by = "CameraLocation"))
   
   #'  Append correct camera location data to each image. Important for cameras
@@ -205,16 +205,7 @@
   cams3 <- cbind(cams3, rep("Detection Data", nrow(cams3)))
   colnames(cams3) <- c("CameraLocation", "Data Source C")
   diff <- full_join(cams3, cams1, by = "CameraLocation")
-  diff <- full_join(diff, cams2, by = "CameraLocation")   # Currently NA for NE6078 w/ Date Source C is OK
-  
-  
-  
-  
-  ####  KEEP IN MIND I DID THIS AND REMOVE THIS FIX ONCE NE6078 IS PROCESSED!!!  ####
-  #'  Remove camera station info for camera with no processed data
-  clean_deployed <- droplevels(clean_deployed[clean_deployed$Cell_ID != "NE6078",])
-  stations <- droplevels(stations[stations$Cell_ID != "NE6078",])
-  
+  diff <- full_join(diff, cams2, by = "CameraLocation")   
   
   
   #'  Now merge them all together so only the right camera location information
@@ -320,8 +311,8 @@
   #'  All wolf detections
   wolves <- full_dat %>%
     filter(Species == "Wolf") %>%
-    filter(Year == "Year2")
-  # write.csv(wolves, paste0('./Output/Wolf_allimgsYr2_', Sys.Date(), '.csv'))
+    filter(Year == "Year1")
+  # write.csv(wolves, paste0('./Output/Wolf_allimgsYr1_', Sys.Date(), '.csv'))
   
   #'  All cougar detections
   cougars <- full_dat %>%
