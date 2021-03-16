@@ -95,10 +95,11 @@
   
   #'  Run data from each year through function (reviewed and partially processed data)
   #'  Note Year 1 data has an extra empty column that makes merging with Year 2 data tough
-  mydir <- list("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1", 
+  mydir <- list("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1",
+                "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1",
                 "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 2",
-                "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1", 
                 "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 2")
+  
   read_dat <- lapply(mydir, read_files)
   #'  Warnings are due to an extra empty column at end of csv files- ignore
   
