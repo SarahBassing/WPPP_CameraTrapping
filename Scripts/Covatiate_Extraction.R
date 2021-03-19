@@ -21,13 +21,16 @@
   #'       -Landcover type 1 (2016 National Landcover Database, 30m res)
   #'       -Percent canopy cover (Global Forest Change, 0.00025 res in degrees)
   #'         Raster created with Covariate_GFC_TreeCanopyCover.R
-  #'       -Landcover type 2 (Cascadia, 30m res)
+  #'       -Landcover type 2 (Cascadia, 0.000269 degree res)
   #'         Annual landcover type
-  #'       -vegIndicies (Cascadia, 30m res)
+  #'       -Interpolated Landcover type 3 (Cascadia, 30m res reprojected)
+  #'         Annual landcover type interpolated to match NLCD
+  #'         Raster created with Covariate_Landcover_Reproject.R
+  #'       -vegIndicies (Cascadia, 0.000269 degree res)
   #'         Band 1: Annual NDVI values for both Spring & Summer
   #'         Band 2: Annual dNBR (burn severity) values for both Spring & Summer 
   #'         Helpful background on dNBR: https://www.earthdatascience.org/courses/earth-analytics/multispectral-remote-sensing-modis/normalized-burn-index-dNBR/
-  #'       -vegDisturbance (Cascadia, 30m res)
+  #'       -vegDisturbance (Cascadia, 0.000269 degree res)
   #'         Band 1: Annual disturbance types include burned, timber harvest, or other
   #'         Band 3: Annual burn perimeters 
   #'       -Road density (Cascadia, 1km res)
@@ -67,6 +70,7 @@
   # station_covs <- read.csv("./Output/Camera_StationYr2_Covariates_2021-03-02.csv")
   station_covs <- read.csv("./Output/Camera_Station18-20_Covariates_2021-03-04.csv")
   CameraLocation <- station_covs$CameraLocation
+  Year <- station_covs$Year
   
   #'  Read in covariate data extracted from other sources
   dist2water18 <- read.csv("./Output/dist2water.csv") %>%
@@ -112,6 +116,8 @@
   #'  Cascadia Biodiveristy Watch rasters
   landcov18 <- raster("./Shapefiles/Cascadia_layers/landcover_2018.tif")
   landcov19 <- raster("./Shapefiles/Cascadia_layers/landcover_2019.tif")
+  interp_landcov18 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2018.tif")
+  interp_landcov19 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2019.tif")
   ndvi_sp18 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2018_spring.tif")
   dnbr_sp18 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2018_spring.tif", band = 2)
   ndvi_sm18 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2018_summer.tif")
@@ -139,6 +145,7 @@
   projection(canopy18)
   projection(landfire)
   projection(landcov18)
+  projection(interp_landcov18)
   projection(ndvi_sp18)
   projection(burnPerim18)
   projection(human)
@@ -149,6 +156,7 @@
   res(waterden)
   res(landfire)
   res(landcov18)
+  res(interp_landcov18)
   res(ndvi_sp18)
   res(human)
   res(HM)
@@ -156,14 +164,12 @@
   #'  Make camera location data spatial
   cams <- st_as_sf(station_covs[,6:8], coords = c("Longitude", "Latitude"), crs = wgs84)
   
-  
   #'  Extract landcover data from NLCD
   #'  Remember this is in a different projection
   cams_reproj <- st_transform(cams, crs = crs(nlcd))
   landcov_nlcd <- raster::extract(nlcd, cams_reproj, df = TRUE)
   colnames(landcov_nlcd) <- c("ID", "NLCD_landcov")
   #'  I think raster::extract can actually reproject spatial points on the fly?!
-  
   
   #'  Extract water density (km of flowlines/1 sq-km)
   #'  Remember this is a different projection
@@ -179,7 +185,6 @@
   colnames(road_density) <- c("ID", "road_density")
   #'  Replace NAs with 0's because no road features within pixel camera fell in
   road_density[is.na(road_density[])] <- 0
-  
   
   #'  Extract percent canopy cover from GFC-derived raster
   canopy_stack <- stack(canopy18, canopy19)
@@ -198,7 +203,85 @@
   modified <- raster::extract(HM, cams, df = TRUE)
   colnames(modified) <- c("ID", "modified")
   
+  #'  Extract landcover value from each pixel within 250m radius of camera site
+  #'  Using interpolated landcover rasters derived from Cascadia landcover
+  cams_reproj <- st_transform(cams, crs(crs(interp_landcov18)))
+  pixvals18 <- raster::extract(interp_landcov18, cams_reproj, factors = TRUE, buffer = 250, df = TRUE)
+  pixvals_df18 <- as.data.frame(pixvals18)
+  pixvals19 <- raster::extract(interp_landcov19, cams_reproj, factors = TRUE, buffer = 250, df = TRUE)
+  pixvals_df19 <- as.data.frame(pixvals19)
+  #'  Merge together
+  ID <- as.data.frame(as.numeric(seq(1:nrow(cams_reproj))))
+  Cameras <- cbind(ID, CameraLocation)
+  colnames(Cameras) <- c("ID", "CameraLocation")
+  landcover_250m <- cbind(pixvals_df18, pixvals_df19$interpolated_landcover_2019) %>%
+    full_join(Cameras, by = "ID")
+  colnames(landcover_250m) <- c("ID", "landcover_2018", "landcover_2019", "CameraLocation")
   
+  #'  Count the number of cells in each landcover category by CameraLocation
+  tbl_landcover18 <- landcover_250m %>%
+    group_by(CameraLocation) %>%
+    count(landcover_2018) %>%
+    ungroup() %>%
+    pivot_wider(names_from = landcover_2018, values_from = n) %>%
+    replace(is.na(.), 0) %>% 
+    mutate(
+      sumPixels = rowSums(.[2:13])
+      )
+  #'  Drop landcover data from 2019
+  tbl_landcover18 <- cbind(Year, tbl_landcover18) %>%
+    filter(Year == "Year1")
+  #'  Reogranize so it's easier to keep track of each category
+  tbl_landcover18 <- tbl_landcover18[, order(colnames(tbl_landcover18), decreasing = TRUE)] %>%
+    relocate(sumPixels, .after = last_col()) 
+  colnames(tbl_landcover18) <- c("Year", "CameraLocation", "Residential",  
+                                 "Commercial", "Agriculture", "Forest",  
+                                 "XericShrub", "MesicShrub", "XericGrass", 
+                                 "MesicGrass", "WoodyWetland", "EmergentWetland", 
+                                 "Barren", "Water", "sumPixels")
+  tbl_landcover19 <- landcover_250m %>%
+    group_by(CameraLocation) %>%
+    count(landcover_2019) %>%
+    ungroup() %>%
+    pivot_wider(names_from = landcover_2019, values_from = n) %>%
+    replace(is.na(.), 0) %>% 
+    mutate(
+      sumPixels = rowSums(.[2:13])
+    )
+  #'  Drop landcover data from 2018
+  tbl_landcover19 <- cbind(Year, tbl_landcover19) %>%
+    filter(Year == "Year2")
+  #'  Reogranize so it's easier to keep track of each category
+  tbl_landcover19 <- tbl_landcover19[, order(colnames(tbl_landcover19), decreasing = TRUE)] %>%
+    relocate(sumPixels, .after = last_col())
+  colnames(tbl_landcover19) <- c("Year", "CameraLocation", "Residential",  
+                                 "Commercial", "Agriculture", "Forest",  
+                                 "XericShrub", "MesicShrub", "XericGrass", 
+                                 "MesicGrass", "WoodyWetland", "EmergentWetland", 
+                                 "Barren", "Water", "sumPixels")
+  #'  Merge annual landcover values together
+  tbl_landcover <- rbind(tbl_landcover18, tbl_landcover19) %>%
+    #'  Consolidate categories
+    #'  Keeping Water to include in percent calculation but will not use for analyses
+    mutate(
+      Forest =  Forest + WoodyWetland + EmergentWetland,
+      MesicGrass = MesicGrass + Barren,
+      Developed = Residential + Commercial + Agriculture,
+      MesicMix = MesicShrub + MesicGrass
+    ) %>%
+    dplyr::select(-c(WoodyWetland, EmergentWetland, Barren, Residential, Commercial, Agriculture)) %>%
+    relocate(sumPixels, .after = last_col()) %>%
+    #'  Calculate percent landcover type within 250m of each camera site
+    mutate(
+      PercForest = round(Forest/sumPixels, 2),
+      PercXericShrub = round(XericShrub/sumPixels, 2),
+      PercMesicShrub = round(MesicShrub/sumPixels, 2),  # Cannot be used in conjunction with MesicMix
+      PercXericGrass = round(XericGrass/sumPixels, 2),
+      PercMesicGrass = round(MesicGrass/sumPixels, 2),  # Cannot be used in conjunction with MesicMix
+      PercMesicMix = round(MesicMix/sumPixels, 2),      # Cannot be used in conjunction with other Mesic landcover types
+      PercWater = round(Water/sumPixels, 2),            # Don't use for analyses (I have better data for H2o)
+      PercDeveloped = round(Developed/sumPixels, 2)
+    )
   
   #'  Stack Cascadia rasters
   cascadia_stack <- stack(landcov18, landcov19, ndvi_sp18, ndvi_sm18, ndvi_sp19, ndvi_sm19, 
@@ -265,6 +348,7 @@
     full_join(human_density, by = "ID") %>% 
     full_join(modified, by  = "ID") %>%
     full_join(station_covs, by = "CameraLocation") %>%
+    full_join(tbl_landcover, by = c("CameraLocation", "Year")) %>%
     #  Slight rearranging of columns
     relocate(c(Year, Study_Area, CameraLocation), .before = ID) %>%
     relocate(c(NLCD_landcov, Habitat_Type), .after= "landcov19") %>%
