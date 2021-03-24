@@ -267,13 +267,15 @@
       Forest =  Forest + WoodyWetland + EmergentWetland,
       MesicGrass = MesicGrass + Barren,
       Developed = Residential + Commercial + Agriculture,
-      MesicMix = MesicShrub + MesicGrass
+      MesicMix = MesicShrub + MesicGrass,
+      ForestMix = Forest + MesicMix
     ) %>%
     dplyr::select(-c(WoodyWetland, EmergentWetland, Barren, Residential, Commercial, Agriculture)) %>%
     relocate(sumPixels, .after = last_col()) %>%
     #'  Calculate percent landcover type within 250m of each camera site
     mutate(
       PercForest = round(Forest/sumPixels, 2),
+      PercForestMix = round(ForestMix/sumPixels,2),     # Cannot be used in conjunction with Forest or any Mesic landcover types
       PercXericShrub = round(XericShrub/sumPixels, 2),
       PercMesicShrub = round(MesicShrub/sumPixels, 2),  # Cannot be used in conjunction with MesicMix
       PercXericGrass = round(XericGrass/sumPixels, 2),
