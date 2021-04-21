@@ -48,27 +48,33 @@
   ####  Read in Randomly Selected Camera locations  ####
   
   #  Read in cell centroids and final camera locations
-  OK_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "OK_cam_points_WGS84_summer20")
-  NE_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "NE_cam_points_WGS84_summer20")
-  # OK_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "OK_cam_points_summer19")
-  # NE_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "NE_cam_points_summer19")
-  # OK_cell_centroids <- readOGR("G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018", layer = "OK_Centroids_Final_2018")
-  # NE_cell_centroids <- readOGR("G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018", layer = "NE_Centoids_Final_2018") #typo in layer name has to stay
-  OK_cell_centroids <- readOGR("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Camera_Locations", layer = "OK_cam_points_summer19")
-  NE_cell_centroids <- readOGR("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Camera_Locations", layer = "NE_cam_points_summer19")
-    
-  
-  Aug_Cameras <- readOGR("./Shapefiles/Camera_Locations", layer = "Cam_Locations_080519")
-  # OK_cameras <- readOGR("G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018", layer = "OK_Camera_Locations_2018")
-  # NE_cameras <- readOGR("G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018", layer = "NE_Camera_Locations_2018")
+  cams1819 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master18_19_spdf_050220")
+  cams1920 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master19_20_spdf_050220")
+  cams2021 <- readOGR("./Shapefiles/Camera_Locations", layer = "Cam_2020locs_spdf_100520")
+  # OK_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "OK_cam_points_WGS84_summer20")
+  # NE_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "NE_cam_points_WGS84_summer20")
+  # # OK_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "OK_cam_points_summer19")
+  # # NE_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "NE_cam_points_summer19")
+  # # OK_cell_centroids <- readOGR("G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018", layer = "OK_Centroids_Final_2018")
+  # # NE_cell_centroids <- readOGR("G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018", layer = "NE_Centoids_Final_2018") #typo in layer name has to stay
+  # OK_cell_centroids <- readOGR("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Camera_Locations", layer = "OK_cam_points_summer19")
+  # NE_cell_centroids <- readOGR("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Camera_Locations", layer = "NE_cam_points_summer19")
+  #   
+  # 
+  # Aug_Cameras <- readOGR("./Shapefiles/Camera_Locations", layer = "Cam_Locations_080519")
+  # # OK_cameras <- readOGR("G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018", layer = "OK_Camera_Locations_2018")
+  # # NE_cameras <- readOGR("G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018", layer = "NE_Camera_Locations_2018")
 
   #  Reproject
-  OK_cent <- spTransform(OK_cell_centroids, new_proj)
-  NE_cent <- spTransform(NE_cell_centroids, new_proj)
-  OK_Cams <- spTransform(OK_cameras, new_proj)
-  NE_Cams <- spTransform(NE_cameras, new_proj)
-  
-  Aug_Cams <- spTransform(Aug_Cameras, new_proj)
+  cams1819 <- spTransform(cams1819, new_proj)
+  cams1920 <- spTransform(cams1920, new_proj)
+  cams2021 <- spTransform(cams2021, new_proj)
+  # OK_cent <- spTransform(OK_cell_centroids, new_proj)
+  # NE_cent <- spTransform(NE_cell_centroids, new_proj)
+  # OK_Cams <- spTransform(OK_cameras, new_proj)
+  # NE_Cams <- spTransform(NE_cameras, new_proj)
+  # 
+  # Aug_Cams <- spTransform(Aug_Cameras, new_proj)
   
     
 ################################################################################
@@ -79,10 +85,12 @@
   #  Pull study area specific US National Forests out
   #  Okanogan-Wenatchee National Forest
   Okanogan_NF <- usfs[usfs@data$FORESTNAME == "Okanogan-Wenatchee National Forest",]
-  OKNF <- Okanogan_NF[OK_cent,]
+  # OKNF <- Okanogan_NF[OK_cent,]
+  OKNF <- Okanogan_NF[cams1819,]
   #  Colville National Forest
   Colville_NF <- usfs[usfs@data$FORESTNAME == "Colville National Forest",]
-  CONF <- Colville_NF[NE_cent,]
+  # CONF <- Colville_NF[NE_cent,]
+  CONF <- Colville_NF[cams1819,]
   
   #  Write shapefiles for National Forests relevant to study areas
   # writeOGR(OKNF, dsn = "./Shapefiles/S_USA.RangerDistrict", layer = "Okanogan_NF", driver = "ESRI Shapefile", overwrite = T)
@@ -115,10 +123,25 @@
   
   ##  USFS  ##
   #  Pull only cameras that fall on USFS land
-  oknf_cents <- OK_cent[OKNF,]
-  conf_cents <- NE_cent[CONF,]
-  oknf_cams <- OK_Cams[OKNF,]
-  conf_cams <- NE_Cams[CONF,]
+  # oknf_cents <- OK_cent[OKNF,]
+  # conf_cents <- NE_cent[CONF,]
+  # oknf_cams <- OK_Cams[OKNF,]
+  # conf_cams <- NE_Cams[CONF,]
+  
+  oknf_cams18 <- cams1819[OKNF,]
+  oknf_cams19 <- cams1920[OKNF,]
+  oknf_cams20 <- cams2021[OKNF,]
+  conf_cams18 <- cams1819[CONF,]
+  conf_cams19 <- cams1920[CONF,]
+  conf_cams20 <- cams2021[CONF,]
+  
+  #  How many cameras on USFS total
+  cams18 <- length(oknf_cams18@data$Cell_ID) + length(conf_cams18@data$Cell_ID)
+  cams19 <- length(oknf_cams19@data$Cell_ID) + length(conf_cams19@data$Cell_ID)
+  cams20 <- length(oknf_cams20@data$Name) + length(conf_cams20@data$Name)
+  cams18+cams19+cams20
+  length(oknf_cams18@data$Cell_ID) + length(oknf_cams19@data$Cell_ID) + length(oknf_cams20@data$Name)
+  length(conf_cams18@data$Cell_ID) + length(conf_cams19@data$Cell_ID) + length(conf_cams20@data$Name)
   
   #  Create and save dataframe & shapefiles of camera locations to be shared with USFS
   Camera_Centroids_2020_OKNF <- as.data.frame(oknf_cents)
