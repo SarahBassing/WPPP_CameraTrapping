@@ -19,7 +19,8 @@
   #'  Read in & format NARR data extracted by O.Sanderfoot
   narr <- read.csv("./Output/WPPP_weather_data_all.csv") %>%
     mutate(
-      Observation_Date_Formatted = as.Date(Observation_Date_Formatted)
+      Observation_Date_Formatted = as.Date(Observation_Date_Formatted),
+      Study_Area = ifelse(grepl("NE", Camera_Location), "NE", "OK")
     ) %>%
     dplyr::select(-X)
   
@@ -31,14 +32,14 @@
     mutate(
       Week = 1 + as.numeric(Observation_Date_Formatted - as.Date("2018-07-01")) %/% 7
     ) %>%
-    group_by(Camera_Location, Latitude, Longitude, Week) %>%
+    group_by(Camera_Location, Study_Area, Week) %>%
     summarise_at(c("Air_Temperature_K", "Precipitation_mm"), mean) %>%
     ungroup() %>%
     mutate(
       Year = "Year1",
       Season = "Summer18"
     )
-  colnames(narr_smr18) <- c("CameraLocation", "Latitude", "Longitude", "Occasion", 
+  colnames(narr_smr18) <- c("CameraLocation", "Study_Area", "Occasion", 
                             "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
 
   narr_wtr1819 <- narr %>%
@@ -47,14 +48,14 @@
     mutate(
       Week = 1 + as.numeric(Observation_Date_Formatted - as.Date("2018-12-01")) %/% 7
     ) %>%
-    group_by(Camera_Location, Latitude, Longitude, Week) %>%
+    group_by(Camera_Location, Study_Area, Week) %>%
     summarise_at(c("Air_Temperature_K", "Precipitation_mm"), mean) %>%
     ungroup() %>%
     mutate(
       Year = "Year1",
       Season = "Winter1819"
     )
-  colnames(narr_wtr1819) <- c("CameraLocation", "Latitude", "Longitude", "Occasion", 
+  colnames(narr_wtr1819) <- c("CameraLocation", "Study_Area", "Occasion", 
                               "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
   
   narr_smr19 <- narr %>%
@@ -63,14 +64,14 @@
     mutate(
       Week = 1 + as.numeric(Observation_Date_Formatted - as.Date("2019-07-01")) %/% 7
     ) %>%
-    group_by(Camera_Location, Latitude, Longitude, Week) %>%
+    group_by(Camera_Location, Study_Area, Week) %>%
     summarise_at(c("Air_Temperature_K", "Precipitation_mm"), mean) %>%
     ungroup() %>%
     mutate(
       Year = "Year2",
       Season = "Summer19"
     )
-  colnames(narr_smr19) <- c("CameraLocation", "Latitude", "Longitude", "Occasion", 
+  colnames(narr_smr19) <- c("CameraLocation", "Study_Area", "Occasion", 
                             "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
   
   narr_wtr1920 <- narr %>%
@@ -79,14 +80,14 @@
     mutate(
       Week = 1 + as.numeric(Observation_Date_Formatted - as.Date("2019-12-01")) %/% 7
     ) %>%
-    group_by(Camera_Location, Latitude, Longitude, Week) %>%
+    group_by(Camera_Location, Study_Area, Week) %>%
     summarise_at(c("Air_Temperature_K", "Precipitation_mm"), mean) %>%
     ungroup() %>%
     mutate(
       Year = "Year2",
       Season = "Winter1920"
     )
-  colnames(narr_wtr1920) <- c("CameraLocation", "Latitude", "Longitude", "Occasion", 
+  colnames(narr_wtr1920) <- c("CameraLocation", "Study_Area", "Occasion", 
                               "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
 
   
