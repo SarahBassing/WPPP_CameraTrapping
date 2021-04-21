@@ -44,6 +44,10 @@
   #'         a given 1 sq-km pixel (even though sum_km says "[m]" the units are 
   #'         in kilometers)
   #'         Metadata found here: https://fortress.wa.gov/ecy/gispublic/DataDownload/ECY_WAT_NHDWA.htm
+  #'       -NARR Daily max precipitation (mm) and mean temperature (K) (32 km res)
+  #'         Extracted from North American Regional Reanalysis, data produced by 
+  #'         the National Centers for Environmental Prediction. 
+  #'         Data kindly extracted by O.Sanderfoot. 
   #'       -Landfire Percent Canopy Cover (USGS, 30m res, excludes Canada)
   #'         Data found here: https://landfire.gov/getdata.php
   #'       -Human population (WorldPop, prepared by T. Ganz, 1km res)
@@ -66,8 +70,6 @@
   library(tidyverse)
   
   #'  Read in camera locations
-  # station_covs <- read.csv("./Output/Camera_Station_Covariates_2021-02-05.csv")
-  # station_covs <- read.csv("./Output/Camera_StationYr2_Covariates_2021-03-02.csv")
   station_covs <- read.csv("./Output/Camera_Station18-20_Covariates_2021-03-04.csv")
   CameraLocation <- station_covs$CameraLocation
   Year <- station_covs$Year
@@ -94,6 +96,10 @@
     mutate(
       ID = seq(1:nrow(.))
     )
+  #'  Daily max precip and mean temp; extracted from NARR by O.Sanderfoot
+  #'  Will need to summarize/average based on desired date range & sampling occasions
+  narr <- read.csv("./Output/WPPP_weather_data_all.csv") %>%
+    dplyr::select(-X)
   
   #'  Read in spatial data
   wppp_bound <- st_read("./Shapefiles/WPPP_CovariateBoundary", layer = "WPPP_CovariateBoundary")
@@ -268,7 +274,8 @@
       MesicGrass = MesicGrass + Barren,
       Developed = Residential + Commercial + Agriculture,
       MesicMix = MesicShrub + MesicGrass,
-      ForestMix = Forest + MesicMix
+      ForestMix = Forest + MesicMix,
+      ForestMix2 = Forest + MesicShrub
     ) %>%
     dplyr::select(-c(WoodyWetland, EmergentWetland, Barren, Residential, Commercial, Agriculture)) %>%
     relocate(sumPixels, .after = last_col()) %>%
@@ -276,6 +283,7 @@
     mutate(
       PercForest = round(Forest/sumPixels, 2),
       PercForestMix = round(ForestMix/sumPixels,2),     # Cannot be used in conjunction with Forest or any Mesic landcover types
+      PercForestMix2 = round(ForestMix2/sumPixels, 2),
       PercXericShrub = round(XericShrub/sumPixels, 2),
       PercMesicShrub = round(MesicShrub/sumPixels, 2),  # Cannot be used in conjunction with MesicMix
       PercXericGrass = round(XericGrass/sumPixels, 2),
@@ -357,6 +365,9 @@
     relocate(Canopy_Cov, .after = "canopy19") %>%
     relocate(c(Latitude, Longitude), .after = last_col()) %>%
     dplyr::select(-c(ID, X, Cell_ID, Camera_ID))
+  
+  #'  Don't forget that you have daily precip & temp data but these need to be 
+  #'  filtered and summarized based on specific analyses, not here.
 
   #'  Save annual covariate data
   covs18_df <- covs_df[covs_df$Year == "Year1",] #%>%
@@ -411,8 +422,6 @@
     
 
   #'  Save for occupancy analyses
-  # write.csv(covs18_df, paste0('./Output/CameraLocation_Covariates18_', Sys.Date(), '.csv'))  
-  # write.csv(covs19_df, paste0('./Output/CameraLocation_Covariates19_', Sys.Date(), '.csv'))
   write.csv(covs_df, paste0('./Output/CameraLocation_Covariates18-20_', Sys.Date(), '.csv')) 
   
   
