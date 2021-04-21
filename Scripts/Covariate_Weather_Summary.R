@@ -26,6 +26,7 @@
   #'  Filter by date and summarize weather data by sampling occasion
   #'  Each sampling occasion is 7 days long
   narr_smr18 <- narr %>%
+    filter(Year == "Year1") %>%
     filter(Observation_Date_Formatted > "2018-06-30" & Observation_Date_Formatted < "2018-09-30") %>%
     mutate(
       Week = 1 + as.numeric(Observation_Date_Formatted - as.Date("2018-07-01")) %/% 7
@@ -41,6 +42,7 @@
                             "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
 
   narr_wtr1819 <- narr %>%
+    filter(Year == "Year1") %>%
     filter(Observation_Date_Formatted > "2018-11-30" & Observation_Date_Formatted < "2019-03-02") %>%
     mutate(
       Week = 1 + as.numeric(Observation_Date_Formatted - as.Date("2018-12-01")) %/% 7
@@ -53,9 +55,10 @@
       Season = "Winter1819"
     )
   colnames(narr_wtr1819) <- c("CameraLocation", "Latitude", "Longitude", "Occasion", 
-                            "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
+                              "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
   
   narr_smr19 <- narr %>%
+    filter(Year == "Year2") %>%
     filter(Observation_Date_Formatted > "2019-06-30" & Observation_Date_Formatted < "2019-09-30") %>%
     mutate(
       Week = 1 + as.numeric(Observation_Date_Formatted - as.Date("2019-07-01")) %/% 7
@@ -71,6 +74,7 @@
                             "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
   
   narr_wtr1920 <- narr %>%
+    filter(Year == "Year2") %>%
     filter(Observation_Date_Formatted > "2019-11-30" & Observation_Date_Formatted < "2020-03-01") %>%
     mutate(
       Week = 1 + as.numeric(Observation_Date_Formatted - as.Date("2019-12-01")) %/% 7
@@ -83,7 +87,7 @@
       Season = "Winter1920"
     )
   colnames(narr_wtr1920) <- c("CameraLocation", "Latitude", "Longitude", "Occasion", 
-                            "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
+                              "MeanDTemp_K", "MeanDPrecip_mm", "Year", "Season")
 
   
   #'  Combine data across seasons
