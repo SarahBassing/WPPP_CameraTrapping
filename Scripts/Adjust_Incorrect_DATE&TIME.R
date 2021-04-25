@@ -366,7 +366,7 @@
         DateTime = RgtDateTime,
         #DateTime = as.POSIXct(RgtDateTime, format="%Y-%m-%d %H:%M:%S",tz="America/Los_Angeles"),
         Date = RgtDate,
-        Time = chron(times = Time),
+        Time = chron(times = RgtTime),
         ImageQuality = as.factor(ImageQuality),
         CameraLocation = as.factor(as.character(CameraLocation)),
         DT_Good = as.factor(as.character(DT_Good)),
