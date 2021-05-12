@@ -103,6 +103,8 @@
   
   #'  Read in spatial data
   wppp_bound <- st_read("./Shapefiles/WPPP_CovariateBoundary", layer = "WPPP_CovariateBoundary")
+  OK_SA <- st_read("./Shapefiles/fwdstudyareamaps", layer = "METHOW_SA")
+  NE_SA <- st_read("./Shapefiles/fwdstudyareamaps", layer = "NE_SA") 
   #'  Terrain rasters
   dem <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m.tif")
   slope <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect.tif", band = 1)
@@ -144,6 +146,7 @@
   sa_proj <- projection("+proj=lcc +lat_1=48.73333333333333 +lat_2=47.5 +lat_0=47 +lon_0=-120.8333333333333 +x_0=500000 +y_0=0 +ellps=GRS80 +units=m +no_defs ")
   wgs84 <- projection("+proj=longlat +datum=WGS84 +no_defs")
   projection(wppp_bound)
+  projection(OK_SA)
   projection(dem)
   projection(nlcd)
   projection(waterden)
@@ -344,6 +347,16 @@
   #'  Where slope = 0, aspect is set to 90 degrees!!!!
   #'  For slope & aspect, used 8 closest cells to calculate values (better for rough surfaces)
   #'  For TRI, scale of neighbor window set to 3 (8 closest cells)
+  
+  #'  Quick summary data about elevation for publications
+  OK <- st_transform(OK_SA, crs = crs(wgs84))
+  NE <- st_transform(NE_SA, crs = crs(wgs84))
+  # elev_OK <- raster::extract(x = dem, y = OK)
+  # elev_NE <- raster::extract(x = dem, y = NE)
+  elev_minOK <- raster::extract(dem, OK, fun = min, na.rm=FALSE)
+  elev_maxOK <- raster::extract(dem, OK, fun = max, na.rm=FALSE)
+  elev_minNE <- raster::extract(dem, NE, fun = min, na.rm=FALSE)
+  elev_maxNE <- raster::extract(dem, NE, fun = max, na.rm=FALSE)
   
 
   #'  Create dataframe with extracted covariate values
