@@ -84,7 +84,8 @@
   #'  Species detection data  
   # alldetections <- read.csv("./Output/Bassing_AllDetections_2021-01-27.csv") %>%
   # alldetections <- read.csv("./Output/Bassing_AllDetectionsYr2_2021-03-01.csv") %>%
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-16.csv") %>%
+  # alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-16.csv") %>%
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-05-06.csv") %>%
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -289,7 +290,7 @@
                           "CameraLocation", "Latitude", "Longitude", "Distance_Focal_Point", 
                           "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", 
                           "Land_Owner", "Habitat_Type")
-  write.csv(stations, paste0("./Output/Camera_Station18-20_Covariates_", Sys.Date(), ".csv"))  # don't forget to deal with NE6078!
+  write.csv(stations, paste0("./Output/Camera_Station18-20_Covariates_", Sys.Date(), ".csv")) 
   
   #'  Final set of detection data with camera locations included for each observation
   animal_det <- full_dat %>%
