@@ -19,9 +19,12 @@
   colnames(CameraLocation) <- c("ID", "CameraLocation")
   
   #'  Read in and inspect landcover data
-  landcov18 <- raster("./Landcover/landcover_2018.tif")
-  landcov19 <- raster("./Landcover/landcover_2019.tif")
-  nlcd <- raster("./Landcover/NLCD_2016_Land_Cover_L48_20190424.img")
+  landcov18 <- raster("./Shapefiles/Cascadia_layers/landcover_2018.tif")
+  landcov19 <- raster("./Shapefiles/Cascadia_layers/landcover_2019.tif")
+  nlcd <- raster("./Shapefiles/Land_cover/NLCD_2016_Land_Cover/landcov16_crop.tif")
+  # landcov18 <- raster("./Landcover/landcover_2018.tif")
+  # landcov19 <- raster("./Landcover/landcover_2019.tif")
+  # nlcd <- raster("./Landcover/NLCD_2016_Land_Cover_L48_20190424.img")
   # landcov18 <- raster("./Shapefiles/Cascadia_layers/landcover_2018.tif")
   # landcov19 <- raster("./Shapefiles/Cascadia_layers/landcover_2019.tif")
   # nlcd <- raster("./Shapefiles/Land_cover/NLCD_2016_Land_Cover/NLCD_2016_Land_Cover_L48_20190424.img")
@@ -46,8 +49,8 @@
   reproj_landcov19 <- projectRaster(landcov19, crs = crs(sa_proj), res = res(nlcd), method = "ngb")
   
   #'  Save for future analyses
-  writeRaster(reproj_landcov18, "./Landcover/interpolated_landcover_2018.tif")
-  writeRaster(reproj_landcov19, "./Landcover/interpolated_landcover_2019.tif")
+  writeRaster(reproj_landcov18, "./Shapefiles/Cascadia_layers/interpolated_landcover_2018.tif")
+  writeRaster(reproj_landcov19, "./Shapefiles/Cascadia_layers/interpolated_landcover_2019.tif")
   
   #'  Check it out
   projection(reproj_landcov18)
