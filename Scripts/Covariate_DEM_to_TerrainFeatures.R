@@ -72,3 +72,11 @@
   rough_reproj <- raster::terrain(dem_reproj, opt = "roughness")
   writeRaster(rough_reproj, filename = "./Shapefiles/WA DEM rasters/WPPP_roughness_reproj.tif", format="GTiff", overwrite=TRUE)
   
+  
+  #'  Merge into a single raster stack
+  dem <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m_reproj.tif")
+  slope_aspect <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect_reproj.tif")
+  tri <- raster("./Shapefiles/WA DEM rasters/WPPP_TRI_reproj.tif")
+  rough <- raster("./Shapefiles/WA DEM rasters/WPPP_roughness_reproj.tif")
+  terrain_stack <- stack(dem, slope_aspect, tri, rough)
+  
