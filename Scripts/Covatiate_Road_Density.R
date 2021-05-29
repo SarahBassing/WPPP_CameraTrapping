@@ -25,22 +25,41 @@
   #' setwd("//udrive.uw.edu/udrive/Mapping") 
   
   #'  Read in spatial data
-  wppp_bound <- st_read("./Shapefiles/WPPP_CovariateBoundary", layer = "WPPP_CovariateBoundary")
-  wppp_grid <- raster("./Shapefiles/ref_grid_1k.img")
+  dem <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m_reproj.tif")
+  rd <- st_read("./Shapefiles/Cascadia_layers/roadsForTaylor", layer = "roadsForTaylor")
+  # wppp_bound <- st_read("./Shapefiles/WPPP_CovariateBoundary", layer = "WPPP_CovariateBoundary")
+  # wppp_grid <- raster("./Shapefiles/ref_grid_1k.img")
   # wppp_bound <- st_read("./WPPP_CovariateBoundary/WPPP_CovariateBoundary", layer = "WPPP_CovariateBoundary")
   # wppp_grid <- raster("./WPPP_CovariateBoundary/WPPP_CovariateBoundary/ref_grid_1k.img")
   
   #'  Identify projections of relevant features
   sa_proj <- projection("+proj=lcc +lat_1=48.73333333333333 +lat_2=47.5 +lat_0=47 +lon_0=-120.8333333333333 +x_0=500000 +y_0=0 +ellps=GRS80 +units=m +no_defs ")
-  projection(sa_proj)
-  projection(wppp_bound)
-  projection(wppp_grid)
   
   #'  Read in cropped road layer in preferred WA projection
-  rd <- st_read("./Shapefiles/Cascadia_layers/roadsForTaylor", layer = "roadsForTaylor")
+  # rd <- st_read("./Shapefiles/Cascadia_layers/roadsForTaylor", layer = "roadsForTaylor")
   # rd <- st_read("./roadsForTaylor", layer = "roadsForTaylor")
+  
+  #'  Reproject road layer to study area projection
   rd_reproj <- st_transform(rd, crs = st_crs(sa_proj))
   projection(rd_reproj)
+  projection(dem)
+
+  #'  Create an empty raster with specified extent, resolution, and projection
+  r <- raster(extent(rd_reproj), res = res(dem), crs = crs(sa_proj))
+  
+  #'  Merge all road features into a single polyline for easier manipulation
+  #'  rgeos needs shapefiles to be an sp object, not an sf object
+  rd_sp <- as(rd_reproj, Class = "Spatial")
+  rd_union <- rgeos::gUnion(rd_sp, rd_sp)
+  
+  #'  Compute distance from each line feature to each raster point
+  dd <- rgeos::gDistance(rd_union, as(r, "SpatialPoints"), byid = TRUE)
+  
+  #'  Save only minimum distance to each raster point
+  r[] <- apply(dd, 1, min)
+  plot(r)
+  
+  
   
   
   ####  CREATE ROAD DENSITY RASTER  ####
