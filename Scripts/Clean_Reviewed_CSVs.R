@@ -316,7 +316,6 @@
   #'  Double check if cameras are dropping Species classifications after formatting
   #'  Just because it lists these cameras doesn't mean there's a problem
   droplevels(unique(full_csv$CameraLocation[is.na(full_csv$Species) & full_csv$Animal == "TRUE"]))
-  droplevels(unique(full_csv$CameraLocation[is.na(full_csv$Species) & full_csv$Animal == "true"]))
   #'  Missing species data is due to confusion re: classifying humans with dog/horse
   #'  These cameras have been reviewed and are fine as is:
   #'  NE2881_9,
@@ -329,11 +328,11 @@
   
   #'  Identify which cameras have images that were never reviewed or where info
   #'  was incorrectly propagated across empty images
-  # droplevels(unique(full_csv$CameraLocation[full_csv$Service == "FALSE" &
-  #                                             full_csv$Empty == "FALSE" &
-  #                                             full_csv$Animal == "FALSE" &
-  #                                             full_csv$Human == "FALSE" &
-  #                                             full_csv$Vehicle == "FALSE"]))
+  droplevels(unique(full_csv$CameraLocation[full_csv$Service == "FALSE" &
+                                              full_csv$Empty == "FALSE" &
+                                              full_csv$Animal == "FALSE" &
+                                              full_csv$Human == "FALSE" &
+                                              full_csv$Vehicle == "FALSE"]))
   ##  BRB, gotta fix these  ##
 
   #'  Identify which images still need a second review
