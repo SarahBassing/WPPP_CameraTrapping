@@ -4,10 +4,18 @@
   #'  Sarah Bassing
   #'  May 2021
   #'  ============================================
-  #'  # Cascadia Landcover Classifications
+  #'  Script to reproject Cascadia landcover rasters to study area projection
+  #'  (takes FOREVER and needs a lot of memory), reclassify landcover types to 
+  #'  a smaller set of habitat types, and create rasters representing the percent
+  #'  of lancover type within 250m of each pixel using a moving window analysis.
+  #'  Reclassification and moving window code provided by L. Satterfield.
+  #'
+  #'  Initial Cascadia Landcover Classifications:
   #'  101 Water; 111 Glacier; 121 Barren; 201 Emergent Wetland; 202 Woody Wetland; 
   #'  Marine Wetland; 211 Mesic Grass; 212 Xeric Grass; 221 Mesic Shrub
-  #'  222 Xeric Shrub; 230 Forest; 310 Agriculture; 331 Commercial/Industrial; 332 Residential	
+  #'  222 Xeric Shrub; 230 Forest; 310 Agriculture; 331 Commercial/Industrial; 
+  #'  332 Residential	
+  #'  ============================================
 
 
   #'  Load libraries
