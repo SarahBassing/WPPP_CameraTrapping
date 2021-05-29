@@ -56,7 +56,7 @@
     cams19 <- cbind(deployed19, Year, cameras19)
     
     #  2020-2021 data
-    cameras20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_100520.csv")) %>%
+    cameras20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_052821.csv")) %>% #100520
       dplyr::select("Date", "Study_Area",  "Cell_ID", "Cam_ID", "Memory_Card", 
                     "Cam_Lat", "Cam_Long",  
                     "Cam_Distance_Focal_Point", "Cam_Distance_Ground", 
@@ -129,7 +129,7 @@
   chks19 <- cbind(checked19, checks19)
   
   #  Pulling Year 2 (summer 2019) cameras in summer 2020
-  summchecks20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Checking_2020_100520.csv")) %>%
+  summchecks20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Checking_2020_052821.csv")) %>% #100520
     dplyr::select("Date", "Study_Area", "Cell_ID",  
                   "Cam_ID", "Cam_Card", "Cam_Lat", "Cam_Long", 
                   "Cam_Condition", "Explain1", "Cam_Replaced", "Num_Images",
@@ -144,12 +144,16 @@
                           "Adjustments", "Explain2",
                           "New_Location", "New_Lat", "New_Long",
                           "Cam_Removed", "Explain3", "Trail_Width", "Year")
-  #  Identify & change Year designation for OK3940_47 
-  #  Trent went to pull but didn't have the right key
+  #  Identify & change Year designation for OK3940_47 & NE3057_54
+  #  Trent went to pull OK3940 but didn't have the right key
+  #  Pull data not properly recorded for NE3057
   #  Cam_Removed makes it look like a Year3 camera with the above code
   dim(summchecks20)
   which(summchecks20$Cell_ID == "OK3940" & summchecks20$Cam_Removed == "N")
   summchecks20$Year[summchecks20$Cell_ID == "OK3940"] <- "Year2"
+  summchecks20$Year[summchecks20$Cell_ID == "NE3057"] <- "Year2"
+  #  FYI, NE2897 was never pulled in summer 2020 so it's out for a second year
+  #  so NE2897 is a Year2 and Year3 camera
   #  Reorder so Year column is in correct spot
   summchecks20 <- dplyr::select(summchecks20, "Date", "Study_Area", "Year", "Cell_ID",
                             "Camera_ID", "Card_No", "Camera_Lat", "Camera_Long",
@@ -322,8 +326,8 @@
   full <- rbind(first, last, prob_cams) %>%
     arrange(Cell_ID)
   #  Gather date of last check or removal for all cameras
-  end_prob <- select(prob_last, c(Cell_ID, Camera_ID, Status, Date))
-  end_good <- select(last, c(Cell_ID, Camera_ID, Status, Date))
+  end_prob <- dplyr::select(prob_last, c(Cell_ID, Camera_ID, Status, Date))
+  end_good <- dplyr::select(last, c(Cell_ID, Camera_ID, Status, Date))
   end <- rbind(end_prob, end_good)
   final_sites <- left_join(full, end, by = (c("Cell_ID", "Camera_ID"))) %>%
     filter(Status.x != "Removed" | dbl_check == 1)
@@ -343,7 +347,7 @@
   
   #  Save
   #  Use this to eventually create "problems" All_Camera_Stations files for camtrapR
-  # write.csv(final_sites, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), "_skinny.csv"))
+   # write.csv(final_sites, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), "_skinny.csv"))
   
   
   
