@@ -113,7 +113,8 @@
   # writeRaster(HM_reproj, filename = "./Shapefiles/Additional_WPPP_Layers/WPPP_gHM_reproj.tif", format="GTiff", overwrite=TRUE)
   HM_reproj <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_gHM_reproj.tif")
   #'  Road density raster
-  roadden <- raster("./Shapefiles/Cascadia_layers/roadsForTaylor/RoadDensity_1km.tif")
+  roadden <- raster("./Shapefiles/roaddensity/road.density_km2_TIF.tif")
+  #roadden <- raster("./Shapefiles/Cascadia_layers/roadsForTaylor/RoadDensity_1km.tif") 
   #'  Cascadia Biodiveristy interpolated rasters
   interp_landcov18 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2018.tif")
   interp_landcov19 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2019.tif")
@@ -235,11 +236,30 @@
   
   #'  Extract covariate values at each camera site from all rasters
   #'  =============================================================
-  #'  Stack terrain and anthropogenic influence covariates
-  #'  Must have matching extents, resolutions, and projections
-  covs_stack <- stack(dem, slope, roadden, HM_reproj)
-  #'  Extract all together
-  cam_covs <- raster::extract(covs_stack, cams_reproj, df = TRUE)
+  #'  Stack terrain rasters
+  terra_stack <- stack(dem, slope)
+  #'  Extract terrain variables
+  terra_covs <- raster::extract(terra_stack, cams_reproj, df = TRUE)
+  
+  #'  Extract anthropogenic variables
+  road_den <- raster::extract(roadden, cams_reproj, df = TRUE)
+  modified <- raster::extract(HM_reproj, cams_reproj, df = TRUE)
+  
+  cam_covs <- terra_covs %>%
+    full_join(road_den, by = "ID") %>%
+    full_join(modified, by = "ID") %>%
+    transmute(
+      obs = ID,
+      Elev = round(WPPP_DEM_30m_reproj, digits = 2),
+      Slope = round(WPPP_slope_aspect_reproj, digits = 2),
+      RoadDen = round(road.density_km2_TIF, digits = 2),
+      HumanMod = round(WPPP_gHM_reproj, digits = 2)
+    ) %>%
+    #'  Need to change NA to 0 for road density (if NA it means there are no
+    #'  roads within that 1km pixel and raster pixel was empty)
+    mutate(
+      RoadDen = ifelse(is.na(RoadDen), 0, RoadDen)
+    )
   
   
   #'  Extract percent landcover type using 250m moving window at each camera site
