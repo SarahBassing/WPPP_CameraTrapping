@@ -276,6 +276,7 @@
     full_join(Cameras, by = "ID") %>%
     cbind(Year) %>%
     transmute(
+      obs = ID,
       CameraLocation = CameraLocation,
       Year = Year,
       PercForestMix2 = round(forestmix2prop_18, 2),
@@ -289,6 +290,7 @@
     full_join(Cameras, by = "ID") %>%
     cbind(Year) %>%
     transmute(
+      obs = ID,
       CameraLocation = CameraLocation,
       Year = Year,
       PercForestMix2 = round(forestmix2prop_19, 2),
@@ -304,79 +306,19 @@
   #'  Combine extracted covaraites into a single dataframe
   #'  ====================================================
   nearest <- dplyr::select(nearest, -c(dist2water, dist2road))
-  covs_df <- full_join(cam_covs, tbl_landcover, by = "ID") %>%
+  covs_df <- full_join(cam_covs, tbl_landcover, by = "obs") %>%
     full_join(station_covs, by = "CameraLocation") %>%
-    relocate(c(Year, Study_Area, CameraLocation), .before = ID) %>%
+    relocate(c(Year.x, Study_Area, CameraLocation), .before = obs) %>%
     relocate(c(Latitude, Longitude), .after = last_col()) %>%
-    dplyr::select(-c(ID, X, Cell_ID, Camera_ID))
-    # full_join(landcov_nlcd, by = "ID") %>%
-    # full_join(canopy_cov, by = "ID") %>%
-    # full_join(landfire, by = "ID") %>%
-    # full_join(water_density, by = "ID") %>%
-    # full_join(road_density, by = "ID") %>%
-    # full_join(nearest, by = "ID") %>%
-    # full_join(human_density, by = "ID") %>% 
-    # full_join(modified, by  = "ID") %>%
-    # full_join(tbl_landcover, by = c("CameraLocation", "Year")) %>%
-    #  Slight rearranging of columns
-    # relocate(c(Year, Study_Area, CameraLocation), .before = ID) %>%
-    # relocate(c(NLCD_landcov, Habitat_Type), .after = landcov19) %>%
-    # relocate(c(PercForestMix2, PercXericGrass, PercXericShrub), .after = Habitat_Type) %>%
-    # relocate(Canopy_Cov, .after = canopy19) %>%
+    dplyr::select(-c(obs, Year.y, X, Cell_ID, Camera_ID))
+  colnames(covs_df)[colnames(covs_df) == "Year.x"] <- "Year"
 
-    
-  
   #'  Don't forget that you have daily precip & temp data but these need to be 
   #'  filtered and summarized based on specific analyses, not here.
   
   #'  Save annual covariate data
   covs18_df <- covs_df[covs_df$Year == "Year1",]   
   covs19_df <- covs_df[covs_df$Year == "Year2",] 
-  
-  #' #'  Merge annual data into a larger complete covariate dataframe
-  #' #'  Requires renaming columns so variables from different years have same header
-  #' #'  Keep in mind each year has slightly different number of covariates so need to add NA columns
-  #' covs18 <- covs18_df %>%
-  #'   mutate(
-  #'     landcov = landcov18,
-  #'     ndvi_sp = ndvi_sp18,
-  #'     ndvi_sm = ndvi_sm18,
-  #'     dnbr_sp = dnbr_sp18,
-  #'     dnbr_sm = dnbr_sm18, 
-  #'     disturb = disturb18,
-  #'     burnPerim = burnPerim18,
-  #'     canopy = canopy18, 
-  #'     landcov19 = "NA", 
-  #'     ndvi_sp19 = "NA", 
-  #'     ndvi_sm19 = "NA",
-  #'     dnbr_sp19 = "NA",
-  #'     dnbr_sm19 = "NA",
-  #'     disturb19 = "NA",
-  #'     burnPerim19 = "NA",
-  #'     canopy19 = "NA"
-  #'   )
-  #' 
-  #' covs19 <- covs19_df %>%
-  #'   mutate(
-  #'     landcov = landcov19,
-  #'     ndvi_sp = ndvi_sp19,
-  #'     ndvi_sm = ndvi_sm19,
-  #'     dnbr_sp = dnbr_sp19,
-  #'     dnbr_sm = dnbr_sm19, 
-  #'     disturb = disturb19,
-  #'     burnPerim = burnPerim19,
-  #'     canopy = canopy19, 
-  #'     landcov18 = "NA", 
-  #'     ndvi_sp18 = "NA", 
-  #'     ndvi_sm18 = "NA",
-  #'     dnbr_sp18 = "NA",
-  #'     dnbr_sm18 = "NA",
-  #'     disturb18 = "NA",
-  #'     burnPerim18 = "NA",
-  #'     canopy18 = "NA"
-  #'   )
-  #' 
-  #' covs_df <- rbind(covs18, covs19)
   
   
   #'  Save for occupancy analyses
