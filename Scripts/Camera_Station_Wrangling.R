@@ -56,7 +56,7 @@
     cams19 <- cbind(deployed19, Year, cameras19)
     
     #  2020-2021 data
-    cameras20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_052821.csv")) %>% #100520
+    cameras20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_071921.csv")) %>% #052821
       dplyr::select("Date", "Study_Area",  "Cell_ID", "Cam_ID", "Memory_Card", 
                     "Cam_Lat", "Cam_Long",  
                     "Cam_Distance_Focal_Point", "Cam_Distance_Ground", 
@@ -129,7 +129,7 @@
   chks19 <- cbind(checked19, checks19)
   
   #  Pulling Year 2 (summer 2019) cameras in summer 2020
-  summchecks20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Checking_2020_052821.csv")) %>% #100520
+  summchecks20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Checking_2020_071921.csv")) %>% #052821
     dplyr::select("Date", "Study_Area", "Cell_ID",  
                   "Cam_ID", "Cam_Card", "Cam_Lat", "Cam_Long", 
                   "Cam_Condition", "Explain1", "Cam_Replaced", "Num_Images",
@@ -172,6 +172,37 @@
   colnames(checked20) <- "Status"
   chks20 <- cbind(checked20, checks20)
   
+  #  Pulling Year 3 (summer 2020) cameras in summer 2021 and end of study
+  summchecks21 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Retrieval_2021_071921.csv")) %>% 
+    dplyr::select("Date", "Study_Area", "Cell_ID",  
+                  "Cam_ID", "Cam_Card", "Cam_Lat", "Cam_Long", 
+                  "Cam_Condition", "Explain1", "Cam_Replaced", "Num_Images",
+                  "Adjustments", "Explain2", 
+                  "New_Location", "New_Lat", "New_Long",
+                  "Cam_Removed", "Explain3", "Cam_Width_of_feature") %>%
+    mutate(Year = ifelse(Cam_Removed == "Y", "Year3", Year),
+           Cam_ID = as.factor(as.character((Cam_ID))))
+  colnames(summchecks21) <- c("Date", "Study_Area", "Cell_ID", # "Year",
+                              "Camera_ID", "Card_No", "Camera_Lat", "Camera_Long",
+                              "Condition", "Explain1", "Cam_Replaced", "Num_Images",
+                              "Adjustments", "Explain2",
+                              "New_Location", "New_Lat", "New_Long",
+                              "Cam_Removed", "Explain3", "Trail_Width", "Year")
+  dim(summchecks21)
+  #  FYI, NE2897 was never pulled in summer 2020 so it's out for a second year
+  #  so NE2897 is a Year2 and Year3 camera
+  #  Reorder so Year column is in correct spot
+  summchecks21 <- dplyr::select(summchecks21, "Date", "Study_Area", "Year", "Cell_ID",
+                                "Camera_ID", "Card_No", "Camera_Lat", "Camera_Long",
+                                "Condition", "Explain1", "Cam_Replaced", "Num_Images",
+                                "Adjustments", "Explain2",
+                                "New_Location", "New_Lat", "New_Long",
+                                "Cam_Removed", "Explain3", "Trail_Width")
+  checks20_21 <- dplyr::filter(summchecks21, Year == "Year3")
+  checked20_21 <- as.data.frame(rep("Removed", nrow(checks20_21)))
+  colnames(checked20_21) <- "Status"
+  chks20_21 <- cbind(checked20_21, checks20_21)
+  
   
   
   #  Slim this down for now
@@ -209,10 +240,15 @@
                                            "Camera_ID", "Card_No", "Camera_Lat", "Camera_Long", 
                                            "Condition", "Explain1", "Num_Images",
                                            "Adjustments", "Explain2", "Explain3", "Cam_Removed"))
+  checks20_21_slim <- dplyr::select(chks20_21, c("Status", "Year", "Date", "Study_Area", "Cell_ID", 
+                                                 "Camera_ID", "Card_No", "Camera_Lat", "Camera_Long", 
+                                                 "Condition", "Explain1", "Num_Images", 
+                                                 "Adjustments", "Explain2", "Explain3", 
+                                                 "Cam_Removed", "Trail_Width"))
   
   
   
-  #  Bind deploy and check dataframes together into single file
+  #  Bind deploy and check dataframes together into single file per year
   camera_master_2018 <- bind_rows(cameras18_slim, checks18_slim, checks18_19_slim) %>%
     mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
     arrange(Cell_ID, Date)
@@ -226,7 +262,14 @@
                   "Adjustments", "Explain2", "Explain3", "Cam_Removed") %>%
     mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
     arrange(Cell_ID, Date)
-  camera_master_2020 <- bind_rows(cameras20_slim, checks20_slim) %>%  #  eventually create and add checks20_21_slim
+  camera_master_2020 <- bind_rows(cameras20_slim, checks20_slim, checks20_21_slim) %>%  
+    #  Reogranize columns so trail width is with other measurement data
+    dplyr::select("Status", "Year", "Date", "Study_Area", "Cell_ID", 
+                  "Camera_ID", "Card_No", "Camera_Lat", "Camera_Long",
+                  "Distance_Focal_Point", "Height_frm_grnd", "Trail_Width", 
+                  "Monitoring","Canopy_Cov", "Land_Mgnt", "Land_Owner", 
+                  "Habitat_Type", "Condition", "Explain1", "Num_Images",
+                  "Adjustments", "Explain2", "Explain3", "Cam_Removed") %>%
     mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
     arrange(Cell_ID, Date)
     
@@ -284,7 +327,7 @@
   #  and csv organized by hand in excel
   #  Camera deployment covariates will be propogated to relevant rows by hand in excel
   # write.csv(all_cams, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), ".csv"))
-  ## =========================================
+  # =========================================
   
   
   #  Create final camera deployment covariate data set, including deployment & pull
@@ -347,7 +390,7 @@
   
   #  Save
   #  Use this to eventually create "problems" All_Camera_Stations files for camtrapR
-   # write.csv(final_sites, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), "_skinny.csv"))
+  # write.csv(final_sites, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), "_skinny.csv"))
   
   
   
