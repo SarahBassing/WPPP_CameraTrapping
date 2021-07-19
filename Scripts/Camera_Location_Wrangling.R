@@ -48,9 +48,9 @@
   ####  Read in Randomly Selected Camera locations  ####
   
   #  Read in cell centroids and final camera locations
-  cams1819 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master18_19_spdf_050220")
-  cams1920 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master19_20_spdf_050220")
-  cams2021 <- readOGR("./Shapefiles/Camera_Locations", layer = "Cam_2020locs_spdf_100520")
+  cams1819 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master18_19_spdf_071921")
+  cams1920 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master19_20_spdf_071921")
+  cams2021 <- readOGR("./Shapefiles/Camera_Locations", layer = "cams_master20_21_spdf_071921")
   # OK_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "OK_cam_points_WGS84_summer20")
   # NE_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "NE_cam_points_WGS84_summer20")
   # # OK_cell_centroids <- readOGR("./Shapefiles/Camera_Locations", layer = "OK_cam_points_summer19")
@@ -144,11 +144,24 @@
   length(conf_cams18@data$Cell_ID) + length(conf_cams19@data$Cell_ID) + length(conf_cams20@data$Name)
   
   #  Create and save dataframe & shapefiles of camera locations to be shared with USFS
+  oknf_cams18_df <- as.data.frame(oknf_cams18)
+  oknf_cams19_df <- as.data.frame(oknf_cams19)
+  oknf_cams20_df <- as.data.frame(oknf_cams20)
+  oknf_cams18_21_df <- rbind(oknf_cams18_df, oknf_cams19_df, oknf_cams20_df)
+  # write.csv(oknf_cams18_21_df, file = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/All_Locations_2018-2021/For Sharing/Camera_Locations_2018_2021_OKNF.csv")
+  
   Camera_Centroids_2020_OKNF <- as.data.frame(oknf_cents)
   # write.csv(Camera_Locations_2018_OKNF, file = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018/For Sharing/Camera_Locations_2018_OKNF.csv")
   writeOGR(oknf_cents, dsn = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2020/For Sharing", layer = "UW Cameras 2020 Okanogan NF", driver = "ESRI Shapefile", overwrite = T)
   writeOGR(oknf_cents, dsn="G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2020/For Sharing/UWCameras_2020_OkanoganNF.gpx",
            dataset_options="GPX_USE_EXTENSIONS=yes",layer="waypoints",driver="GPX", overwrite_layer = T)
+  
+  conf_cams18_df <- as.data.frame(conf_cams18)
+  conf_cams19_df <- as.data.frame(conf_cams19)
+  conf_cams20_df <- as.data.frame(conf_cams20)
+  conf_cams18_21_df <- rbind(conf_cams18_df, conf_cams19_df, conf_cams20_df)
+  # write.csv(conf_cams18_21_df, file = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/All_Locations_2018-2021/For Sharing/Camera_Locations_2018_2021_CONF.csv")
+  
   Camera_Locations_2020_CONF <- as.data.frame(conf_cents)
   # write.csv(Camera_Locations_2018_CONF, file = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2018/For Sharing/Camera_Locations_2018_CONF.csv")
   writeOGR(conf_cents, dsn = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/Summer 2020/For Sharing", layer = "UW Cameras 2020 Colville NF", driver = "ESRI Shapefile", overwrite = T)
