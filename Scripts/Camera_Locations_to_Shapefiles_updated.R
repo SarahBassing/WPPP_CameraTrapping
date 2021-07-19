@@ -22,7 +22,7 @@
   ##  Version 1: Organize ALL camera locations, even if cameras were moved during season
   
   #  Cameras deployed summer 2018
-  master18_19 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018_updated_2021-05-28.csv") %>%  # camera_master_2018_updated.9.25.20
+  master18_19 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018_updated_2021-07-19.csv") %>%  # camera_master_2018_updated_2021-05-28
     dplyr::select("Status", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Camera_Long", "Camera_Lat", "Distance_Focal_Point", "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", "Habitat_Type") %>%
     #  Add a column merging cell & camera, format date
     mutate(
@@ -56,7 +56,7 @@
   nrow(NE_all18_19)   
   
   #  Cameras deployed summer 2019
-  master19_20 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated_2021-05-28.csv") %>% #camera_master_2019_updated.9.25.20.csv
+  master19_20 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2019_updated_2021-07-19.csv") %>% #camera_master_2019_updated_2021-05-28.csv
     dplyr::select("Status", "Date", "Study_Area", "Cell_ID", "Camera_ID","Camera_Long", "Camera_Lat",  "Distance_Focal_Point", "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", "Habitat_Type") %>%
     #  Add a column merging cell & camera, format date
     mutate(
@@ -89,7 +89,7 @@
   nrow(NE_all19_20)
   
   #  Cameras deployed summer 2020
-  master20_21 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2020_updated_2021-05-29.csv") %>% # camera_master_2020_updated.9.25.20.csv
+  master20_21 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2020_updated_2021-07-19.csv") %>% # camera_master_2020_updated_2021-05-29.csv
     dplyr::select("Status", "Date", "Study_Area", "Cell_ID", "Camera_ID","Camera_Long", "Camera_Lat",  "Distance_Focal_Point", "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", "Habitat_Type") %>%
     #  Add a column merging cell & camera, format date
     mutate(
@@ -104,11 +104,13 @@
     group_by(Camera_Lat, Camera_Long) %>%
     distinct(Name, .keep_all = TRUE) %>%
     ungroup() %>%
-    #  Remove camera station that did not change but camera # was changed due to damage
-    filter(Name != "OK2145_3") %>%
+    # #  Remove camera station that did not change but camera # was changed due to damage
+    # filter(Name != "OK2145_3") %>%
     #  Remove duplicates that dplyr thinks are distinct
-    filter(Cell_ID != "NE1990" | Status != "Checked") %>%    
-    filter(Cell_ID != "NE2383" | Status != "Checked") 
+    filter(Cell_ID != "NE2796" | Status != "Checked") %>%
+    filter(Cell_ID != "NE4299" | Status != "Checked")
+    #  Note: NE2897 will only have check data since it was deployed in 2019 and left until 2021
+    
   
   #  Convert to dataframes
   cams_all20_21 <- as.data.frame(master20_21) %>%
@@ -281,17 +283,17 @@
   plot(NEAMs_2020, add = T, col = "darkorange", pch = 19)
   
   #  Write shapefiles
-  writeOGR(cams_master18_19_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "cams_master18_19_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
-  writeOGR(OK_master18_19_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "OK_master18_19_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
-  writeOGR(NE_master18_19_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "NE_master18_19_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(cams_master18_19_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "cams_master18_19_spdf_071921", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(OK_master18_19_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "OK_master18_19_spdf_071921", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(NE_master18_19_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "NE_master18_19_spdf_071921", driver = "ESRI Shapefile", overwrite = F )
   
-  writeOGR(cams_master19_20_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "cams_master19_20_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
-  writeOGR(OK_master19_20_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "OK_master19_20_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
-  writeOGR(NE_master19_20_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "NE_master19_20_spdf_050220", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(cams_master19_20_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "cams_master19_20_spdf_071921", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(OK_master19_20_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "OK_master19_20_spdf_071921", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(NE_master19_20_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "NE_master19_20_spdf_071921", driver = "ESRI Shapefile", overwrite = F )
   
-  writeOGR(cams_master20_21_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "cams_master20_21_spdf_052921", driver = "ESRI Shapefile", overwrite = F )
-  writeOGR(OK_master20_21_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "OK_master20_21_spdf_052921", driver = "ESRI Shapefile", overwrite = F )
-  writeOGR(NE_master20_21_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "NE_master20_21_spdf_052921", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(cams_master20_21_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "cams_master20_21_spdf_071921", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(OK_master20_21_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "OK_master20_21_spdf_071921", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(NE_master20_21_spdf, dsn = "./Shapefiles/Camera_Locations", layer = "NE_master20_21_spdf_071921", driver = "ESRI Shapefile", overwrite = F )
   
   writeOGR(cams_current20_21, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_currentlocs_spdf_052921", driver = "ESRI Shapefile", overwrite = F )
   writeOGR(OKcams_current20_21, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_currentlocs.OK_spdf_052921", driver = "ESRI Shapefile", overwrite = F )
