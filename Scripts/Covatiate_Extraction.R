@@ -99,12 +99,12 @@
   NE_SA <- st_read("./Shapefiles/fwdstudyareamaps", layer = "NE_SA") %>%
     st_transform(crs = crs(sa_proj))
   #'  Terrain rasters (based on rasters projected in study area projection)
-  dem <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m_reproj.tif")
-  slope <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect_reproj.tif", band = 1)
-  aspect <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect_reproj.tif", band = 2)
-  dem2 <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m.tif")
-  slope2 <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect.tif", band = 1)
-  aspect2 <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect.tif", band = 2)
+  dem_reproj <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m_reproj.tif")
+  slope_reproj <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect_reproj.tif", band = 1)
+  aspect_reproj <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect_reproj.tif", band = 2)
+  dem <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m.tif")
+  slope <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect.tif", band = 1)
+  aspect <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect.tif", band = 2)
   TRI <- raster("./Shapefiles/WA DEM rasters/WPPP_TRI_reproj.tif")
   rough <- raster("./Shapefiles/WA DEM rasters/WPPP_roughness_reproj.tif")
   #'  Human density
@@ -116,8 +116,8 @@
   # writeRaster(HM_reproj, filename = "./Shapefiles/Additional_WPPP_Layers/WPPP_gHM_reproj.tif", format="GTiff", overwrite=TRUE)
   HM_reproj <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_gHM_reproj.tif")
   #'  Road density raster
-  roadden <- raster("./Shapefiles/roaddensity/road.density_km2_TIF.tif")
-  # roadden <- raster("./Shapefiles/Cascadia_layers/roadsForTaylor/RoadDensity_1km.tif") 
+  roadden <- raster("./Shapefiles/Cascadia_layers/roadsForTaylor/RoadDensity_1km.tif") 
+  roadden2 <- raster("./Shapefiles/roaddensity/road.density_km2_TIF.tif")
   #'  Cascadia Biodiveristy interpolated rasters
   interp_landcov18 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2018.tif")
   interp_landcov19 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2019.tif")
@@ -127,6 +127,29 @@
   xgrassprop19 <- raster("./Shapefiles/Cascadia_layers/xgrassprop_19.tif")
   xshrubprop18 <- raster("./Shapefiles/Cascadia_layers/xshrubprop_18.tif")
   xshrubprop19 <- raster("./Shapefiles/Cascadia_layers/xshrubprop_19.tif")
+  
+  #'  Generate a grid for each study area to guide covariate extraction for mapping later on
+  grid_1k <- raster("./Shapefiles/ref_grid_1k.img")
+  projection(grid_1k)
+  #'  Crop reference 1km grid to extents of study areas
+  OK_grid <- crop(grid_1k, OK_SA)
+  NE_grid <- crop(grid_1k, NE_SA)
+  #'  Renumber grid cells based on new grid size
+  OK_grid[] <- 1:ncell(OK_grid)
+  NE_grid[] <- 1:ncell(NE_grid)
+  #'  Convert raster to pixels
+  OK_dots <- as(OK_grid, "SpatialPixelsDataFrame")
+  NE_dots <- as(NE_grid, "SpatialPixelsDataFrame")
+  #'  Extract coordinates for each pixel (centroid of each grid cell)
+  OK_dot_coords <- coordinates(OK_dots)
+  NE_dot_coords <- coordinates(NE_dots)
+  #'  And make spatial
+  OK_centers <- SpatialPoints(OK_dots, proj4string = CRS(sa_proj))
+  NE_centers <- SpatialPoints(NE_dots, proj4string = CRS(sa_proj))
+  #'  Reproject for extracting covariate data in WGS84
+  OK_centers_wgs84 <- spTransform(OK_centers, crs(wgs84))
+  NE_centers_wgs84 <- spTransform(NE_centers, crs(wgs84))
+  
   
   #' #'  Other rasters, likely won't use
   #' #'  NLCD raster
@@ -166,13 +189,13 @@
   projection(wppp_bound)
   projection(OK_SA)
   projection(dem)
-  projection(dem2)
+  projection(dem_reproj)
   projection(HM_reproj)
   projection(HM)
   projection(interp_landcov18)
   projection(xshrubprop18)
-  projection(roadden)
-  projection(roadden2)
+  projection(roadden) 
+  projection(roadden2) 
   # projection(nlcd)
   # projection(waterden)
   # projection(canopy18)
@@ -182,8 +205,8 @@
   # projection(burnPerim18)
   # projection(human)
 
+  res(dem_reproj)
   res(dem)
-  res(dem2)
   res(HM_reproj)
   res(HM)
   res(interp_landcov18)
@@ -197,9 +220,11 @@
   # res(human)
   
   extent(dem)
+  extent(dem_reproj)
   extent(HM_reproj)
   extent(xshrubprop18)
   extent(roadden)
+  extent(roadden2)
   
   
   #'  Quick summary data about elevation for publications
@@ -248,21 +273,30 @@
   #'  Stack terrain rasters
   terra_stack <- stack(dem, slope)
   #'  Extract terrain variables
-  terra_covs <- raster::extract(terra_stack, cams_reproj, df = TRUE)
+  terra_covs <- raster::extract(terra_stack, cams, df = TRUE)
+  #'  Extract terrain variables for ALL 1 sq-km grid cells per study area
+  terra_OK <- raster::extract(terra_stack, OK_centers_wgs84, df = TRUE)
+  terra_NE <- raster::extract(terra_stack, NE_centers_wgs84, df = TRUE)
   
   #'  Extract anthropogenic variables
   road_den <- raster::extract(roadden, cams_reproj, df = TRUE)
-  modified <- raster::extract(HM_reproj, cams_reproj, df = TRUE)
+  modified <- raster::extract(HM, cams, df = TRUE)
+  #'  For ALL 1 sq-km grid cells per study area
+  road_OK <- raster::extract(roadden, OK_centers, df = TRUE)
+  road_NE <- raster::extract(roadden, NE_centers, df = TRUE)
+  modified_OK <- raster::extract(HM, OK_centers_wgs84, df = TRUE)
+  modified_NE <- raster::extract(HM, NE_centers_wgs84, df = TRUE)
   
+  #'  Start covariate dataframe
   cam_covs <- terra_covs %>%
     full_join(road_den, by = "ID") %>%
     full_join(modified, by = "ID") %>%
     transmute(
       obs = ID,
-      Elev = round(WPPP_DEM_30m_reproj, digits = 2),
-      Slope = round(WPPP_slope_aspect_reproj, digits = 2),
-      RoadDen = round(road.density_km2_TIF, digits = 2),
-      HumanMod = round(WPPP_gHM_reproj, digits = 2)
+      Elev = round(WPPP_DEM_30m, digits = 2), #WPPP_DEM_30m_reproj
+      Slope = round(WPPP_slope_aspect, digits = 2), #WPPP_slope_aspect_reproj
+      RoadDen = round(RoadDensity_1km, digits = 2), #road.density_km2_TIF
+      HumanMod = round(WPPP_gHM, digits = 2) #WPPP_gHM_reproj
     ) %>%
     #'  Need to change NA to 0 for road density (if NA it means there are no
     #'  roads within that 1km pixel and raster pixel was empty)
@@ -270,6 +304,37 @@
       RoadDen = ifelse(is.na(RoadDen), 0, RoadDen)
     )
   
+  #'  Start covariate dataframe for entire OK and NE study areas (1km grid cells)
+  OK_covs <- terra_OK %>%
+    full_join(road_OK, by = "ID") %>%
+    full_join(modified_OK, by = "ID") %>%
+    transmute(
+      obs = ID,
+      Elev = round(WPPP_DEM_30m, digits = 2), 
+      Slope = round(WPPP_slope_aspect, digits = 2), 
+      RoadDen = round(RoadDensity_1km, digits = 2),
+      HumanMod = round(WPPP_gHM, digits = 2)
+    ) %>%
+    #'  Need to change NA to 0 for road density (if NA it means there are no
+    #'  roads within that 1km pixel and raster pixel was empty)
+    mutate(
+      RoadDen = ifelse(is.na(RoadDen), 0, RoadDen)
+    )
+  NE_covs <- terra_NE %>%
+    full_join(road_NE, by = "ID") %>%
+    full_join(modified_NE, by = "ID") %>%
+    transmute(
+      obs = ID,
+      Elev = round(WPPP_DEM_30m, digits = 2), 
+      Slope = round(WPPP_slope_aspect, digits = 2), 
+      RoadDen = round(RoadDensity_1km, digits = 2),
+      HumanMod = round(WPPP_gHM, digits = 2)
+    ) %>%
+    #'  Need to change NA to 0 for road density (if NA it means there are no
+    #'  roads within that 1km pixel and raster pixel was empty)
+    mutate(
+      RoadDen = ifelse(is.na(RoadDen), 0, RoadDen)
+    )
   
   #'  Extract percent landcover type using 250m moving window at each camera site
   #'  Make sure camera data are in correct format
@@ -311,6 +376,24 @@
   tbl_landcover <- rbind(perc_landcover18, perc_landcover19)
   
   
+  #'  Same for entire OK and NE study areas (1km grid cells)
+  #'  Just using data from 2018 though since 2018 - 2020 data are combined in models
+  #'  and can't plot estimates separately by year
+  perc_landcover18_OK <- raster::extract(perc_stack18, OK_centers, df = TRUE) %>%
+    transmute(
+      obs = ID,
+      PercForestMix2 = round(forestmix2prop_18, 2),
+      PercXericGrass = round(xgrassprop_18, 2),
+      PercXericShrub = round(xshrubprop_18, 2)
+    )
+  perc_landcover18_NE <- raster::extract(perc_stack18, NE_centers, df = TRUE) %>%
+    transmute(
+      obs = ID,
+      PercForestMix2 = round(forestmix2prop_18, 2),
+      PercXericGrass = round(xgrassprop_18, 2),
+      PercXericShrub = round(xshrubprop_18, 2)
+    )
+  
   
   #'  Combine extracted covaraites into a single dataframe
   #'  ====================================================
@@ -332,6 +415,19 @@
   
   #'  Save for occupancy analyses
   write.csv(covs_df, paste0('./Output/CameraLocation_Covariates18-20_', Sys.Date(), '.csv'))
+  
+  
+  
+  #'  Combine extracted data into master dataframes for entire 1km grids per study area
+  covs_df_OK <- full_join(OK_covs, perc_landcover18_OK, by = "obs") %>%
+    cbind(OK_dot_coords)
+  covs_df_NE <- full_join(NE_covs, perc_landcover18_NE, by = "obs") %>%
+    cbind(NE_dot_coords)
+  
+  #'  Save for mapping predicted results across study areas
+  #'  NOTE: these are being saved in the CamTraps_and_Collars Repository!!!
+  write.csv(covs_df_OK, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_OK_Covariates_', Sys.Date(), '.csv'))
+  write.csv(covs_df_NE, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_NE_Covariates_', Sys.Date(), '.csv'))
   
   
   
