@@ -65,6 +65,8 @@
   #'         impacts, Data: https://figshare.com/articles/dataset/Global_Human_Modification/7283087
   #'  ============================================
 
+  #'  Clean workspace & load libraries
+  rm(list = ls())
   
   #'  Load libraries
   library(sf)
@@ -426,8 +428,8 @@
   
   #'  Save for mapping predicted results across study areas
   #'  NOTE: these are being saved in the CamTraps_and_Collars Repository!!!
-  # write.csv(covs_df_OK, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_OK_Covariates_', Sys.Date(), '.csv'))
-  # write.csv(covs_df_NE, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_NE_Covariates_', Sys.Date(), '.csv'))
+  write.csv(covs_df_OK, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_OK_Covariates_', Sys.Date(), '.csv'))
+  write.csv(covs_df_NE, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_NE_Covariates_', Sys.Date(), '.csv'))
   
   
   
