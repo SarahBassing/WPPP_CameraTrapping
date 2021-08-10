@@ -117,7 +117,7 @@
   HM_reproj <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_gHM_reproj.tif")
   #'  Road density raster
   roadden <- raster("./Shapefiles/Cascadia_layers/roadsForTaylor/RoadDensity_1km.tif") 
-  roadden2 <- raster("./Shapefiles/roaddensity/road.density_km2_TIF.tif")
+  # roadden2 <- raster("./Shapefiles/roaddensity/road.density_km2_TIF.tif") # I think units really are in meters of road length for this raster
   #'  Cascadia Biodiveristy interpolated rasters
   interp_landcov18 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2018.tif")
   interp_landcov19 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2019.tif")
@@ -195,7 +195,7 @@
   projection(interp_landcov18)
   projection(xshrubprop18)
   projection(roadden) 
-  projection(roadden2) 
+  # projection(roadden2) 
   # projection(nlcd)
   # projection(waterden)
   # projection(canopy18)
@@ -212,7 +212,7 @@
   res(interp_landcov18)
   res(xshrubprop18)
   res(roadden)
-  res(roadden2)
+  # res(roadden2)
   # res(nlcd)
   # res(landfire)
   # res(landcov18)
@@ -224,10 +224,10 @@
   extent(HM_reproj)
   extent(xshrubprop18)
   extent(roadden)
-  extent(roadden2)
+  # extent(roadden2)
   
   
-  #'  Quick summary data about elevation for publications
+  #'  Quick summary data about elevation for publications- this takes awhile!
   OK <- st_transform(OK_SA, crs = crs(wgs84))
   NE <- st_transform(NE_SA, crs = crs(wgs84))
   # elev_OK <- raster::extract(x = dem, y = OK)
@@ -426,8 +426,8 @@
   
   #'  Save for mapping predicted results across study areas
   #'  NOTE: these are being saved in the CamTraps_and_Collars Repository!!!
-  write.csv(covs_df_OK, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_OK_Covariates_', Sys.Date(), '.csv'))
-  write.csv(covs_df_NE, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_NE_Covariates_', Sys.Date(), '.csv'))
+  # write.csv(covs_df_OK, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_OK_Covariates_', Sys.Date(), '.csv'))
+  # write.csv(covs_df_NE, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_NE_Covariates_', Sys.Date(), '.csv'))
   
   
   
