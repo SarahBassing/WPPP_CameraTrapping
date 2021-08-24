@@ -131,9 +131,16 @@
   oknf_cams18 <- cams1819[OKNF,]
   oknf_cams19 <- cams1920[OKNF,]
   oknf_cams20 <- cams2021[OKNF,]
+  writeOGR(oknf_cams18, dsn = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/All_Locations_2018-2021/For Sharing", layer = "OKNF_CameraLocations_2018-2019", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(oknf_cams19, dsn = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/All_Locations_2018-2021/For Sharing", layer = "OKNF_CameraLocations_2019-2020", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(oknf_cams20, dsn = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/All_Locations_2018-2021/For Sharing", layer = "OKNF_CameraLocations_2020-2021", driver = "ESRI Shapefile", overwrite = F )
+  
   conf_cams18 <- cams1819[CONF,]
   conf_cams19 <- cams1920[CONF,]
   conf_cams20 <- cams2021[CONF,]
+  writeOGR(conf_cams18, dsn = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/All_Locations_2018-2021/For Sharing", layer = "CONF_CameraLocations_2018-2019", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(conf_cams19, dsn = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/All_Locations_2018-2021/For Sharing", layer = "CONF_CameraLocations_2019-2020", driver = "ESRI Shapefile", overwrite = F )
+  writeOGR(conf_cams20, dsn = "G:/My Drive/1 Predator Prey Project/Field Work/Camera Locations/All_Locations_2018-2021/For Sharing", layer = "CONF_CameraLocations_2020-2021", driver = "ESRI Shapefile", overwrite = F )
   
   #  How many cameras on USFS total
   cams18 <- length(oknf_cams18@data$Cell_ID) + length(conf_cams18@data$Cell_ID)
