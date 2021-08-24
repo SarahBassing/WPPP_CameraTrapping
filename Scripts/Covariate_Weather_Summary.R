@@ -17,12 +17,13 @@
   library(tidyverse)
   
   #'  Read in & format NARR data extracted by O.Sanderfoot
-  narr <- read.csv("./Output/WPPP_weather_data_all.csv") %>%
+  # narr <- read.csv("./Output/WPPP_weather_data_all.csv") %>% # Year3 data was wrong!
+  narr <- read.csv("./Output/Sanderfoot_WPPP_weather_data_all_land_cover.csv") %>%
     mutate(
-      Observation_Date_Formatted = as.Date(Observation_Date_Formatted),
+      Observation_Date_Formatted = as.Date(Observation_Date_Formatted, format = "%m/%d/%Y"),
       Study_Area = ifelse(grepl("NE", Camera_Location), "NE", "OK")
-    ) %>%
-    dplyr::select(-X)
+    ) #%>%
+    # dplyr::select(-X)
   
   #'  Filter by date and summarize weather data by sampling occasion
   #'  Each sampling occasion is 7 days long
