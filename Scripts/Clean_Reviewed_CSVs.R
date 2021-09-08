@@ -96,9 +96,9 @@
   #'  Run data from each year through function (reviewed and partially processed data)
   #'  Note Year 1 data has an extra empty column that makes merging with Year 2 data tough
   mydir <- list("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1",
-                "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1",
                 "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 2",
                 "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 2")
+  # "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1",
   
   read_dat <- lapply(mydir, read_files)
   #'  Warnings are due to an extra empty column at end of csv files- ignore
@@ -114,23 +114,23 @@
   #' #'  BRB gotta go fix these!
   #' 
   #' #'  PROCESSED DATA BUT NOT REVIEWED YET
-  #' mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1" #Year 1
-  #' csv_files2 <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>% 
+  #' mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 2" 
+  #' csv_files2 <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>%
   #'   #  col_types forces all columns to be characters
   #'   #  Forcing to character addresses issue w/ inconsistent typecasting of columns
   #'   map_df(~read_csv(., col_types = cols(.default = "c"))) %>%
   #'   mutate(
   #'     #  Reformat dates based on the structure of the character string
-  #'     DateNew = ifelse(nchar(Date) == 11, 
+  #'     DateNew = ifelse(nchar(Date) == 11,
   #'                      format(as.Date(parse_date_time(Date,"dbY")), "%Y-%m-%d"), Date),
-  #'     DateNew = ifelse(nchar(Date) <= 9, 
+  #'     DateNew = ifelse(nchar(Date) <= 9,
   #'                      format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), DateNew),
   #'     #  Add extra columns to identify potential errors in date conversion
   #'     #  Correct date format should have 10 characters (YYYY-MM-DD)
   #'     Date_10char = ifelse(nchar(DateNew) != 10, "Fail", "Good"),
   #'     #  Correct date format should be in the 2000's (not 0018, etc.)
-  #'     Date_2000 = ifelse(year(DateNew) == 0018 | year(DateNew) == 0019 | 
-  #'                        year(DateNew) == 0020 | year(DateNew) == 0021, 
+  #'     Date_2000 = ifelse(year(DateNew) == 0018 | year(DateNew) == 0019 |
+  #'                        year(DateNew) == 0020 | year(DateNew) == 0021,
   #'                        "Fail", "Good"),
   #'     CameraLocation = as.factor(as.character(CameraLocation)),
   #'     #  Reformat columns to the desired format
@@ -156,7 +156,7 @@
   #'     HumanActivity = as.character(HumanActivity),
   #'     Count = as.numeric(Count),
   #'     AdultFemale = as.numeric(AdultFemale),
-  #'     AdultMale = as.numeric(AdultMale), 
+  #'     AdultMale = as.numeric(AdultMale),
   #'     AdultUnknown = as.numeric(AdultUnknown),
   #'     Offspring = as.numeric(Offspring),
   #'     UNK = as.numeric(UNK),
@@ -222,11 +222,11 @@
   
   #'  Run each year's worth of camera data through function
   cleaned_dat <- lapply(read_dat, format_dat)
-  megadata <- rbind(cleaned_dat[[1]], cleaned_dat[[2]], cleaned_dat[[3]], cleaned_dat[[4]])
+  megadata <- rbind(cleaned_dat[[1]], cleaned_dat[[2]], cleaned_dat[[3]]) #, cleaned_dat[[4]] #change based on number of folders read in
   
   #'  Keep data split out by year if needed
-  megadata_yr1 <- rbind(cleaned_dat[[1]], cleaned_dat[[3]])
-  megadata_yr2 <- rbind(cleaned_dat[[2]], cleaned_dat[[4]])
+  megadata_yr1 <- cleaned_dat[[1]] 
+  megadata_yr2 <- rbind(cleaned_dat[[2]], cleaned_dat[[3]]) #change based on number of folders read in
   
   #'  Check for rows where the date format is incorrect
   fail_10char <- megadata[megadata$Date_10char == "Fail",]
