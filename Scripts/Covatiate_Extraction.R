@@ -132,25 +132,32 @@
   
   #'  Generate a grid for each study area to guide covariate extraction for mapping later on
   grid_1k <- raster("./Shapefiles/ref_grid_1k.img")
+  grid_30m <- raster("./Shapefiles/MD_raster_template_epsg2855.tif") # Taylor's grid 30m res (extended OK study area for mule deer)
   projection(grid_1k)
+  projection(grid_30m)
   #'  Crop reference 1km grid to extents of study areas
   OK_grid <- crop(grid_1k, OK_SA)
   NE_grid <- crop(grid_1k, NE_SA)
   #'  Renumber grid cells based on new grid size
   OK_grid[] <- 1:ncell(OK_grid)
   NE_grid[] <- 1:ncell(NE_grid)
+  grid_30m[] <- 1:ncell(grid_30m)
   #'  Convert raster to pixels
   OK_dots <- as(OK_grid, "SpatialPixelsDataFrame")
   NE_dots <- as(NE_grid, "SpatialPixelsDataFrame")
+  MD_dots <- as(grid_30m, "SpatialPixelsDataFrame")
   #'  Extract coordinates for each pixel (centroid of each grid cell)
   OK_dot_coords <- coordinates(OK_dots)
   NE_dot_coords <- coordinates(NE_dots)
+  MD_dot_coords <- coordinates(MD_dots)
   #'  And make spatial
   OK_centers <- SpatialPoints(OK_dots, proj4string = CRS(sa_proj))
   NE_centers <- SpatialPoints(NE_dots, proj4string = CRS(sa_proj))
+  MD_centers <- SpatialPoints(MD_dots, proj4string = CRS(sa_proj))
   #'  Reproject for extracting covariate data in WGS84
   OK_centers_wgs84 <- spTransform(OK_centers, crs(wgs84))
   NE_centers_wgs84 <- spTransform(NE_centers, crs(wgs84))
+  MD_centers_wgs84 <- spTransform(MD_centers, crs(wgs84))
   
   
   #' #'  Other rasters, likely won't use
@@ -277,17 +284,21 @@
   #'  Extract terrain variables
   terra_covs <- raster::extract(terra_stack, cams, df = TRUE)
   #'  Extract terrain variables for ALL 1 sq-km grid cells per study area
+  #'  and 30 sq-m grid cells for Taylor (MD)
   terra_OK <- raster::extract(terra_stack, OK_centers_wgs84, df = TRUE)
   terra_NE <- raster::extract(terra_stack, NE_centers_wgs84, df = TRUE)
+  terra_MD <- raster::extract(terra_stack, MD_centers_wgs84, df = TRUE)
   
   #'  Extract anthropogenic variables
   road_den <- raster::extract(roadden, cams_reproj, df = TRUE)
   modified <- raster::extract(HM, cams, df = TRUE)
-  #'  For ALL 1 sq-km grid cells per study area
+  #'  For ALL 1 sq-km grid cells per study area & 30 sq-m grid cells for Taylor (extended OK study area for mule deer)
   road_OK <- raster::extract(roadden, OK_centers, df = TRUE)
   road_NE <- raster::extract(roadden, NE_centers, df = TRUE)
+  road_MD <- raster::extract(roadden, MD_centers, df = TRUE)
   modified_OK <- raster::extract(HM, OK_centers_wgs84, df = TRUE)
   modified_NE <- raster::extract(HM, NE_centers_wgs84, df = TRUE)
+  modified_MD <- raster::extract(HM, MD_centers_wgs84, df = TRUE)
   
   #'  Start covariate dataframe
   cam_covs <- terra_covs %>%
@@ -337,6 +348,24 @@
     mutate(
       RoadDen = ifelse(is.na(RoadDen), 0, RoadDen)
     )
+  
+  #'  Start covariate dataframe for 30 sq-meter grid cells for Taylor (mule deer data)
+  MD_covs <- terra_MD %>%
+    full_join(road_MD, by = "ID") %>%
+    full_join(modified_MD, by = "ID") %>%
+    transmute(
+      obs = ID,
+      Elev = round(WPPP_DEM_30m, digits = 2), 
+      Slope = round(WPPP_slope_aspect, digits = 2), 
+      RoadDen = round(RoadDensity_1km, digits = 2),
+      HumanMod = round(WPPP_gHM, digits = 2)
+    ) %>%
+    #'  Need to change NA to 0 for road density (if NA it means there are no
+    #'  roads within that 1km pixel and raster pixel was empty)
+    mutate(
+      RoadDen = ifelse(is.na(RoadDen), 0, RoadDen)
+    )
+  
   
   #'  Extract percent landcover type using 250m moving window at each camera site
   #'  Make sure camera data are in correct format
@@ -396,6 +425,17 @@
       PercXericShrub = round(xshrubprop_18, 2)
     )
   
+  #'  Same for 30 sq-meter grid for Taylor (extended OK study area for mule deer)
+  #'  Just using data from 2018 though since 2018 - 2020 data are combined in models
+  #'  and can't plot estimates separately by year
+  perc_landcover18_MD <- raster::extract(perc_stack18, MD_centers, df = TRUE) %>%
+    transmute(
+      obs = ID,
+      PercForestMix2 = round(forestmix2prop_18, 2),
+      PercXericGrass = round(xgrassprop_18, 2),
+      PercXericShrub = round(xshrubprop_18, 2)
+    )
+  
   
   #'  Combine extracted covaraites into a single dataframe
   #'  ====================================================
@@ -430,7 +470,16 @@
   #'  NOTE: these are being saved in the CamTraps_and_Collars Repository!!!
   write.csv(covs_df_OK, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_OK_Covariates_', Sys.Date(), '.csv'))
   write.csv(covs_df_NE, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_NE_Covariates_', Sys.Date(), '.csv'))
+
   
+  #'  Combine extracted data into master dataframes for entire 1km grids per study area
+  covs_df_MD <- full_join(MD_covs, perc_landcover18_MD, by = "obs") %>%
+    cbind(MD_dot_coords)
+  
+  #'  Save for mapping predicted results across extended OK study area for Taylor
+  #'  NOTE: these are being saved in the CamTraps_and_Collars Repository!!!
+  write.csv(covs_df_MD, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_MuleDeer_Covariates_', Sys.Date(), '.csv'))
+
   
   
   #' #'  Extract landcover data from NLCD
