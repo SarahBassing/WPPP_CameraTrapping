@@ -70,6 +70,43 @@
   #' st_write(hydro_crop,
   #'          dsn = "G:/My Drive/1 Dissertation/Analyses/Shapefiles/WA_DeptEcology_HydroWA",
   #'          layer = "WPPP_hydro.shp", driver = "ESRI Shapefile")
+  #'      
+  #'          
+  #' #'  Crop and save NHD Water body shapefile to match WPPP extended boundary
+  #' #'  Read in and review data
+  #' waterbody <- sf::st_read("G:/My Drive/1 Dissertation/Analyses/Shapefiles/WA_DeptEcology_HydroWA/ECY_WAT_NHDWA/NHDWA.gdb", layer = "NHDWaterbody")
+  #' head(waterbody)
+  #' projection(waterbody)
+  #' 
+  #' #'  Waterbody data has "MULTISURFACE" geometries which make cropping difficult
+  #' as.data.frame(table(st_geometry_type(waterbody)))
+  #' #'  Cast the multisurface geometries to avoide the unwanted geometry type
+  #' waterbody = st_cast(waterbody, "MULTIPOLYGON")
+  #' #'  And in case any topological corrections need to be made
+  #' waterbody = st_make_valid(waterbody)
+  #' 
+  #' #'  Reproject extended WPPP boundary to match NHD projection
+  #' reproj_bound <- st_transform(wppp_bound, crs = st_crs(waterbody))
+  #' 
+  #' #'  Identify bounding box of boundary in new projection
+  #' bb <- st_bbox(reproj_bound)
+  #' 
+  #' #'  Drop M dimension
+  #' waterbody <- st_zm(waterbody)
+  #' 
+  #' #'  Crop hydrology features to the extent of the WPPP extended boundary
+  #' waterbody_crop <- st_crop(waterbody, bb)
+  #' 
+  #' #'  Reproject to desired WA projection
+  #' waterbody_reproj <- st_transform(waterbody_crop, crs = st_crs(sa_proj))
+  #' 
+  #' #'  Save so I never have to do this again!
+  #' st_write(waterbody_crop,
+  #'          dsn = "G:/My Drive/1 Dissertation/Analyses/Shapefiles/WA_DeptEcology_HydroWA",
+  #'          layer = "WPPP_waterbody.shp", driver = "ESRI Shapefile")
+  #'          
+  #' #'  Identify specific water bodies
+  #' LakeChelan <- waterbody_crop[waterbody_crop$GNIS_Name == "Lake Chelan",]
 
   
   
