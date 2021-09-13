@@ -96,9 +96,9 @@
   #'  Run data from each year through function (reviewed and partially processed data)
   #'  Note Year 1 data has an extra empty column that makes merging with Year 2 data tough
   mydir <- list("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1",
-                "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 2",
-                "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 2")
+                "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 2")
   # "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1",
+  # "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 2"
   
   read_dat <- lapply(mydir, read_files)
   #'  Warnings are due to an extra empty column at end of csv files- ignore
@@ -222,11 +222,12 @@
   
   #'  Run each year's worth of camera data through function
   cleaned_dat <- lapply(read_dat, format_dat)
-  megadata <- rbind(cleaned_dat[[1]], cleaned_dat[[2]], cleaned_dat[[3]]) #, cleaned_dat[[4]] #change based on number of folders read in
+  megadata <- rbind(cleaned_dat[[1]], cleaned_dat[[2]]) #, cleaned_dat[[3]], cleaned_dat[[4]] #change based on number of folders read in
   
   #'  Keep data split out by year if needed
   megadata_yr1 <- cleaned_dat[[1]] 
-  megadata_yr2 <- rbind(cleaned_dat[[2]], cleaned_dat[[3]]) #change based on number of folders read in
+  megadata_yr2 <- cleaned_dat[[2]]
+  # megadata_yr2 <- rbind(cleaned_dat[[2]], cleaned_dat[[3]]) #change based on number of folders read in
   
   #'  Check for rows where the date format is incorrect
   fail_10char <- megadata[megadata$Date_10char == "Fail",]
