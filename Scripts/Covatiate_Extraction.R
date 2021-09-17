@@ -154,7 +154,7 @@
   OK_coord <- coordinates(OK_grid)
   OK_gridID <- cbind(OK_gridID, OK_coord)
   NE_gridID <- as.data.frame(NE_grid)
-  NE_coord <- coordiantes(NE_grid)
+  NE_coord <- coordinates(NE_grid)
   NE_gridID <- cbind(NE_gridID, NE_coord)
   
   #'  Create reference grid with same extent as 1km grid but resolution at 30m
@@ -455,14 +455,14 @@
   #'  Same for entire OK and NE study areas (UPDATE 1km vs 30m grid cells)
   #'  Just using data from 2018 though since 2018 - 2020 data are combined in models
   #'  and can't plot estimates separately by year
-  perc_landcover18_OK <- raster::extract(perc_stack18, OK_30centers, df = TRUE) %>% # OK_centers
+  perc_landcover18_OK <- raster::extract(perc_stack18, OK_centers30, df = TRUE) %>% # OK_centers
     transmute(
       obs = ID,
       PercForestMix2 = round(forestmix2prop_18, 2),
       PercXericGrass = round(xgrassprop_18, 2),
       PercXericShrub = round(xshrubprop_18, 2)
     )
-  perc_landcover18_NE <- raster::extract(perc_stack18, NE_30centers, df = TRUE) %>% # NE_centers
+  perc_landcover18_NE <- raster::extract(perc_stack18, NE_centers30, df = TRUE) %>% # NE_centers
     transmute(
       obs = ID,
       PercForestMix2 = round(forestmix2prop_18, 2),
@@ -512,7 +512,7 @@
     cbind(NE_30dot_coords) # NE_dot_coords
   
   #'  Save for mapping predicted results across study areas
-  #'  MATE SURE YOU'RE SAVING DATA AT THE RIGHT RESOLUTION!!!
+  #'  --------------->  MAKE SURE YOU'RE SAVING DATA AT THE RIGHT RESOLUTION!!!
   #'  NOTE: these are being saved in the CamTraps_and_Collars Repository!!!
   write.csv(covs_df_OK, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_OK_Covariates_30m_', Sys.Date(), '.csv')) # NOTE THE RESOLUTION
   write.csv(covs_df_NE, paste0('G:/My Drive/1_Repositories/CamTraps_and_Collars/Outputs/Tables/StudyAreaWide_NE_Covariates_30m_', Sys.Date(), '.csv')) # NOTE THE RESOLUTION
