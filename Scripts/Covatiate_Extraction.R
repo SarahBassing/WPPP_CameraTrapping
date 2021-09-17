@@ -455,14 +455,14 @@
   #'  Same for entire OK and NE study areas (UPDATE 1km vs 30m grid cells)
   #'  Just using data from 2018 though since 2018 - 2020 data are combined in models
   #'  and can't plot estimates separately by year
-  perc_landcover18_OK <- raster::extract(perc_stack18, OK_centers30, df = TRUE) %>% # OK_centers
+  perc_landcover18_OK <- raster::extract(perc_stack18, OK_30centers, df = TRUE) %>% # OK_centers
     transmute(
       obs = ID,
       PercForestMix2 = round(forestmix2prop_18, 2),
       PercXericGrass = round(xgrassprop_18, 2),
       PercXericShrub = round(xshrubprop_18, 2)
     )
-  perc_landcover18_NE <- raster::extract(perc_stack18, NE_centers30, df = TRUE) %>% # NE_centers
+  perc_landcover18_NE <- raster::extract(perc_stack18, NE_30centers, df = TRUE) %>% # NE_centers
     transmute(
       obs = ID,
       PercForestMix2 = round(forestmix2prop_18, 2),
