@@ -86,7 +86,7 @@
   # alldetections <- read.csv("./Output/Bassing_AllDetectionsYr2_2021-03-01.csv") %>%
   # alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-16.csv") %>%
   # alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-05-06.csv") %>%
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-09-08.csv") %>%
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-09-13.csv") %>%
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -318,7 +318,10 @@
   
   #'  All cougar detections
   cougars <- full_dat %>%
-    filter(Species == "Cougar")
+    filter(Species == "Cougar") %>%
+    filter(AU > 0 | UNK > 0)
+  collared_coug <- cougars %>%
+    filter(Collars > 0)
   # write.csv(cougars, paste0('./Output/Cougars_allimgs_', Sys.Date(), '.csv'))
   
   #'  Coyote, bobcat & human detections for Alyssa
@@ -331,6 +334,31 @@
     filter(!grepl("Moultrie", CameraLocation))
   Alyssa_data <- rbind(meso, humans)
   # write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_dataYr2_', Sys.Date(), '.csv'))
+  
+  #'  Cattle detections for Angela
+  moo <- full_dat %>%
+    filter(Species == "Cattle")
+  
+  #'  Deer detections for Hunter (Aug 1 - Jan 31)
+  FallDeer <- full_dat %>%
+    filter(Species == "White-tailed Deer" | Species == "Mule Deer") %>%
+    filter(!grepl("Moultrie", CameraLocation)) %>%
+    mutate(
+      Month = strftime(Date, "%m")
+    ) %>%
+    filter(Month == "01" | Month == "08" | Month == "09" | Month == "10" | Month == "11" | Month == "12") %>%
+    dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type, Month))
+  #'  Human detections for Hunter (Aug 1 - Jan 31)
+  FallHumans <- full_dat %>%
+    filter(Human == "TRUE" | Vehicle == "TRUE") %>%
+    filter(!grepl("Moultrie", CameraLocation)) %>%
+    mutate(
+      Month = strftime(Date, "%m")
+    ) %>%
+    filter(Month == "01" | Month == "08" | Month == "09" | Month == "10" | Month == "11" | Month == "12") %>%
+    dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type, Month))
+  Hunter_data <- rbind(FallDeer, FallHumans)
+  # write.csv(Hunter_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Hunter/Hunter_DetectionData_', Sys.Date(), '.csv'))
   
 
   #'  Extract independent detections
@@ -413,10 +441,12 @@
   Yr1wolf <- Yr1dat[Yr1dat$Species == "Wolf",]
   Yr1bear <- Yr1dat[Yr1dat$Species == "Black Bear",]
   Yr1coug <- Yr1dat[Yr1dat$Species == "Cougar",]
+  Yr1cougcoll <- Yr1coug[Yr1coug$Collar > 0,]
   Yr1elk <- Yr1dat[Yr1dat$Species == "Elk",]
   Yr1moose <- Yr1dat[Yr1dat$Species == "Moose",]
   Yr1md <- Yr1dat[Yr1dat$Species == "Mule Deer",]
   Yr1wtd <- Yr1dat[Yr1dat$Species == "White-tailed Deer",]
+  Yr1cow <- Yr1dat[Yr1dat$Species == "Cattle",]
   NEYr1moose <- st_as_sf(NEmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   OKYr1moose <- st_as_sf(OKmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   Yr1wolf <- st_as_sf(wolf, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
@@ -431,6 +461,23 @@
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OK_wgs84, fill = NA) +
     geom_sf(data = Yr1elk)
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = Yr1coug)
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = Yr1coug, col = "blue") +
+    geom_sf(data = Yr1cougcoll, col = "orange") + 
+    ggtitle("Cams with cougar and collared cougar detections") +
+    labs(x = "Longitude", y = "Latitude")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = Yr1cow, col = "blue") +
+    ggtitle("Cams with Cattle Detections") +
+    labs(x = "Longitude", y = "Latitude")
   
   pdf(file = "./Output/wolf_camera_detection_18-19.pdf")
   ggplot() +
