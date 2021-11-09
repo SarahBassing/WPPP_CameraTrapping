@@ -279,7 +279,7 @@
 
   
   #'  Save for projects!
-  write.csv(full_dat, paste0("./Output/full_camdata18-20_", Sys.Date(), ".csv"))
+  # write.csv(full_dat, paste0("./Output/full_camdata18-20_", Sys.Date(), ".csv"))
 
   #'  Camera station covariates with updated CameraLocation names (b cameras)
   stations <- clean_deployed %>%
@@ -291,7 +291,7 @@
                           "CameraLocation", "Latitude", "Longitude", "Distance_Focal_Point", 
                           "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", 
                           "Land_Owner", "Habitat_Type")
-  write.csv(stations, paste0("./Output/Camera_Station18-20_Covariates_", Sys.Date(), ".csv")) 
+  # write.csv(stations, paste0("./Output/Camera_Station18-20_Covariates_", Sys.Date(), ".csv")) 
   
   #'  Final set of detection data with camera locations included for each observation
   animal_det <- full_dat %>%
@@ -318,11 +318,14 @@
   
   #'  All cougar detections
   cougars <- full_dat %>%
-    filter(Species == "Cougar") %>%
-    filter(AU > 0 | UNK > 0)
+    filter(Species == "Cougar") #%>%
+    #filter(AU > 0 | UNK > 0)
   collared_coug <- cougars %>%
     filter(Collars > 0)
   # write.csv(cougars, paste0('./Output/Cougars_allimgs_', Sys.Date(), '.csv'))
+  
+  
+  #### CAPSTONE PROJECT DATA  ####
   
   #'  Coyote, bobcat & human detections for Alyssa
   meso <- full_dat %>%
@@ -337,7 +340,41 @@
   
   #'  Cattle detections for Angela
   moo <- full_dat %>%
-    filter(Species == "Cattle")
+    filter(Species == "Cattle") %>%
+    dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type))
+  # write.csv(moo, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Angela/Cattle_detections_', Sys.Date(), '.csv'))
+  bears <- full_dat %>%
+    filter(Species == "Black Bear") %>%
+    dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type))
+  # write.csv(bears, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Angela/Bear_detections_', Sys.Date(), '.csv'))
+  
+  #'  Cougar detections for Donovan
+  cougars <- full_dat %>%
+    filter(Species == "Cougar") %>%
+    dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type))
+  # write.csv(cougars, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Donovan/Cougar_detections_', Sys.Date(), '.csv'))
+
+  
+  #'  Deer detections for Sophia (need to narrow down the time period)
+  Deer <- full_dat %>%
+    filter(Species == "White-tailed Deer" | Species == "Mule Deer") %>%
+    filter(!grepl("Moultrie", CameraLocation))
+  # write.csv(Deer, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Sophia/Deer_detections_', Sys.Date(), '.csv'))
+  #'  Human detections for Sophia (Aug 1 - Jan 31)
+  FallHumans <- full_dat %>%
+    filter(Human == "TRUE" | Vehicle == "TRUE") %>%
+    filter(!grepl("Moultrie", CameraLocation)) %>%
+    mutate(
+      Month = strftime(Date, "%m")
+    ) %>%
+    filter(Month == "01" | Month == "08" | Month == "09" | Month == "10" | Month == "11" | Month == "12") %>%
+    dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type, Month))
+  # write.csv(FallHumans, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Sophia/FallHuman_detections_', Sys.Date(), '.csv'))
+  
+  #'  Multi-species detections for Celine (need to pick species and narrow time period)
+  
+  
+  
   
   #'  Deer detections for Hunter (Aug 1 - Jan 31)
   FallDeer <- full_dat %>%
