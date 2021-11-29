@@ -25,19 +25,25 @@
   #'  Read in Global Forest Change Data (WPPP boundary covers two 10x10 degrees tiles)
   #'  Tree canopy cover for year 2000: percent canopy closure for all veg >5m
   #'  Treecover2000: 0-100 % canopy cover at pixel level
-  gfc_treecovW <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_treecover2000_50N_130W.tif")
-  gfc_treecovE <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_treecover2000_50N_120W.tif")
+  # gfc_treecovW <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_treecover2000_50N_130W.tif")
+  # gfc_treecovE <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_treecover2000_50N_120W.tif")
+  gfc_treecovW <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2020-v1.8_treecover2000_50N_130W.tif")
+  gfc_treecovE <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2020-v1.8_treecover2000_50N_120W.tif")
   #'  Forest cover gain: forest change from non-forest to forest (1 = gain, 0 = no gain)
   #'  Gains: 1 = 100% gain at pixel level at any point between 2001 & 2019
-  gfc_gainW <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_gain_50N_130W.tif")
-  gfc_gainE <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_gain_50N_120W.tif")
+  # gfc_gainW <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_gain_50N_130W.tif")
+  # gfc_gainE <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_gain_50N_120W.tif")
+  gfc_gainW <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2020-v1.8_gain_50N_130W.tif")
+  gfc_gainE <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2020-v1.8_gain_50N_120W.tif")
   #'  Gross forest cover loss (lossyear): stand-replacing disturbance, forest
   #'  changed from forest to non-forest at pixel level (0 = no loss, 1-19 = loss 
   #'  detected primarily in year 2001-2019, respectively)
   #'  Loss: 1 through 19 = 100% loss at pixel level during year 2001-2019 
-  gfc_lossW <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_lossyear_50N_130W.tif")
-  gfc_lossE <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_lossyear_50N_120W.tif")
-  projection(gfc_treecov)
+  # gfc_lossW <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_lossyear_50N_130W.tif")
+  # gfc_lossE <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2019-v1.7_lossyear_50N_120W.tif")
+  gfc_lossW <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2020-v1.8_lossyear_50N_130W.tif")
+  gfc_lossE <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/Hansen_GFC-2020-v1.8_lossyear_50N_120W.tif")
+  projection(gfc_treecovW)
   res(gfc_treecovW) #  Keep projection in mind here! (should equate to ~30m res)
   #'  Merge west and east GFC rasters to cover full extent of WPPP boundary
   gfc_treecov <- raster::merge(gfc_treecovW, gfc_treecovE)
@@ -80,20 +86,29 @@
   #'  Values after 2018 are converted to 0
   loss18 <- gfc_loss_crop
   loss18[loss18$layer == 19,] <- 0
+  loss18[loss18$layer == 20,] <- 0
   loss18[loss18$layer >= 1,] <- 100
-  #'  For 2019 tree cover layer, convert all loss values >0 to be 100, else 0
+  #'  For 2019 tree cover layer, convert all loss values 1 - 19 to be 100
+  #'  Values after 2019 are converted to 0
   loss19 <- gfc_loss_crop
+  loss19[loss19$layer == 20,] <- 0
   loss19[loss19$layer >= 1,] <- 100
+  #'  For 2020 tree cover layer, convert all loss values >0 to be 100, else 0
+  loss20 <- gfc_loss_crop
+  loss20[loss20$layer >= 1,] <- 100
   #'  Double check it worked
   summary(loss19)
+  summary(loss20)
   # plot(gfc_loss_crop)
   # plot(loss)
   
   #'  Subtract loss pixels from treecover pixels
   treecov_loss18 <- treecov_gain - loss18
   treecov_loss19 <- treecov_gain - loss19
+  treecov_loss20 <- treecov_gain - loss20
   #'  Double check it worked
   summary(treecov_loss18)
+  summary(treecov_loss20)
   # plot(gfc_treecov_crop)
   # plot(treecov_loss)
   # plot(loss)
@@ -101,12 +116,15 @@
   #'  Change all negative numbers to 0
   treecov_loss18[treecov_loss18$layer <= 0] <- 0
   treecov_loss19[treecov_loss19$layer <= 0] <- 0
+  treecov_loss20[treecov_loss20$layer <= 0] <- 0
   summary(treecov_loss19)
   plot(gfc_treecov_crop)
   plot(loss18)
   plot(treecov_loss18)
   plot(loss19)
   plot(treecov_loss19)
+  plot(loss20)
+  plot(treecov_loss20)
   
   #'  Project to match prefered WPPP projection
   # treecov_2018 <- projectRaster(treecov_loss18, crs = crs(sa_proj))
@@ -120,14 +138,18 @@
   #'  Tree cover = canopy closure for all vegetation taller than 5m in height
   treecov_2018 <- treecov_loss18
   treecov_2019 <- treecov_loss19
-  writeRaster(treecov_2018,
-              filename = "G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/treecov_2018.tif",
-              format="GTiff", overwrite=TRUE)
-  writeRaster(treecov_2019,
-              filename = "G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/treecov_2019.tif",
+  treecov_2020 <- treecov_loss20
+  # writeRaster(treecov_2018,
+  #             filename = "G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/treecov_2018.tif",
+  #             format="GTiff", overwrite=TRUE)
+  # writeRaster(treecov_2019,
+  #             filename = "G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/treecov_2019.tif",
+  #             format="GTiff", overwrite=TRUE)
+  writeRaster(treecov_2020,
+              filename = "G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/treecov_2020.tif",
               format="GTiff", overwrite=TRUE)
   
-  pdf(file = "./Output/TreeCover_2000v2019.pdf")
+  pdf(file = "./Output/TreeCover_2000v2020.pdf")
   plot(gfc_treecov_crop, main = "Tree Canopy Cover 2000")
-  plot(treecov_loss19, main = "Tree Canopy Cover 2019")
+  plot(treecov_loss20, main = "Tree Canopy Cover 2020")
   dev.off()
