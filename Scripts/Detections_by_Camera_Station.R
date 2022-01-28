@@ -325,7 +325,9 @@
   # write.csv(cougars, paste0('./Output/Cougars_allimgs_', Sys.Date(), '.csv'))
   
   
+  #  =============================
   #### CAPSTONE PROJECT DATA  ####
+  #  =============================
   
   #'  Coyote, bobcat & human detections for Alyssa
   meso <- full_dat %>%
@@ -338,22 +340,19 @@
   Alyssa_data <- rbind(meso, humans)
   # write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_dataYr2_', Sys.Date(), '.csv'))
   
-  #'  Cattle detections for Angela
+  #'  Cattle & bear detections for Angela
   moo <- full_dat %>%
     filter(Species == "Cattle") %>%
     dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type))
   # write.csv(moo, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Angela/Cattle_detections_', Sys.Date(), '.csv'))
   bears <- full_dat %>%
-    filter(Species == "Black Bear") %>%
-    dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type))
+    filter(Species == "Black Bear")   
   # write.csv(bears, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Angela/Bear_detections_', Sys.Date(), '.csv'))
   
   #'  Cougar detections for Donovan
   cougars <- full_dat %>%
-    filter(Species == "Cougar") %>%
-    dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type))
+    filter(Species == "Cougar")
   # write.csv(cougars, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Donovan/Cougar_detections_', Sys.Date(), '.csv'))
-
   
   #'  Deer detections for Sophia (need to narrow down the time period)
   Deer <- full_dat %>%
@@ -372,9 +371,9 @@
   # write.csv(FallHumans, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Sophia/FallHuman_detections_', Sys.Date(), '.csv'))
   
   #'  Multi-species detections for Celine (need to pick species and narrow time period)
-  
-  
-  
+  MultiSppDetections <- full_dat %>%
+    filter(Animal == "true" | Animal == "TRUE")
+  # write.csv(MultiSppDetections, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Celine/MultiSpp_detections_', Sys.Date(), '.csv'))
   
   #'  Deer detections for Hunter (Aug 1 - Jan 31)
   FallDeer <- full_dat %>%
