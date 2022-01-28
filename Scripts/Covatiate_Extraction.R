@@ -107,8 +107,8 @@
   dem <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m.tif")
   slope <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect.tif", band = 1)
   aspect <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect.tif", band = 2)
-  TRI <- raster("./Shapefiles/WA DEM rasters/WPPP_TRI_reproj.tif")
-  rough <- raster("./Shapefiles/WA DEM rasters/WPPP_roughness_reproj.tif")
+  TRI <- raster("./Shapefiles/WA DEM rasters/WPPP_TRI.tif")
+  rough <- raster("./Shapefiles/WA DEM rasters/WPPP_roughness.tif")
   #'  Human density
   human <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_pop.tif")
   #'  Human modified landscape
