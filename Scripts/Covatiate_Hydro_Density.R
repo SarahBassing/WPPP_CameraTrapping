@@ -174,7 +174,7 @@
   #'  the extended WPPP boundary (outside of watershed so no data included in 
   #'  original hydro layer) so all cell values in this region will be NA
   #'  Other large gaps around Spokane and central WA reflect real areas of little
-  #'  water (e.g., massive urbanization, arid regions) and should be convtered to 0
+  #'  water (e.g., massive urbanization, arid regions) and should be converted to 0
 
   #'  Replace NAs with 0's since no flowlines documented in these pixels
   #WaterDensity[is.na(WaterDensity[])] <- 0
