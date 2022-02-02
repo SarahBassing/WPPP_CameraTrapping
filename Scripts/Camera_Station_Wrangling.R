@@ -173,7 +173,7 @@
   chks20 <- cbind(checked20, checks20)
   
   #  Pulling Year 3 (summer 2020) cameras in summer 2021 and end of study
-  summchecks21 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Retrieval_2021_071921.csv")) %>% 
+  summchecks21 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Retrieval_2021_020122.csv")) %>% #071921
     dplyr::select("Date", "Study_Area", "Cell_ID",  
                   "Cam_ID", "Cam_Card", "Cam_Lat", "Cam_Long", 
                   "Cam_Condition", "Explain1", "Cam_Replaced", "Num_Images",
@@ -325,7 +325,7 @@
   #  Save to create "problems" csv and camera deployment covariates csv
   #  Problem dates will have to be extracted from image data (last image taken)
   #  and csv organized by hand in excel
-  #  Camera deployment covariates will be propogated to relevant rows by hand in excel
+  #  Camera deployment covariates will be propagated to relevant rows by hand in excel
   # write.csv(all_cams, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), ".csv"))
   # =========================================
   
@@ -386,7 +386,6 @@
   #  2. Cameras that were redeployed part way through season,
   #  3. Memory cards that filled up before camera was checked,
   #  4. Cameras that were removed by landowner and collected by us later.
-  #  Keep in mind Year 3 data are not complete
   
   #  Save
   #  Use this to eventually create "problems" All_Camera_Stations files for camtrapR
