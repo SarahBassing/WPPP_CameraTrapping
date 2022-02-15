@@ -337,7 +337,7 @@
   ##  BRB, gotta fix these  ##
 
   #'  Identify which images still need a second review
-  # unique(full_csv$CameraLocation[which(full_csv$SecondOp == "TRUE" | full_csv$SecondOp == "true")])
+  unique(full_csv$CameraLocation[which(full_csv$SecondOp == "TRUE" | full_csv$SecondOp == "true")])
   ##  BRB, gotta go check these  ##
 
   
@@ -400,7 +400,6 @@
   #'  Make sure there are no rows with no species or human activity but count data
   missing_obs <- allimgs[is.na(allimgs$Species) & is.na(allimgs$HumanActivity) & allimgs$Count > 0,]
   print(droplevels(unique(missing_obs$CameraLocation)))
-  #  OK3599 currently flagged but this image set is still being reviewed
   
   
   
