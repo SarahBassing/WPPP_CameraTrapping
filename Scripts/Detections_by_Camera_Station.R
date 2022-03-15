@@ -370,6 +370,17 @@
     dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type, Month))
   # write.csv(FallHumans, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Sophia/FallHuman_detections_', Sys.Date(), '.csv'))
   
+  #'  Human detections for Cameron (Aug 1 - Jan 31)
+  FallHumans <- full_dat %>%
+    filter(Human == "TRUE" | Vehicle == "TRUE") %>%
+    filter(!grepl("Moultrie", CameraLocation)) %>%
+    mutate(
+      Month = strftime(Date, "%m")
+    ) %>%
+    filter(Month == "01" | Month == "08" | Month == "09" | Month == "10" | Month == "11" | Month == "12")
+  # write.csv(FallHumans, paste0('G:/My Drive/1 Volunteers/Side projects for interns/Hunter-Cattle-Activity/FallHuman_detections_', Sys.Date(), '.csv'))
+  
+  
   #'  Multi-species detections for Celine (need to pick species and narrow time period)
   MultiSppDetections <- full_dat %>%
     filter(Animal == "true" | Animal == "TRUE")
