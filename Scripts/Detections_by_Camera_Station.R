@@ -86,7 +86,7 @@
   # alldetections <- read.csv("./Output/Bassing_AllDetectionsYr2_2021-03-01.csv") %>%
   # alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-16.csv") %>%
   # alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-05-06.csv") %>%
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2022-02-11.csv") %>% #2021-09-13
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2022-03-16.csv") %>% #2022-02-11
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -379,7 +379,6 @@
     ) %>%
     filter(Month == "01" | Month == "08" | Month == "09" | Month == "10" | Month == "11" | Month == "12")
   # write.csv(FallHumans, paste0('G:/My Drive/1 Volunteers/Side projects for interns/Hunter-Cattle-Activity/FallHuman_detections_', Sys.Date(), '.csv'))
-  
   
   #'  Multi-species detections for Celine (need to pick species and narrow time period)
   MultiSppDetections <- full_dat %>%
