@@ -25,6 +25,9 @@
   ## OK7545_51_C110 (C13 is correct, C197 only end servicing images are off & not worth changing)
   ## OK8226_103_MSD2001 (C134 is correct)- time off 1 hour during PST- subtract 1 hour in winter 
   ## OK8226_103_C206- time off 1 hour during PST
+  ##
+  ##  Year 3 cameras
+  ## OK8302_71_C197- time is 70 minutes ahead
   ##  ==========================================================
     
   ##  Libraries and data
@@ -353,6 +356,14 @@
       RgtDate = date(RgtDateTime),  # Date is actually fine
       RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
   
+  ####  YEAR 3  ####
+  OK8302_71 <- format_csv[format_csv$CameraLocation == "OK8302_71",]
+  #  Needs to fall back 70 minutes
+  OK8302_71 <- mutate(OK8302_71, 
+                      RgtDateTime = DateTime - 70*60,
+                      RgtDate = date(RgtDateTime),
+                      RgtTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S"))
+  
 
   ## ==========================================================
   #  Step 3
@@ -395,9 +406,8 @@
   shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, 
                      NE5511_C168_C186, OK4880_C175, OK7237_C159_C241, 
                      OK4306_C23, OK4489_C104_C132,  OK4944_C97, OK5719_C116, 
-                     OK7545_C110, OK8226_103)
-  #shift_list <- list(NE5511_C168_C186)
-  #shift_list <- list(NE3000_C18, NE3109_S4, NE3815_C61, NE3815_C125, OK4880_C175)
+                     OK7545_C110, OK8226_103, OK8302_71)
+  
   #  Run reformatting function
   reformat_shiftdat <- lapply(shift_list, reformat_csv)
   #  Separate out individual cameras
@@ -414,6 +424,7 @@
   OK5719_C116shift <- reformat_shiftdat[[11]]
   OK7545_C110shift <- reformat_shiftdat[[12]]
   OK8226_103shift <- reformat_shiftdat[[13]]
+  OK8302_71shift <- reformat_shiftdat[[14]]
   
   #  Add additional memory cards (with good date/times) back to adjusted cameras
   NE3000_S3 <- NE3000_S3_C18 %>%
@@ -440,6 +451,7 @@
   OK5719_C116_DTGood <- OK5719_C116shift
   OK7545_C110_DTGood <- OK7545_C110shift
   OK8226_C206_MSD2001_DTGood <- OK8226_103shift
+  OK8302_C197_DTGood <- OK8302_71shift
   
   #  From here, source this script to merge these corrected data sets in with 
   #  other processed & formatted image data
@@ -450,118 +462,6 @@
                       "OK7237_C159_C241_DTGood", "OK4306_C23_DTGood",
                       "OK4489_C104_C132_DTGood", "OK4944_C97_DTGood",
                       "OK5719_C116_DTGood", "OK7545_C110_DTGood",
-                      "OK8226_C206_MSD2001_DTGood"))
+                      "OK8226_C206_MSD2001_DTGood", "OK8302_C197_DTGood"))
 
-  
-  
-  ## ====================================================
-  # ####  Example with a single csv  ####
-  # NE3815 <- NE3815_C125 %>% 
-  #   transmute(
-  #     File = as.character(File),
-  #     RelativePath = as.character(RelativePath),
-  #     Folder = as.character(Folder),
-  #     DateTime = as.POSIXct(paste(Date, Time),
-  #                           format="%d-%b-%y %H:%M:%S",tz="America/Los_Angeles"), 
-  #     Date = as.Date(Date, format = "%d-%b-%y"), 
-  #     Time = chron(times = Time),
-  #     ImageQuality = as.factor(ImageQuality),
-  #     CameraLocation = as.factor(as.character(CameraLocation)),
-  #     DT_Good = as.factor(as.character(DT_Good)),
-  #     Service = as.factor(as.character(Service)),
-  #     Empty = as.factor(as.character(Empty)),
-  #     Animal = as.factor(as.character(Animal)),
-  #     Human = as.factor(as.character(Human)),
-  #     Vehicle = as.factor(as.character(Vehicle)),
-  #     Species = as.factor(as.character(Species)),
-  #     HumanActivity = as.factor(as.character(HumanActivity)),
-  #     Count = as.numeric(Count),
-  #     AF = as.numeric(AdultFemale),
-  #     AM = as.numeric(AdultMale),
-  #     AU = as.numeric(AdultUnknown),
-  #     OS = as.numeric(Offspring),
-  #     UNK = as.numeric(UNK),
-  #     Collars = as.numeric(Collars),
-  #     Tags = as.character(Tags),
-  #     Color = as.character(NaturalMarks)
-  #   )
-  # 
-  # str(NE3815)
-  # min(NE3815$Date); max(NE3815$Date)
-  # min(NE3815$DateTime); max(NE3815$DateTime)
-  # 
-  # 
-  # #  Use base R to change date and time
-  # #  Check out https://www.gormanalysis.com/blog/dates-and-times-in-r-without-losing-your-sanity/
-  # 
-  # #  Move the date up 21 days
-  # #  Example:
-  # # ymd <- NE3815$Date
-  # # newymd <- ymd + 21
-  # # min(newymd); max(newymd)
-  # NE3815 <- NE3815 %>%
-  #   mutate(RgtDate = Date + 21,
-  #          WrgDate = Date) %>%
-  #   select(-Date)
-  # 
-  # #  Change date & time (using DateTime column)
-  # #  This is done by adding or subtracting n seconds to the DateTime
-  # #  Doesn't appear that I can do this with Time column with current format
-  # #  Examples:
-  # # dt <- NE3815$DateTime
-  # # dtday <- dt + 24*60*60 # add 1 day
-  # # dthr <- dt + 60*60  # add 1 hour
-  # # dtmin <- dt + 60  # add 1 minute
-  # # dtdayhr <- dt + 24*60*60 + 60*60 #  add 1 day & 1 hour
-  # # dtbckday <- dt - 24*60*60  # subtract 1 day
-  # NE3815 <- NE3815 %>%
-  #   mutate(RgtDateTime = DateTime + 21*24*60*60 + 7*60*60 + 3*60, # plus 21 days, 7 hours, 2 minutes
-  #          WrgDateTime = DateTime) %>%
-  #   select(-DateTime)
-  # 
-  # #  Separate out Date and Time based on shifted DateTime
-  # require(lubridate)
-  # tstdate <- OK4880_C175 %>%
-  #   mutate(
-  #     NewDate = date(RgtDateTime),
-  #     NewTime = format(as.POSIXct(RgtDateTime, format = "%Y-%m-%d %H:%M:%S"), "%H:%M:%S") 
-  #   )
-  # 
-  # #  Reorganize entire dataframe to match other camera dataframes
-  # #  REMEMBER that the Time column is incorrect and should not be used for further analyses
-  #NE3815_C125_tst <- NE3815 %>%
-  #   transmute(
-  #     File = as.character(File),
-  #     RelativePath = as.character(RelativePath),
-  #     Folder = as.character(Folder),
-  #     DateTime = RgtDateTime,
-  #     Date = RgtDate,
-  #     Time = chron(times = Time),
-  #     ImageQuality = as.factor(ImageQuality),
-  #     CameraLocation = as.factor(as.character(CameraLocation)),
-  #     DT_Good = as.factor(as.character(DT_Good)),
-  #     Service = as.factor(as.character(Service)),
-  #     Empty = as.factor(as.character(Empty)),
-  #     Animal = as.factor(as.character(Animal)),
-  #     Human = as.factor(as.character(Human)),
-  #     Vehicle = as.factor(as.character(Vehicle)),
-  #     Species = as.factor(as.character(Species)),
-  #     HumanActivity = as.factor(as.character(HumanActivity)),
-  #     Count = as.numeric(Count),
-  #     AF = as.numeric(AF),
-  #     AM = as.numeric(AM),
-  #     AU = as.numeric(AU),
-  #     OS = as.numeric(OS),
-  #     UNK = as.numeric(UNK),
-  #     Collars = as.numeric(Collars),
-  #     Tags = as.character(Tags),
-  #     Color = as.character(Color)
-  #   )
-  # 
-  # str(NE3815_C125_tst)
-  # 
-  # #### DON'T FORGET  ####
-  # #  Add memory cards back to cameras that had data from multiple cards where 
-  # #  date & time were correct
-  # #  NE3000 S3; NE3109 C31, C96, C131; NE3815 C26; NE5511 C168
   
