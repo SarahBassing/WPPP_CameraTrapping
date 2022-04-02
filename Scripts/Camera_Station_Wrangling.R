@@ -152,7 +152,7 @@
   which(summchecks20$Cell_ID == "OK3940" & summchecks20$Cam_Removed == "N")
   summchecks20$Year[summchecks20$Cell_ID == "OK3940"] <- "Year2"
   summchecks20$Year[summchecks20$Cell_ID == "NE3057"] <- "Year2"
-  #  FYI, NE2897 was never pulled in summer 2020 so it's out for a second year
+  #  FYI, NE2897 was never pulled in summer 2020 so it was out for a second year
   #  so NE2897 is a Year2 and Year3 camera
   #  Reorder so Year column is in correct spot
   summchecks20 <- dplyr::select(summchecks20, "Date", "Study_Area", "Year", "Cell_ID",
