@@ -93,12 +93,11 @@
     return(csv_files)
   }
   
-  #'  Run data from each year through function (reviewed and partially processed data)
+  #'  Run data from each year through function (processed and REVIEWED data)
   #'  Note Year 1 data has an extra empty column that makes merging with Year 2 data tough
   mydir <- list("G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1",
-                "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 2")
-  # "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 1",
-  # "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 2"
+                "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 2",
+                "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 3")
   
   read_dat <- lapply(mydir, read_files)
   #'  Warnings are due to an extra empty column at end of csv files- ignore
@@ -222,12 +221,12 @@
   
   #'  Run each year's worth of camera data through function
   cleaned_dat <- lapply(read_dat, format_dat)
-  megadata <- rbind(cleaned_dat[[1]], cleaned_dat[[2]]) #, cleaned_dat[[3]], cleaned_dat[[4]] #change based on number of folders read in
+  megadata <- rbind(cleaned_dat[[1]], cleaned_dat[[2]], cleaned_dat[[3]]) 
   
   #'  Keep data split out by year if needed
   megadata_yr1 <- cleaned_dat[[1]] 
   megadata_yr2 <- cleaned_dat[[2]]
-  # megadata_yr2 <- rbind(cleaned_dat[[2]], cleaned_dat[[3]]) #change based on number of folders read in
+  megadata_yr3 <- cleaned_dat[[3]]
   
   #'  Check for rows where the date format is incorrect
   fail_10char <- megadata[megadata$Date_10char == "Fail",]
@@ -284,7 +283,9 @@
                     #  Year 2 data
                     OK4306_C23_DTGood, OK4489_C104_C132_DTGood,
                     OK4944_C97_DTGood, OK5719_C116_DTGood, 
-                    OK7545_C110_DTGood, OK8226_C206_MSD2001_DTGood) %>%
+                    OK7545_C110_DTGood, OK8226_C206_MSD2001_DTGood,
+                    #  Year 3 data
+                    OK8302_C197_DTGood) %>%
     filter(CameraLocation != "NE5853_Moultrie5" | File != "MFDC0001.JPG") %>%
     #  Drop this one cow image w/ bizarre incorrect date/time- camera malfunction
     #  (plenty of cow pix before & after it so no real loss of data)
@@ -318,14 +319,10 @@
   #'  Just because it lists these cameras doesn't mean there's a problem
   droplevels(unique(full_csv$CameraLocation[is.na(full_csv$Species) & full_csv$Animal == "TRUE"]))
   #'  Missing species data is due to confusion re: classifying humans with dog/horse
-  #'  These cameras have been reviewed and are fine as is:
-  #'  NE2881_9,
-
   
   #'  Which ones are reading in as lower-cased "true"/"false"? This is causing problems
   droplevels(unique(full_csv$CameraLocation[full_csv$Animal == "true"]))
   #'  New method of reading in raw csv files should have fixed this
-  
   
   #'  Identify which cameras have images that were never reviewed or where info
   #'  was incorrectly propagated across empty images
@@ -413,7 +410,7 @@
   
   
   #'  Save for later analyses
-  write.csv(alldetections, paste0('./Output/Bassing_AllDetections18-20_', Sys.Date(), '.csv'))
+  write.csv(alldetections, paste0('./Output/Bassing_AllDetections18-21_', Sys.Date(), '.csv'))
 
   
   #'  Filter for capstone students
@@ -435,7 +432,7 @@
            Species == "Black Bear" | Species == "Bobcat" | Species == "Coyote" | 
            Species == "Turkey" | Species == "Snowshoe Hare" | Species == "Rabbit Spp") %>%
     filter(!grepl("Moultrie", CameraLocation))
-  # write.csv(allstudyspp, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Jessalyn/Bassing_AllStudySpecies_', Sys.Date(), '.csv'))
+  # write.csv(allstudyspp, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2020-2021/Jessalyn- Carlton Extern/Bassing_AllStudySpecies_', Sys.Date(), '.csv'))
   
   #'  Cougar detections
   cougar.data <- alldetections %>%
