@@ -257,23 +257,6 @@
   
   
   #'  Append sourced data to MEGA data file
-  # full_csv <- rbind(megadata,
-  #                   NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
-  #                   NE3815_C26_C61_DTGood, NE3815_C125_DTGood,
-  #                   NE5511_C168_C186_DTGood, OK4880_C175_DTGood, 
-  #                   OK7237_C159_C241_DTGood) %>%
-  #   #  Drop service image with incorrect data/time before camera was fully set
-  #   filter(CameraLocation != "NE5853_Moultrie5" | File != "MFDC0001.JPG") %>%
-  #   #  Drop this one cow image w/ bizarre incorrect date/time- camera malfunction
-  #   #  (plenty of cow pix before & after it so no real loss of data)
-  #   #  FYI, this filtering also drops an empty image with the same file number
-  #   filter(CameraLocation != "NE7394_117" | File != "RCNX2117.JPG")
-  # 
-  # full_csv <- rbind(megadata,
-  #                   OK4306_C23_DTGood, OK4489_C104_C132_DTGood,
-  #                   OK4944_C97_DTGood, OK5719_C116_DTGood, 
-  #                   OK7545_C110_DTGood, OK8226_C206_MSD2001_DTGood)
-  
   full_csv <- rbind(megadata,
                     #  Year 1 data
                     NE3000_S3_C18_DTGood, NE3109_S4_C31_C96_C131_DTGood,
@@ -414,6 +397,15 @@
 
   
   #'  Filter for capstone students
+  #'  All study species detections for Jessalyn
+  allstudyspp <- alldetections %>%
+    filter(Species == "Elk" | Species == "Moose" | Species == "Mule Deer" | 
+             Species == "White-tailed Deer" | Species == "Cougar" | Species == "Wolf" | 
+             Species == "Black Bear" | Species == "Bobcat" | Species == "Coyote" | 
+             Species == "Turkey" | Species == "Snowshoe Hare" | Species == "Rabbit Spp") %>%
+    filter(!grepl("Moultrie", CameraLocation))
+  # write.csv(allstudyspp, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2020-2021/Jessalyn- Carlton Extern/Bassing_AllStudySpecies_', Sys.Date(), '.csv'))
+  
   #'  Coyote, bobcat & human detections for Alyssa
   meso <- alldetections %>%
     filter(Species == "Bobcat" | Species == "Coyote") %>%
@@ -425,15 +417,6 @@
   Alyssa_data <- rbind(meso, humans)
   # write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_data_', Sys.Date(), '.csv'))
 
-  #'  All study species detections for Jessalyn
-  allstudyspp <- alldetections %>%
-    filter(Species == "Elk" | Species == "Moose" | Species == "Mule Deer" | 
-           Species == "White-tailed Deer" | Species == "Cougar" | Species == "Wolf" | 
-           Species == "Black Bear" | Species == "Bobcat" | Species == "Coyote" | 
-           Species == "Turkey" | Species == "Snowshoe Hare" | Species == "Rabbit Spp") %>%
-    filter(!grepl("Moultrie", CameraLocation))
-  # write.csv(allstudyspp, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2020-2021/Jessalyn- Carlton Extern/Bassing_AllStudySpecies_', Sys.Date(), '.csv'))
-  
   #'  Cougar detections
   cougar.data <- alldetections %>%
     filter(Species == "Cougar")
