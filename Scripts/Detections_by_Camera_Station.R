@@ -41,7 +41,6 @@
   #'  Read in data, format, and filter
   #'  Camera station data:
   source("./Scripts/Camera_Station_Covariate_Wrangling.R") 
-  # allstations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_2021-07-19_skinny.csv") %>% 
   allstations <- allstations %>%
     dplyr::select("Status", "Year", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Name", 
            "Camera_Lat", "Camera_Long", "Distance_Focal_Point", "Height_frm_grnd", 
@@ -49,6 +48,7 @@
            "Pull_Status") %>%
     mutate(
       Date = as.Date(Date, format = "%Y-%m-%d"),
+      Name = ifelse(Name == "OK5332_73b", "OK5332_73", Name),
       CameraLocation = as.factor(as.character(Name))
     ) %>%
     arrange(Name, Date) %>%
@@ -71,22 +71,28 @@
     # filter(Cell_ID != "OK2749" | Camera_Lat != "48.64027") %>%
     # filter(Cell_ID != "OK3667" | Camera_Lat != "48.54991") %>%
     # filter(Cell_ID != "OK7658" | Camera_Lat != "48.17755") %>%
+    # filter(Cell_ID != "NE3081" | Camera_Lat != "48.42142") %>%
     #  Remove camera station that did not change but camera # was changed due to damage
-    filter(Cell_ID != "OK2145" | Camera_ID != "3") 
+    filter(Cell_ID != "OK2145" | Camera_ID != "3") %>%
+    #  Remove camera station that was stolen and no data recorded
+    filter(Cell_ID != "NE4299" | Camera_ID != "50") %>%
+    filter(Cell_ID != "NE4299" | Status != "Checked") %>%
+    filter(Cell_ID != "NE5314" | Camera_ID != "25") %>%
+    filter(Cell_ID != "OK5332" | Camera_ID != "73") %>%
+    #  Change Camera 73b to 73 since no detections at original Camera 73 location
+    mutate(Camera_ID = ifelse(Camera_ID == "73b", "73", Camera_ID))
+    
 
   #'  Camera deployment, retrieval, and problem dates for each station
   #'  This includes the locations and date ranges of camera stations that moved
   #'  part way through the season!
   deployedYr1 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_18-19_updated_1.21.21.csv", header = TRUE)
   deployedYr2 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_19-20.csv", header = TRUE)
-  deployed <- rbind(deployedYr1, deployedYr2)
+  deployedYr3 <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/All_Camera_Stations_20-21.csv", header = TRUE)
+  deployed <- rbind(deployedYr1, deployedYr2, deployedYr3)
   
   #'  Species detection data  
-  # alldetections <- read.csv("./Output/Bassing_AllDetections_2021-01-27.csv") %>%
-  # alldetections <- read.csv("./Output/Bassing_AllDetectionsYr2_2021-03-01.csv") %>%
-  # alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-03-16.csv") %>%
-  # alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2021-05-06.csv") %>%
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-20_2022-03-16.csv") %>% #2022-02-11
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-21_2022-04-06.csv") %>% #Bassing_AllDetections18-20_2022-03-16
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -118,17 +124,17 @@
   # alldetections <- alldetections %>% filter(!grepl("Moultrie", CameraLocation)) %>% droplevels()
 
   
-  #'  For now, subset to just 2018-2019 data
-  #'  Will need to do this on a larger scale for all data
-  # stationsYr1 <- allstations[allstations$Year == "Year1",]  
-  # stationsYr2 <- allstations[allstations$Year == "Year2",]
-  stations <- allstations[allstations$Year != "Year3",]
+  #' #'  For now, subset to just 2018-2019 data
+  #' #'  Will need to do this on a larger scale for all data
+  #' # stationsYr1 <- allstations[allstations$Year == "Year1",]  
+  #' # stationsYr2 <- allstations[allstations$Year == "Year2",]
+  #' stations <- allstations[allstations$Year != "Year3",]
   
   #'  Toss duplicate camera stations that moved to new locations
   #'  THIS IS NOT A PERMINANT FIX!!!!!
   # og_stations <- stationsYr1[!duplicated(stationsYr1$CameraLocation),]
   # og_stations <- stationsYr2[!duplicated(stationsYr2$CameraLocation),]
-  og_stations <- stations[!duplicated(stations$CameraLocation),]
+  og_stations <- allstations[!duplicated(allstations$CameraLocation),]
 
   #'  Double check I have the same camera location information in each database
   #'  NA's indicate that CameraLocation is missing (there should be none!)
@@ -163,7 +169,7 @@
   #'  Yr1 cams with NAs that are ok: NE3149_8, NE5740_15, NE5853_20, NE6491_34, 
   #'  OK2749_59, OK3667_92, & OK7858_43
   #'  Yr2 cams with NAs that are ok: NE1380_106, NE1538_6, OK8420_71
-  match_coord <- full_join(stations, deployed, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude"))
+  match_coord <- full_join(allstations, deployed, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude"))
   # match_coord <- full_join(stationsYr2, deployedYr2, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude"))
   
   #'  Join original stations (don't account for moves) with start/end data for all stations
@@ -253,7 +259,7 @@
     filter(FinalLocation != "NE2902_22" | !grepl("C69", RelativePath))
 
   #'  Add camera station covariate data to detection data
-  full_dat <- full_join(squeeky_clean, stations, by = c("Camera_Lat", "Camera_Long")) %>%
+  full_dat <- full_join(squeeky_clean, allstations, by = c("Camera_Lat", "Camera_Long")) %>%
     #'  Rename Date columns to make it clearer how these differ; rename location name
     mutate(
       Date = as.Date(Date.x, format = "%Y-%m-%d"),
@@ -279,7 +285,7 @@
 
   
   #'  Save for projects!
-  # write.csv(full_dat, paste0("./Output/full_camdata18-20_", Sys.Date(), ".csv"))
+  # write.csv(full_dat, paste0("./Output/full_camdata18-21_", Sys.Date(), ".csv"))
 
   #'  Camera station covariates with updated CameraLocation names (b cameras)
   stations <- clean_deployed %>%
@@ -291,7 +297,7 @@
                           "CameraLocation", "Latitude", "Longitude", "Distance_Focal_Point", 
                           "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", 
                           "Land_Owner", "Habitat_Type")
-  # write.csv(stations, paste0("./Output/Camera_Station18-20_Covariates_", Sys.Date(), ".csv")) 
+  # write.csv(stations, paste0("./Output/Camera_Station18-21_Covariates_", Sys.Date(), ".csv")) 
   
   #'  Final set of detection data with camera locations included for each observation
   animal_det <- full_dat %>%
