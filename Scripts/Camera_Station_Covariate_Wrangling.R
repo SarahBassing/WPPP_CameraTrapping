@@ -19,32 +19,14 @@
   library(tidyverse)
   
   #'  Read in data, format, and filter
-  # allstations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_2020-12-22_skinny.csv")
-  allstations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_2021-09-08_skinny.csv") %>% #updated_2020-12-22_skinny 
+  allstations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_2022-02-01_skinny.csv") %>% #updated_2021-09-08_skinny 
     dplyr::select("Status", "Year", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Name", 
            "Camera_Lat", "Camera_Long", "Distance_Focal_Point", "Height_frm_grnd", 
            "Monitoring", "Canopy_Cov", "Land_Mgnt", "Land_Owner", "Habitat_Type", "Pull_Status") %>%
     mutate(
-      Date = as.Date(Date, format = "%m/%d/%Y"),  #"%Y-%m-%d"
+      Date = as.Date(Date, format = "%Y-%m-%d"),  #"%m/%d/%Y"
       CameraLocation = as.factor(as.character(Name))
     ) %>%
-    # arrange(Name, Date) %>%
-    # #  Remove entries when the camera was pulled
-    # filter(Status != "Removed") %>%
-    # #  Remove duplicate data (where deployment and check data match for a given camera)
-    # group_by(Camera_Lat, Camera_Long) %>%
-    # distinct(Name, .keep_all = TRUE) %>%
-    # ungroup() %>%
-    # select(-Name) %>%
-    # #  Remove duplicate cameras with incorrect coordinates (cameras were not moved)
-    # filter(Cell_ID != "NE5094" | Status != "Checked") %>%
-    # filter(Cell_ID != "NE6019" | Status != "Checked") %>%
-    # filter(Cell_ID != "NE7602" | Status != "Checked") %>%
-    # #  Remove duplicates that dplyr thinks are distinct for some reason
-    # filter(Cell_ID != "NE1990" | Status != "Checked") %>%
-    # filter(Cell_ID != "NE2383" | Status != "Checked") %>%
-    # #  Remove camera station that did not change but camera # was changed due to damage
-    # filter(Cell_ID != "OK2145" | Camera_ID != "3") %>%
     mutate(
       #  Adjust name of feature being monitored by camera
       Monitoring = ifelse(Monitoring == "Decommissioned Road, Game Trail", "Decommissioned road", Monitoring), 
@@ -88,10 +70,13 @@
       Monitoring = ifelse(Monitoring == "trail", "Trail", Monitoring),
       #  Adjust name of land management type
       Land_Mgnt = ifelse(Land_Mgnt == "federal", "Federal", Land_Mgnt),
+      Land_Mgnt = ifelse(Land_Mgnt == "federal ", "Federal", Land_Mgnt),
       Land_Mgnt = ifelse(Land_Mgnt == "federal, access through private", "Federal", Land_Mgnt),
+      Land_Mgnt = ifelse(Land_Mgnt == "Federal ", "Federal", Land_Mgnt),
       Land_Mgnt = ifelse(Land_Mgnt == "private", "Private", Land_Mgnt),
       Land_Mgnt = ifelse(Land_Mgnt == "Private ", "Private", Land_Mgnt),
       Land_Mgnt = ifelse(Land_Mgnt == "state", "State", Land_Mgnt),
+      Land_Mgnt = ifelse(Land_Mgnt == "State ", "State", Land_Mgnt),
       #  Adjust name of managing agency or owner type
       Land_Owner2 = ifelse(grepl("NF", Land_Owner), "USFS", Land_Owner),
       Land_Owner2 = ifelse(grepl("USFS", Land_Owner), "USFS", Land_Owner2),
