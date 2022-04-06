@@ -389,6 +389,7 @@
   
   #  Save
   #  Use this to eventually create "problems" All_Camera_Stations files for camtrapR
+  #  and for Camera_Station_Covariate_Wrangling.R script
   # write.csv(final_sites, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), "_skinny.csv"))
   
   
