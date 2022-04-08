@@ -393,4 +393,67 @@
   # write.csv(final_sites, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), "_skinny.csv"))
   
   
+  #'  Calucalte nearest distance between cameras
+  #'  Load the sf library
+  library(sf)
+  
+  #'  Set the projection for data in lat/longs
+  wgs84 <- st_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+  
+  #'  Make camera location data spatial 
+  cam_sf <- st_as_sf(final_sites, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  
+  #'  Filter and organize by year and season
+  cam_sf_deploy <- cam_sf %>%
+    filter(Status == "Deployed") %>% 
+    filter(Name != "NE3000_17") %>%
+    filter(Name != "NE5345_3") %>%
+    filter(Name != "NE5314_25") %>%
+    filter(Name != "NE5920_8") %>%
+    filter(Name != "OK6576_52") %>%
+    group_by(Year, Name) %>%
+    slice(1L) %>%
+    ungroup()
+  
+  cam_sf_1819 <- filter(cam_sf_deploy, Year == "Year1")
+  cam_sf_1920 <- filter(cam_sf_deploy, Year == "Year2")
+  cam_sf_2021 <- filter(cam_sf_deploy, Year == "Year3")
+  
+  #'  Calculate nearest distance between cameras
+  nearest_cam <- function(cams) {
+    #'  Calculate distance between each camera location in meters
+    dist_matrix <- st_distance(cams$geometry, cams$geometry)
+    #'  Drop the units classification generated with st_distance
+    drop_units <- function(x) {
+      class(x) <- setdiff(class(x), "units")
+      attr(x, "units") <- NULL
+      x
+    }
+    cams <- drop_units(dist_matrix)
+    #'  Force distance = 0 to NA so this distance can't be considered
+    cams[cams == 0] <- NA
+    #'  Find the minimum distance for each camera
+    cam_dist <- sapply(1:nrow(cams), function(x) min(cams[x,], na.rm = TRUE))
+    cam_dist <- as.data.frame(cam_dist)
+    return(cam_dist)
+  }
+  #'  Run annual camera locations through function
+  #'  Estimate mean distance, SD, and maximum distance per year
+  nearest_cams_1819 <- nearest_cam(cam_sf_1819)
+  round(mean(nearest_cams_1819$cam_dist), 2); round(sd(nearest_cams_1819$cam_dist), 2)
+  round(max(nearest_cams_1819$cam_dist), 2); round(min(nearest_cams_1819$cam_dist), 2)
+  
+  nearest_cams_1920 <- nearest_cam(cam_sf_1920)
+  round(mean(nearest_cams_1920$cam_dist), 2); round(sd(nearest_cams_1920$cam_dist), 2)
+  round(max(nearest_cams_1920$cam_dist), 2); round(min(nearest_cams_1920$cam_dist), 2)
+  
+  nearest_cams_2021 <- nearest_cam(cam_sf_2021)
+  round(mean(nearest_cams_2021$cam_dist), 2); round(sd(nearest_cams_2021$cam_dist), 2)
+  round(max(nearest_cams_2021$cam_dist), 2); round(min(nearest_cams_2021$cam_dist), 2)
+
+  
+  
+  
+  
+  
   
