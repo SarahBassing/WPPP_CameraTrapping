@@ -446,5 +446,5 @@
   # write.csv(bird_detections, paste0('./Output/Bassing_BirdImages_', Sys.Date(), '.csv'))
   
   
-  
+  #'  NEXT: go to Detection_by_Camera_Station.R to do some final cleaning
   
