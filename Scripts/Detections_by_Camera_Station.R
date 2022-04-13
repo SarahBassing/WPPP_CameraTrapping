@@ -92,7 +92,7 @@
   deployed <- rbind(deployedYr1, deployedYr2, deployedYr3)
   
   #'  Species detection data  
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-21_2022-04-06.csv") %>% #Bassing_AllDetections18-20_2022-03-16
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-21_2022-04-13.csv") %>% #Bassing_AllDetections18-20_2022-03-16
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -284,8 +284,10 @@
   cams <- distinct(full_dat, full_dat$CameraLocation)
 
   
-  #'  Save for projects!
-  # write.csv(full_dat, paste0("./Output/full_camdata18-21_", Sys.Date(), ".csv"))
+  ####  Save for projects!  ####
+  #'  --------------------------
+  write.csv(full_dat, paste0("./Output/full_camdata18-21_", Sys.Date(), ".csv"))
+  
 
   #'  Camera station covariates with updated CameraLocation names (b cameras)
   stations <- clean_deployed %>%
