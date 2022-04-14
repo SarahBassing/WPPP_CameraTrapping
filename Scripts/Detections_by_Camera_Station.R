@@ -92,7 +92,7 @@
   deployed <- rbind(deployedYr1, deployedYr2, deployedYr3)
   
   #'  Species detection data  
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-21_2022-04-13.csv") %>% #Bassing_AllDetections18-20_2022-03-16
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-21_2022-04-14.csv") %>% #Bassing_AllDetections18-20_2022-04-13
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -124,16 +124,7 @@
   # alldetections <- alldetections %>% filter(!grepl("Moultrie", CameraLocation)) %>% droplevels()
 
   
-  #' #'  For now, subset to just 2018-2019 data
-  #' #'  Will need to do this on a larger scale for all data
-  #' # stationsYr1 <- allstations[allstations$Year == "Year1",]  
-  #' # stationsYr2 <- allstations[allstations$Year == "Year2",]
-  #' stations <- allstations[allstations$Year != "Year3",]
-  
   #'  Toss duplicate camera stations that moved to new locations
-  #'  THIS IS NOT A PERMINANT FIX!!!!!
-  # og_stations <- stationsYr1[!duplicated(stationsYr1$CameraLocation),]
-  # og_stations <- stationsYr2[!duplicated(stationsYr2$CameraLocation),]
   og_stations <- allstations[!duplicated(allstations$CameraLocation),]
 
   #'  Double check I have the same camera location information in each database
@@ -300,6 +291,8 @@
                           "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", 
                           "Land_Owner", "Habitat_Type")
   # write.csv(stations, paste0("./Output/Camera_Station18-21_Covariates_", Sys.Date(), ".csv")) 
+  
+  
   
   #'  Final set of detection data with camera locations included for each observation
   animal_det <- full_dat %>%
