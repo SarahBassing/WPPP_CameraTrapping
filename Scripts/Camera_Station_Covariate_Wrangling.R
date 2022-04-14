@@ -19,7 +19,7 @@
   library(tidyverse)
   
   #'  Read in data, format, and filter
-  allstations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_2022-02-01_skinny.csv") %>% #updated_2021-09-08_skinny 
+  allstations <- read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_2022-04-13_skinny.csv") %>% #updated_2022-02-01_skinny 
     dplyr::select("Status", "Year", "Date", "Study_Area", "Cell_ID", "Camera_ID", "Name", 
            "Camera_Lat", "Camera_Long", "Distance_Focal_Point", "Height_frm_grnd", 
            "Monitoring", "Canopy_Cov", "Land_Mgnt", "Land_Owner", "Habitat_Type", "Pull_Status") %>%
