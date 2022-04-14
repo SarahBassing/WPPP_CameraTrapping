@@ -344,6 +344,7 @@
     ungroup()
   #  Double check I didn't drop any grid cells
   length(unique(ugh$Cell_ID)); length(unique(prob_cams$Cell_ID)); length(unique(prob_last$Cell_ID))
+  #'  Currently off by 1 (OK3576) b/c camera never pulled due to 2021 Ceder Crk Fire
   
   #  Subset list of cameras to only ones that were not damaged or missing
   good_cams <- all_cams[!(all_cams$Cell_ID %in% prob_cams$Cell_ID),] %>%
@@ -372,8 +373,25 @@
   end_prob <- dplyr::select(prob_last, c(Cell_ID, Camera_ID, Status, Date))
   end_good <- dplyr::select(last, c(Cell_ID, Camera_ID, Status, Date))
   end <- rbind(end_prob, end_good)
+  
+  #'  Final data set of cameras
   final_sites <- left_join(full, end, by = (c("Cell_ID", "Camera_ID"))) %>%
-    filter(Status.x != "Removed" | dbl_check == 1)
+    filter(Status.x != "Removed" | dbl_check == 1) %>%
+    #'  Add "b" to OK1790_85 since deployed at same location two years in a row
+    #'  FYI: can't change Camera_ID for some reason b/c it changes all Camera_IDs 
+    #'  in weird ways that I don't understand what's going on. NBD tho cuz don't 
+    #'  use this column for anything really
+    mutate(Name = ifelse(Year == "Year3" & Name == "OK1790_85", "OK1790_85b", Name))
+  #'  Create a new row for the second year NE2897 was deployed at same location
+  NE2897 <- final_sites[final_sites$Cell_ID == "NE2897",] %>%
+    mutate(Name = ifelse(Name == "NE2897_4", "NE2897_4b", Name),
+           Camera_ID = ifelse(Year == "Year2" & Camera_ID == "4", "4b", Camera_ID),
+           Year = ifelse(Year == "Year2", "Year3", Year),
+           Date.x = ifelse(Date.x == "2019-06-13", "2020-06-20", Date.x))
+  #'  Merge back with final date set for all camera locations
+  final_sites <- rbind(final_sites, NE2897) %>%
+    arrange(Cell_ID)
+  
   colnames(final_sites) <- c("Status", "Year", "Date", "Study_Area", "Cell_ID", 
                              "Camera_ID", "Card_ID", "Camera_Lat", "Camera_Long", 
                              "Distance_Focal_Point", "Height_frm_grnd", "Trail_Width",
@@ -393,7 +411,7 @@
   # write.csv(final_sites, paste0(file = "G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/camera_master_2018-2021_updated_", Sys.Date(), "_skinny.csv"))
   
   
-  #'  Calucalte nearest distance between cameras
+  #'  Calculate nearest distance between cameras
   #'  Load the sf library
   library(sf)
   
