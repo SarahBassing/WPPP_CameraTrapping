@@ -77,7 +77,7 @@
   
   
   #'  Read in camera locations
-  station_covs <- read.csv("./Output/Camera_Station18-21_Covariates_2022-04-14.csv") 
+  station_covs <- read.csv("./Output/Camera_Station18-21_Covariates_2021-03-04.csv") 
   CameraLocation <- station_covs$CameraLocation
   Year <- station_covs$Year
   
