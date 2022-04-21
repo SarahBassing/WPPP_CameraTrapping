@@ -467,13 +467,16 @@
     dplyr::select(-caps)
   # write.csv(Cougs, paste0('./Output/Cougar_inddet_', Sys.Date(), '.csv'))
   
-  #'  Wolf detections for Lisanne
+  #'  Wolf & ungulate detections for Lisanne
   wolf <- detections %>%
     filter(Species == "Wolf") %>%
-    filter(Year == "Year2") %>%
-    # filter(str_detect(CameraLocation, paste("NE"), negate = TRUE)) %>%
     dplyr::select(-caps)
-  # write.csv(wolf, paste0('./Output/wolf_inddetYr2_', Sys.Date(), '.csv'))
+  # write.csv(wolf, paste0('./Output/Bassing_wolf_detections_', Sys.Date(), '.csv'))
+  wolf_food <- detections %>%
+    filter(Species == "Elk" | Species == "Moose" | Species == "Mule Deer" | Species == "White-tailed Deer") %>%
+    dplyr::select(-caps)
+  # write.csv(wolf_food, paste0('./Output/Bassing_ungulate_detections_', Sys.Date(), '.csv'))
+  
   
   #'  =============================================
   #'  Make the species detection data spatial based on CameraLocation lat/long
@@ -494,54 +497,100 @@
   NEcams <- cams[grepl("NE", cams$CameraLocation),]
   OKcams <- cams[grepl("OK", cams$CameraLocation),]
   
-  Yr1dat <- st_as_sf(full_dat, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
-  Yr1spp <- group_split(Yr1dat, Yr1dat$Species)
-  Yr1wolf <- Yr1dat[Yr1dat$Species == "Wolf",]
-  Yr1bear <- Yr1dat[Yr1dat$Species == "Black Bear",]
-  Yr1coug <- Yr1dat[Yr1dat$Species == "Cougar",]
-  Yr1cougcoll <- Yr1coug[Yr1coug$Collar > 0,]
-  Yr1elk <- Yr1dat[Yr1dat$Species == "Elk",]
-  Yr1moose <- Yr1dat[Yr1dat$Species == "Moose",]
-  Yr1md <- Yr1dat[Yr1dat$Species == "Mule Deer",]
-  Yr1wtd <- Yr1dat[Yr1dat$Species == "White-tailed Deer",]
-  Yr1cow <- Yr1dat[Yr1dat$Species == "Cattle",]
-  NEYr1moose <- st_as_sf(NEmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
-  OKYr1moose <- st_as_sf(OKmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
-  Yr1wolf <- st_as_sf(wolf, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
-  Yr1coug <- st_as_sf(Cougs, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  dat <- st_as_sf(detections, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  # spp <- group_split(dat, dat$Species)
+  wolf <- dat[dat$Species == "Wolf",]
+  bear <- dat[dat$Species == "Black Bear",]
+  coug <- dat[dat$Species == "Cougar",]
+  cougcoll <- coug[coug$Collars > 0,]
+  elk <- dat[dat$Species == "Elk",]
+  moose <- dat[dat$Species == "Moose",]
+  md <- dat[dat$Species == "Mule Deer",]
+  wtd <- dat[dat$Species == "White-tailed Deer",]
+  cow <- dat[dat$Species == "Cattle",]
+  NEmoose <- st_as_sf(NEmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  OKmoose <- st_as_sf(OKmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  wolf <- st_as_sf(wolf, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  coug <- st_as_sf(Cougs, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   
   
+  # ggplot() +
+  #   geom_sf(data = NE_wgs84, fill = NA) +
+  #   geom_sf(data = OK_wgs84, fill = NA) +
+  #   geom_sf(data = spp[[1]])
+  
+  pdf(file = "./Output/spp_all_camera_detections_18-21.pdf")
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OK_wgs84, fill = NA) +
-    geom_sf(data = Yr1spp[[1]])
+    geom_sf(data = elk, col = "darkgreen") +
+    ggtitle("Cams with elk detections") +
+    labs(x = "Longitude", y = "Latitude")
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OK_wgs84, fill = NA) +
-    geom_sf(data = Yr1elk)
+    geom_sf(data = md, col = "orange") +
+    ggtitle("Cams with mule deer detections") +
+    labs(x = "Longitude", y = "Latitude")
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OK_wgs84, fill = NA) +
-    geom_sf(data = Yr1coug)
+    geom_sf(data = wtd, col = "bisque4") +
+    ggtitle("Cams with white-tailed deer detections") +
+    labs(x = "Longitude", y = "Latitude")
+  ggplot() +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = wtd, size = 3, col = "bisque4") +
+    geom_sf(data = md, col = "orange")  +
+    ggtitle("Cams with mule deer & white-tailed deer detections") +
+    labs(x = "Longitude", y = "Latitude")
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OK_wgs84, fill = NA) +
-    geom_sf(data = Yr1coug, col = "blue") +
-    geom_sf(data = Yr1cougcoll, col = "orange") + 
+    geom_sf(data = bear) +
+    ggtitle("Cams with black bear detections") +
+    labs(x = "Longitude", y = "Latitude")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = moose, col = "red") +
+    ggtitle("Cams with moose detections") +
+    labs(x = "Longitude", y = "Latitude")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = wolf, col = "deeppink4") +
+    ggtitle("Cams with wolf detections") +
+    labs(x = "Longitude", y = "Latitude")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = coug, col = "blue") +
+    ggtitle("Cams with cougar detections") +
+    labs(x = "Longitude", y = "Latitude")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = coug, col = "blue") +
+    geom_sf(data = cougcoll, col = "orange") + 
     ggtitle("Cams with cougar and collared cougar detections") +
     labs(x = "Longitude", y = "Latitude")
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OK_wgs84, fill = NA) +
-    geom_sf(data = Yr1cow, col = "blue") +
+    geom_sf(data = cow, col = "darkorchid") +
     ggtitle("Cams with Cattle Detections") +
     labs(x = "Longitude", y = "Latitude")
+  dev.off()
   
-  pdf(file = "./Output/wolf_camera_detection_18-19.pdf")
+  pdf(file = "./Output/wolf_camera_detection_18-21.pdf")
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OK_wgs84, fill = NA) +
-    geom_sf(data = Yr1wolf)
+    geom_sf(data = wolf, col = "deeppink4")
+  ggtitle("Cams with wolf detections") +
+    labs(x = "Longitude", y = "Latitude")
   dev.off()
   
   
@@ -549,24 +598,30 @@
   ggplot() +
     geom_sf(data = OK_wgs84, fill = NA) +
     geom_sf(data = NE_wgs84, fill = NA) +
-    geom_sf(data = Yr1wtd, shape  = 23, size = 3, fill = "darkred") +
-    geom_sf(data = Yr1md, shape = 8, size = 2) 
+    geom_sf(data = wtd, shape  = 23, size = 3, fill = "darkred") +
+    geom_sf(data = md, shape = 8, size = 2)  +
+    ggtitle("Cams with mule deer & white-tailed deer detections") +
+    labs(x = "Longitude", y = "Latitude")
 
   #'  Plot NE moose detections
   #'  Count the number of independent detections per camera station
-  NEYr1moose <- NEYr1moose %>%
+  NEmoose_n <- NEmoose %>%
     group_by(CameraLocation) %>%
     summarise(count = n()) %>%
     ungroup()
-  OKYr1moose <- OKYr1moose %>%
+  OKmoose_n <- OKmoose %>%
     group_by(CameraLocation) %>%
     summarise(count = n()) %>%
     ungroup()
-  Yr1wolf <- Yr1wolf %>%
+  wolf_n <- wolf %>%
     group_by(CameraLocation) %>%
     summarise(count = n()) %>%
     ungroup()
-  Yr1coug <- Yr1coug %>%
+  coug_n <- coug %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  cow_n <- cow %>%
     group_by(CameraLocation) %>%
     summarise(count = n()) %>%
     ungroup()
@@ -575,12 +630,12 @@
   ggplot() +
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
-    geom_sf(data = NEYr1moose, aes(size = count), shape  = 21, fill = "darkred") + 
+    geom_sf(data = NEmoose_n, aes(size = count), shape  = 21, fill = "darkred") + 
     scale_fill_manual(values = c("A" = "transparent"),
                       labels = c("Camera traps"), name = "Legend") +
     labs(size = "Independent \ndetections") +
     labs(x = "Longitude", y = "Latitude") +
-    ggtitle("WPPP Camera Trap Moose Detections \n(2018 - 2019)") +
+    ggtitle("WPPP Camera Trap Moose Detections \n(2018 - 2021)") +
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5))
   dev.off()
@@ -591,14 +646,12 @@
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OKcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
     geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
-    # geom_sf(data = OKYr1moose, aes(size = count), shape  = 21, fill = "darkred") + 
-    # geom_sf(data = NEYr1moose, aes(size = count), shape  = 21, fill = "darkred") +
-    geom_sf(data = Yr1wolf, aes(size = count), shape = 21, fill = "orange") +
+    geom_sf(data = wolf_n, aes(size = count), shape = 21, fill = "orange") +
     scale_fill_manual(values = c("A" = "transparent"),
                       labels = c("Camera traps"), name = "") +
     labs(size = "Independent \ndetections") +
     labs(x = "Longitude", y = "Latitude") +
-    ggtitle("WPPP Camera Trap Wolf Detections \n(2018 - 2019)") +
+    ggtitle("WPPP Camera Trap Wolf Detections \n(2018 - 2021)") +
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5))
   dev.off()
@@ -609,7 +662,7 @@
     geom_sf(data = NE_wgs84, fill = NA) +
     geom_sf(data = OKcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
     geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
-    geom_sf(data = Yr1coug, aes(size = count), shape = 21, fill = "orange") +
+    geom_sf(data = coug_n, aes(size = count), shape = 21, fill = "orange") +
     scale_fill_manual(values = c("A" = "transparent"),
                       labels = c("Camera traps"), name = "") +
     labs(size = "Independent \ndetections") +
@@ -618,6 +671,22 @@
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5))
   dev.off()
+  
+  
+  ggplot() +
+    geom_sf(data = OK_wgs84, fill = NA) +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = OKcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = cow_n, aes(size = count), shape = 21, fill = "darkgreen") +
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "") +
+    labs(size = "Independent \ndetections") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Cattle Detections \n(2018 - 2019)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+
     
   #' #'  More basic plot
   #' ggplot() +
