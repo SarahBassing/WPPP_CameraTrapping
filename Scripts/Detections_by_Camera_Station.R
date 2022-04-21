@@ -341,7 +341,7 @@
   Alyssa_data <- rbind(meso, humans)
   # write.csv(Alyssa_data, paste0('G:/My Drive/1 Volunteers/Capstone Projects/Alyssa/Alyssa_dataYr2_', Sys.Date(), '.csv'))
   
-  #'  Cattle & bear detections for Angela
+  #'  Cattle, bear, & human detections for Angela
   moo <- full_dat %>%
     filter(Species == "Cattle") %>%
     dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type))
@@ -349,6 +349,17 @@
   bears <- full_dat %>%
     filter(Species == "Black Bear")   
   # write.csv(bears, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Angela/Bear_detections_', Sys.Date(), '.csv'))
+  humans <- full_dat %>%
+    filter(Human == "TRUE" | Vehicle == "TRUE") %>%
+    filter(!grepl("Moultrie", CameraLocation)) %>%
+    mutate(
+      Month = strftime(Date, "%m")
+    ) %>%
+    filter(Month == "05" | Month == "06" | Month == "07" | Month == "08" | Month == "09" | Month == "10") %>%
+    filter(!Year == "Year3") %>%
+    dplyr::select(-c(Distance_Focal_Point, Height_frm_grnd, Monitoring, Canopy_Cov, Land_Mgnt, Land_Owner, Habitat_Type, Month))
+  # write.csv(humans, paste0('G:/My Drive/1 Volunteers/Capstone Projects/2021-2022/Angela/Human_detections_', Sys.Date(), '.csv'))
+  
   
   #'  Cougar detections for Donovan
   cougars <- full_dat %>%
