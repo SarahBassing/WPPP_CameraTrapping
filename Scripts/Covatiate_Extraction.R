@@ -77,7 +77,7 @@
   
   
   #'  Read in camera locations
-  station_covs <- read.csv("./Output/Camera_Station18-20_Covariates_2021-03-04.csv") #2021-04-25
+  station_covs <- read.csv("./Output/Camera_Station18-21_Covariates_2022-04-14.csv") 
   CameraLocation <- station_covs$CameraLocation
   Year <- station_covs$Year
   
@@ -100,10 +100,7 @@
     st_transform(crs = crs(sa_proj))
   NE_SA <- st_read("./Shapefiles/fwdstudyareamaps", layer = "NE_SA") %>%
     st_transform(crs = crs(sa_proj))
-  #'  Terrain rasters (based on rasters projected in study area projection)
-  dem_reproj <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m_reproj.tif")
-  slope_reproj <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect_reproj.tif", band = 1)
-  aspect_reproj <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect_reproj.tif", band = 2)
+  #'  Terrain rasters 
   dem <- raster("./Shapefiles/WA DEM rasters/WPPP_DEM_30m.tif")
   slope <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect.tif", band = 1)
   aspect <- raster("./Shapefiles/WA DEM rasters/WPPP_slope_aspect.tif", band = 2)
@@ -113,16 +110,11 @@
   human <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_pop.tif")
   #'  Human modified landscape
   HM <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_gHM.tif") 
-  #'  Reproject (and resample) human modified raster to match that of DEM reproj
-  # HM_reproj <- projectRaster(HM, crs = crs(sa_proj), res = res(dem), method = "bilinear")
-  # writeRaster(HM_reproj, filename = "./Shapefiles/Additional_WPPP_Layers/WPPP_gHM_reproj.tif", format="GTiff", overwrite=TRUE)
-  HM_reproj <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_gHM_reproj.tif")
-  #'  Road density raster
+  #'  Road density and distance to nearest road rasters
   roadden <- raster("./Shapefiles/Cascadia_layers/roadsForTaylor/RoadDensity_1km.tif") 
-  # roadden2 <- raster("./Shapefiles/roaddensity/road.density_km2_TIF.tif") # I think units really are in meters of road length for this raster
-  #'  Cascadia Biodiveristy interpolated rasters
-  interp_landcov18 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2018.tif")
-  interp_landcov19 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2019.tif")
+  dist2rd_minor <-
+  dist2rd_major <-
+  #'  Cascadia Biodiveristy
   formix2prop18 <- raster("./Shapefiles/Cascadia_layers/forestmix2prop_18.tif")
   formix2prop19 <- raster("./Shapefiles/Cascadia_layers/forestmix2prop_19.tif")
   xgrassprop18 <- raster("./Shapefiles/Cascadia_layers/xgrassprop_18.tif")
@@ -132,7 +124,7 @@
   
   #'  Generate a grid for each study area to guide covariate extraction for mapping later on
   grid_1k <- raster("./Shapefiles/ref_grid_1k.img")
-  TG_grid <- raster("./Shapefiles/MD_raster_template_epsg2855.tif") # T.Ganz's grid 30m res (extended OK study area for mule deer)
+  # TG_grid <- raster("./Shapefiles/MD_raster_template_epsg2855.tif") # T.Ganz's grid 30m res (extended OK study area for mule deer)
   projection(grid_1k)
   projection(TG_grid)
   #'  Load water bodies shapefile (needed to mask unavailable habitat)
@@ -142,7 +134,7 @@
   bigwater <- waterbody[waterbody$AreSqKm > 1,]
   #'  Mask large bodies of water from raster
   grid_1k_mask <- mask(grid_1k, bigwater, inverse = TRUE)
-  TG_grid_mask <- mask(TG_grid, bigwater, inverse = TRUE)
+  # TG_grid_mask <- mask(TG_grid, bigwater, inverse = TRUE)
   #'  Crop reference 1km grid to extents of study areas
   OK_grid <- crop(grid_1k_mask, OK_SA)
   NE_grid <- crop(grid_1k_mask, NE_SA)
@@ -178,101 +170,44 @@
   NE_dots <- as(NE_grid, "SpatialPixelsDataFrame")
   OK_30dots <- as(OK_30m, "SpatialPixelsDataFrame")
   NE_30dots <- as(NE_30m, "SpatialPixelsDataFrame")
-  TG_dots <- as(TG_grid, "SpatialPixelsDataFrame")
+  # TG_dots <- as(TG_grid, "SpatialPixelsDataFrame")
   #'  Extract coordinates for each pixel (centroid of each grid cell)
   OK_dot_coords <- coordinates(OK_dots)
   NE_dot_coords <- coordinates(NE_dots)
   OK_30dot_coords <- coordinates(OK_30dots)
   NE_30dot_coords <- coordinates(NE_30dots)
-  TG_dot_coords <- coordinates(TG_dots)
+  # TG_dot_coords <- coordinates(TG_dots)
   #'  And make spatial
   OK_centers <- SpatialPoints(OK_dots, proj4string = CRS(sa_proj))
   NE_centers <- SpatialPoints(NE_dots, proj4string = CRS(sa_proj))
   OK_30centers <- SpatialPoints(OK_30dots, proj4string = CRS(sa_proj))
   NE_30centers <- SpatialPoints(NE_30dots, proj4string = CRS(sa_proj))
-  TG_centers <- SpatialPoints(TG_dots, proj4string = CRS(sa_proj))
+  # TG_centers <- SpatialPoints(TG_dots, proj4string = CRS(sa_proj))
   #'  Reproject for extracting covariate data in WGS84
   OK_centers_wgs84 <- spTransform(OK_centers, crs(wgs84))
   NE_centers_wgs84 <- spTransform(NE_centers, crs(wgs84))
   OK_30centers_wgs84 <- spTransform(OK_30centers, crs(wgs84))
   NE_30centers_wgs84 <- spTransform(NE_30centers, crs(wgs84))
-  TG_centers_wgs84 <- spTransform(TG_centers, crs(wgs84))
-  
-  
-  #' #'  Other rasters, likely won't use
-  #' #'  NLCD raster
-  #' nlcd <- raster("./Shapefiles/Land_cover/NLCD_2016_Land_Cover/NLCD_2016_Land_Cover_L48_20190424.img")
-  #' #'  Water density raster
-  #' waterden <- raster("./Shapefiles/WA_DeptEcology_HydroWA/WaterDensity_1km.tif")
-  #' #'  Percent canopy cover rasters
-  #' canopy18 <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/treecov_2018.tif")
-  #' canopy19 <- raster("G:/My Drive/1 Dissertation/Analyses/Shapefiles/Global_Forest_Change/treecov_2019.tif")
-  #' landfire <- raster("./Shapefiles/Additional_WPPP_Layers/WPPP_landfire_CC_2019.tif")
-  #' #'  Cascadia Biodiveristy Watch rasters
-  #' landcov18 <- raster("./Shapefiles/Cascadia_layers/landcover_2018.tif")
-  #' landcov19 <- raster("./Shapefiles/Cascadia_layers/landcover_2019.tif")
-  #' interp_landcov18 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2018.tif")
-  #' interp_landcov19 <- raster("./Shapefiles/Cascadia_layers/interpolated_landcover_2019.tif")
-  #' formix2prop18 <- raster("./Shapefiles/Cascadia_layers/forestmix2prop_18.tif")
-  #' formix2prop19 <- raster("./Shapefiles/Cascadia_layers/forestmix2prop_19.tif")
-  #' xgrassprop18 <- raster("./Shapefiles/Cascadia_layers/xgrassprop_18.tif")
-  #' xgrassprop19 <- raster("./Shapefiles/Cascadia_layers/xgrassprop_19.tif")
-  #' xshrubprop18 <- raster("./Shapefiles/Cascadia_layers/xshrubprop_18.tif")
-  #' xshrubprop19 <- raster("./Shapefiles/Cascadia_layers/xshrubprop_19.tif")
-  #' ndvi_sp18 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2018_spring.tif")
-  #' dnbr_sp18 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2018_spring.tif", band = 2)
-  #' ndvi_sm18 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2018_summer.tif")
-  #' dnbr_sm18 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2018_summer.tif", band = 2)
-  #' ndvi_sp19 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2019_spring.tif")
-  #' dnbr_sp19 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2019_spring.tif", band = 2)
-  #' ndvi_sm19 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2019_summer.tif")
-  #' dnbr_sm19 <- raster("./Shapefiles/Cascadia_layers/vegIndices_2019_summer.tif", band = 2)
-  #' disturb18 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2018.tif")
-  #' burnPerim18 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2018.tif", band = 3)
-  #' disturb19 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2019.tif")
-  #' burnPerim19 <- raster("./Shapefiles/Cascadia_layers/vegDisturbance_2019.tif", band = 3)
+  # TG_centers_wgs84 <- spTransform(TG_centers, crs(wgs84))
   
   
   #'  Identify projection, resolution, & spatial extent of relevant rasters
   projection(wppp_bound)
   projection(OK_SA)
   projection(dem)
-  projection(dem_reproj)
-  projection(HM_reproj)
   projection(HM)
-  projection(interp_landcov18)
   projection(xshrubprop18)
   projection(roadden) 
-  # projection(roadden2) 
-  # projection(nlcd)
-  # projection(waterden)
-  # projection(canopy18)
-  # projection(landfire)
-  # projection(landcov18)
-  # projection(ndvi_sp18)
-  # projection(burnPerim18)
-  # projection(human)
-
-  res(dem_reproj)
+  
   res(dem)
-  res(HM_reproj)
   res(HM)
-  res(interp_landcov18)
   res(xshrubprop18)
   res(roadden)
-  # res(roadden2)
-  # res(nlcd)
-  # res(landfire)
-  # res(landcov18)
-  # res(ndvi_sp18)
-  # res(human)
-  
+ 
   extent(dem)
-  extent(dem_reproj)
-  extent(HM_reproj)
+  extent(HM)
   extent(xshrubprop18)
   extent(roadden)
-  # extent(roadden2)
   
   
   #'  Quick summary data about elevation for publications- this takes awhile!
@@ -310,6 +245,7 @@
     mutate(
       ID = seq(1:nrow(.))
     )
+  
   #'  Daily max precip and mean temp; extracted from NARR by O.Sanderfoot
   #'  Will need to summarize/average based on desired date range & sampling occasions
   narr <- read.csv("./Output/WPPP_weather_data_all.csv") %>%
@@ -328,7 +264,7 @@
   terra_NE <- raster::extract(terra_stack, NE_centers_wgs84, df = TRUE)
   terra_OK30 <- raster::extract(terra_stack, OK_30centers_wgs84, df = TRUE)
   terra_NE30 <- raster::extract(terra_stack, NE_30centers_wgs84, df = TRUE)
-  terra_TG <- raster::extract(terra_stack, TG_centers_wgs84, df = TRUE)
+  # terra_TG <- raster::extract(terra_stack, TG_centers_wgs84, df = TRUE)
   
   #'  Extract anthropogenic variables
   road_den <- raster::extract(roadden, cams_reproj, df = TRUE)
@@ -338,12 +274,12 @@
   road_NE <- raster::extract(roadden, NE_centers, df = TRUE)
   road_OK30 <- raster::extract(roadden, OK_30centers, df = TRUE)
   road_NE30 <- raster::extract(roadden, NE_30centers, df = TRUE)
-  road_TG <- raster::extract(roadden, TG_centers, df = TRUE)
+  # road_TG <- raster::extract(roadden, TG_centers, df = TRUE)
   modified_OK <- raster::extract(HM, OK_centers_wgs84, df = TRUE)
   modified_NE <- raster::extract(HM, NE_centers_wgs84, df = TRUE)
   modified_OK30 <- raster::extract(HM, OK_30centers_wgs84, df = TRUE)
   modified_NE30 <- raster::extract(HM, NE_30centers_wgs84, df = TRUE)
-  modified_TG <- raster::extract(HM, TG_centers_wgs84, df = TRUE)
+  # modified_TG <- raster::extract(HM, TG_centers_wgs84, df = TRUE)
   
   #'  Start covariate dataframe
   cam_covs <- terra_covs %>%
