@@ -74,8 +74,8 @@
   #'  E.g., Forest is labeled 230, so everything from = 229 (non-inclusive), 
   #'  to = 230, (including 230) gets assigned value of 230. 
   #'  Anything from 230 (non-inclusive) through 333 gets a value of 0.
-  #'  
-  #'  "Forest" class that includes: Forest (230), Woody Wetland (202), and Emergent Wetland (201)
+  
+  #'  "Forest": Forest (230), Woody Wetland (202), and Emergent Wetland (201)
   forestm <- matrix(c(0,200,0,
                       200,202,1,
                       202,229,0,
@@ -85,7 +85,7 @@
   #'  Check to make sure it looks right
   forestm
   #'  Reclassify the raster based on a matrix
-  forest18 <- reclassify(landcov18_reproj, forestm)
+  forest18 <- reclassify(landcov18_reproj, forestm) 
   forest19 <- reclassify(landcov19_reproj, forestm)
   forest20 <- reclassify(landcov20_reproj, forestm)
   #'  Plot to see how it looks - only forest areas (binary format)
