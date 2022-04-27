@@ -391,6 +391,9 @@
     filter(Empty != "TRUE") %>% 
     filter(Service != "TRUE")  
   
+  #'  Make sure there are no duplicate detections in here
+  dups <- alldetections[duplicated(alldetections),]
+  
   
   #'  Save for later analyses
   write.csv(alldetections, paste0('./Output/Bassing_AllDetections18-21_', Sys.Date(), '.csv'))
