@@ -92,7 +92,7 @@
   deployed <- rbind(deployedYr1, deployedYr2, deployedYr3)
   
   #'  Species detection data  
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-21_2022-04-14.csv") %>% #Bassing_AllDetections18-20_2022-04-13
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-21_2022-04-27.csv") %>% 
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
@@ -118,6 +118,9 @@
     filter(!grepl("Moultrie", CameraLocation)) %>%
     filter(!grepl("Moultire", CameraLocation)) %>%
     droplevels()
+  
+  #'  Make sure there are no duplicate detections in here
+  dups <- alldetections[duplicated(alldetections),]
 
   #'  Or to save myself the reformatting step...
   # source("./Scripts/Clean_Reviewed_CSVs.R")
@@ -160,42 +163,76 @@
   #'  Yr1 cams with NAs that are ok: NE3149_8, NE5740_15, NE5853_20, NE6491_34, 
   #'  OK2749_59, OK3667_92, & OK7858_43
   #'  Yr2 cams with NAs that are ok: NE1380_106, NE1538_6, OK8420_71
-  match_coord <- full_join(allstations, deployed, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude"))
-  # match_coord <- full_join(stationsYr2, deployedYr2, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude"))
-  
+  #'  Yr3 cams with NAs that are ok: NE3081_20
+  match_coord <- full_join(allstations, deployed, by = c("Camera_Lat" = "Latitude", "Camera_Long" = "Longitude")) 
+
   #'  Join original stations (don't account for moves) with start/end data for all stations
-  # messy <- full_join(og_stations, deployedYr1, by = c("Cell_ID")) %>% 
-  messy <- full_join(og_stations, deployed, by = c("Cell_ID")) %>%
+  # messy <- full_join(og_stations, deployed, by = c("Cell_ID")) %>%
+  messy <- full_join(og_stations, deployed, by = c("CameraLocation")) %>%
     #'  Drop Camera_Lat & Camera_Long since these don't account for camera locations
     #'  that moved part way through season
-    dplyr::select(-c(Camera_Lat, Camera_Long))
+    dplyr::select(-c(Camera_Lat, Camera_Long)) %>%
+    #'  Change CameraID info for Year3 OK1790 location since same location but
+    #'  new year and throws things off otherwise
+    mutate(Camera_ID.x = ifelse(CameraLocation == "OK1790_85b", "85b", Camera_ID.x))
   
   #'  Pull out data for cameras that were moved to a second location ("b" was 
   #'  added to the CameraLocation name in the deployed data frame)
   #'  Only applies to Year 1 cameras
   moved <- messy %>%
-    filter(str_detect(CameraLocation.y, "b"))
+    #filter(str_detect(CameraLocation.y, "b"))
+    filter(str_detect(CameraLocation, "b"))
+  #'  Hang on to just the Year1 b cameras and rejoin with location data from 
+  #'  full camera station data frame
+  Yr1_moved <- moved %>%
+    filter(is.na(Camera_ID.x)) %>%
+    dplyr::select(c("CameraLocation", "Cell_ID.y", "Camera_ID.y", "Latitude", "Longitude", 
+                    "Setup_date", "Retrieval_date", "Problem1_from", "Problem1_to", 
+                    "Problem2_from", "Problem2_to")) 
+  skinny_moved <- match_coord %>% 
+    filter(match_coord$Camera_Lat %in% Yr1_moved$Latitude) %>%
+    mutate(
+      Latitude = Camera_Lat,
+      Longitude = Camera_Long, 
+      CameraLocation = CameraLocation.y,
+      Cell_ID.x = Cell_ID.y,
+      Camera_ID.x = Camera_ID.y
+    ) %>%
+    dplyr::select(-c("Camera_Lat", "Camera_Long", "CameraLocation.y")) %>%
+    relocate(CameraLocation, .before = "Cell_ID.y") %>%
+    relocate(Latitude, .after = "Camera_ID.y") %>%
+    relocate(Longitude, .after = "Latitude")
   
   #'  Retain only where CameraLocation names are consistent across stations & 
   #'  deployed data frames (this removes funky duplicates that occurred during
   #'  the full_join but also drops the location data for cameras that moved)
-  nomess <- distinct(messy[messy$CameraLocation.x == messy$CameraLocation.y,])
+  # nomess <- distinct(messy[messy$CameraLocation.x == messy$CameraLocation.y,])
+  nomess <- distinct(messy[messy$Camera_ID.x == messy$Camera_ID.y,]) %>%
+    #'  Drop mystery NA row at bottom
+    filter(!is.na(Year)) %>%
+    #'  Add row for secondary CameraLocation field- this is necessary for merging
+    #'  skinny_moved data below where CameraLocation includes "b" and is actually
+    #'  a different location
+    mutate(CameraLocation.x = CameraLocation) %>%
+    relocate(CameraLocation.x, .before = CameraLocation)
   
   #'  Merge two parts back together so all camera locations are represented but
   #'  no duplicates occur
-  clean_deployed <- rbind(nomess, moved) %>%
-    arrange(CameraLocation.y) %>%
+  # clean_deployed <- rbind(nomess, moved) %>%
+  clean_deployed <- rbind(nomess, skinny_moved) %>%
+    # arrange(CameraLocation.y) %>%
+    arrange(CameraLocation) %>%
     mutate(
       Setup_date = as.Date(Setup_date, format = "%m/%d/%Y"),
       Retrieval_date = as.Date(Retrieval_date, format = "%m/%d/%Y"),
       CameraLocation.x = as.factor(as.character(CameraLocation.x)),
-      CameraLocation.y = as.factor(as.character(CameraLocation.y))
+      CameraLocation = as.factor(as.character(CameraLocation)) #.y
     )
 
   #'  Double check I have the same camera location information in each data set
   #'  NA's indicate that CameraLocation is missing (should only happen for "b" sites)
-  cams1 <- as.data.frame(as.factor(as.character(clean_deployed$CameraLocation.y)))
-  cams1 <- cbind(cams1, rep("CameraLocation.y", nrow(cams1)))
+  cams1 <- as.data.frame(as.factor(as.character(clean_deployed$CameraLocation)))
+  cams1 <- cbind(cams1, rep("CameraLocation", nrow(cams1)))
   colnames(cams1) <- c("CameraLocation", "Data Source A")
   cams2 <- as.data.frame(as.factor(as.character(clean_deployed$CameraLocation.x))) 
   cams2 <- cbind(cams2, rep("CameraLocation.x", nrow(cams2)))
@@ -213,11 +250,11 @@
   #'  Extract site-specific location & deployment data
   for(i in 1: nrow(clean_deployed)){
     #'  CameraLoction names & coordinates, including cameras that were moved
-    allcamloc <- clean_deployed$CameraLocation.y[i]
+    allcamloc <- clean_deployed$CameraLocation[i] #.y
     allcamlat <- clean_deployed$Latitude[i]
     allcamlong <- clean_deployed$Longitude[i]
     #'  Original CameraLocation names (these will match the detection data)
-    basecamloc <- clean_deployed$CameraLocation.x[i]
+    basecamloc <- clean_deployed$CameraLocation.x[i] #.x
     #'  Identify the day each camera was deployed and pulled/moved
     start <- clean_deployed$Setup_date[i]  
     end <- clean_deployed$Retrieval_date[i]
@@ -257,13 +294,6 @@
       DeployDate = as.Date(Date.y, format = "%Y-%m-%d"),
       CameraLocation = FinalLocation
     ) %>%
-    #'  Drop unnecessary columns
-    dplyr::select(-c(Date.x, Date.y, DT_Good, Service, Empty, SecondOp, Status, FinalLocation,
-              CameraLocation.x, CameraLocation.y, Cell_ID, Camera_ID, Pull_Status)) %>%
-    #'  Reorganize columns to put data in more useful locations
-    relocate("Date", .after = DateTime) %>%
-    relocate("DeployDate", .after = Color) %>%
-    relocate(c("CameraLocation", "Camera_Lat", "Camera_Long"), .after = Time) %>%
   #'  Remove rows with NAs that were created during full_join. 
   #'  This happens when a camera station has no detection data. Specifically, 
   #'  when camera sites have a second record in the "stations" data frame 
@@ -271,7 +301,38 @@
   #'  spot (coordinates changed by a few meters).
   filter(!is.na(File))
   
-
+  #'  Pull out data from NE2897_4 and NE2897_4b because these have same location
+  #'  so get duplicated in the join above. Need to thin this out so it can be
+  #'  added back into full_dat.
+  NE2897_4 <- full_dat[full_dat$CameraLocation == "NE2897_4",]
+  NE2897_4b <- full_dat[full_dat$CameraLocation == "NE2897_4b",]
+  NE2897 <- rbind(NE2897_4, NE2897_4b) %>%
+    #'  Remove observations with NE2897_4b in Year2
+    filter(!CameraLocation.x == "NE2897_4b" | !Year == "Year2") %>%
+    #'  Remove observations with NE2897_4 in Year3
+    filter(!CameraLocation.x == "NE2897_4" | !Year == "Year3")
+  
+  #'  Final cleaning
+  #'  Swap duplicated & mixed up NE2897 4 & 4b observations from full_dat and 
+  #'  replace with correct NE2897 4 & 4b data
+  full_dat <- full_dat %>%
+    filter(!CameraLocation == "NE2897_4") %>%
+    filter(!CameraLocation == "NE2897_4b") %>%
+    rbind(NE2897) %>%
+    #'  Drop unnecessary columns
+    dplyr::select(-c(Date.x, Date.y, DT_Good, Service, Empty, SecondOp, Status, FinalLocation,
+              CameraLocation.x, CameraLocation.y, Cell_ID, Camera_ID, Pull_Status)) %>%
+    #'  Reorganize columns to put data in more useful locations
+    relocate("Date", .after = DateTime) %>%
+    relocate("DeployDate", .after = Color) %>%
+    relocate(c("CameraLocation", "Camera_Lat", "Camera_Long"), .after = Time) %>%
+    #'  Reorder by CameraLocation and time of each observation
+    arrange(CameraLocation, DateTime)
+  
+  #'  Double check there aren't duplicate observations
+  dups <- full_dat[duplicated(full_dat),]
+  
+  #'  How many camera stations do I end up with?
   cams <- distinct(full_dat, full_dat$CameraLocation)
 
   
@@ -282,8 +343,8 @@
 
   #'  Camera station covariates with updated CameraLocation names (b cameras)
   stations <- clean_deployed %>%
-    dplyr::select("Year", "Study_Area", "Cell_ID", "Camera_ID.y",   
-                  "CameraLocation.y", "Latitude", "Longitude", "Distance_Focal_Point", 
+    dplyr::select("Year", "Study_Area", "Cell_ID.y", "Camera_ID.y",   
+                  "CameraLocation", "Latitude", "Longitude", "Distance_Focal_Point", 
                   "Height_frm_grnd", "Monitoring", "Canopy_Cov", "Land_Mgnt", 
                   "Land_Owner", "Habitat_Type")
   colnames(stations) <- c("Year", "Study_Area", "Cell_ID", "Camera_ID", 
