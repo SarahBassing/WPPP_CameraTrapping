@@ -391,9 +391,16 @@
     filter(Empty != "TRUE") %>% 
     filter(Service != "TRUE")  
   
+  #'  Make sure the date & time columns have values for each observation. If 
+  #'  DateTime, Date, and Time columns are "NA" this means the original data were 
+  #'  exported from Timelapse2 using a newer version that reorders info to end of 
+  #'  .csv file. Must re-export with Timelapse2 version 2.2.4.3 or older!
+  DT_NA <- alldetections[is.na(alldetections$DateTime),]
+  nrow(DT_NA)
+  
   #'  Make sure there are no duplicate detections in here
   dups <- alldetections[duplicated(alldetections),]
-  
+  nrow(dups)
   
   #'  Save for later analyses
   write.csv(alldetections, paste0('./Output/Bassing_AllDetections18-21_', Sys.Date(), '.csv'))
