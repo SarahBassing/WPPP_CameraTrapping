@@ -263,6 +263,13 @@
   OKAMs_2020 <- SpatialPointsDataFrame(coords = OK_AMs[,2:3], data = OK_AMs, proj4string = WGS84)
   NEAMs_2020 <- SpatialPointsDataFrame(coords = NE_AMs[,2:3], data = NE_AMs, proj4string = WGS84)
   
+  final_cams <- read.csv("./Output/Camera_Station18-21_Covariates_2022-04-27.csv") %>%
+    dplyr::select(c("CameraLocation", "Year", "Longitude", "Latitude")) # note these are now flipped
+  Cam_locs <- SpatialPointsDataFrame(coords = final_cams[,3:4], data = final_cams, proj4string = WGS84)
+  final_cams_noYear <- dplyr::select(final_cams, -Year)
+  Cam_locs_gpx <- SpatialPointsDataFrame(coords = final_cams_noYear[,2:3], data = final_cams_noYear, proj4string = WGS84)
+  
+  
   #  Does everything make sense?
   plot(cams_master18_19_spdf)
   plot(OK, add = T); plot(NE, add = T)
@@ -302,6 +309,8 @@
   writeOGR(Cams_2020, dsn = "./Shapefiles/Camera_Locations", layer = "Cam_2020locs_spdf_052921", driver = "ESRI Shapefile", overwrite = F )
   writeOGR(AMs_2020, dsn = "./Shapefiles/Camera_Locations", layer = "AM_2020locs_spdf_052921", driver = "ESRI Shapefile", overwrite = F )
   
+  writeOGR(Cam_locs, dsn = "./Shapefiles/Camera_Locations", layer = "Cams_FinalLocs18-21_spdf_050922", driver = "ESRI Shapefile", overwrite = F)
+  
   #  Write GPX files
   #  Be sure spdf only includes NAME, LONG, LAT
   writeOGR(cams_current20_21, dsn="./Shapefiles/Camera_Locations/Cam_currentlocs_spdf_052921.gpx",
@@ -310,6 +319,7 @@
            dataset_options="GPX_USE_EXTENSIONS=yes",layer="waypoints",driver="GPX", overwrite_layer = T)
   writeOGR(AMs_2020, dsn="./Shapefiles/Camera_Locations/AM_2020locs_spdf_052921.gpx",
            dataset_options="GPX_USE_EXTENSIONS=yes",layer="waypoints",driver="GPX", overwrite_layer = T)
-
+  writeOGR(Cam_locs_gpx, dsn = "./Shapefiles/Camera_Locations/Cams_FinalLocs18-21_spdf_050922.gpx",
+           dataset_options="GPX_USE_EXTENSIONS=yes",layer="waypoints",driver="GPX", overwrite_layer = T)
   
   
