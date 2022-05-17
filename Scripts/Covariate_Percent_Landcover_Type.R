@@ -28,6 +28,7 @@
   library(tidyverse)
   
   #'  Read in and inspect landcover data
+  landcov17 <- raster("./Shapefiles/Cascadia_layers/landcover_2017.tiff")
   landcov18 <- raster("./Shapefiles/Cascadia_layers/landcover_2018.tif")
   landcov19 <- raster("./Shapefiles/Cascadia_layers/landcover_2019.tif")
   landcov20 <- raster("./Shapefiles/Cascadia_layers/landcover_2020.tif")
@@ -45,6 +46,7 @@
   #' #'  Reproject landcover rasters to match dem 30x30m resolution and projection
   #' #'  Use nearest neighbor method (ngb) to compute values for new raster
   #' #'  ngb is appropriate for categorical variables (bilinear for continuous)
+  #' landcov17_reproj <- projectRaster(landcov17, crs = crs(sa_proj), res = res(dem), method = "ngb")
   #' landcov18_reproj <- projectRaster(landcov18, crs = crs(sa_proj), res = res(dem), method = "ngb")
   #' landcov19_reproj <- projectRaster(landcov19, crs = crs(sa_proj), res = res(dem), method = "ngb")
   #' landcov20_reproj <- projectRaster(landcov20, crs = crs(sa_proj), res = res(dem), method = "ngb")
@@ -58,12 +60,14 @@
   extent(dem)
 
   #' #'  Save
+  #' writeRaster(landcov17_reproj, filename = "./Shapefiles/Cascadia_layers/Percent_Lancover_reproj/landcov17_reproj.tif", format="GTiff", overwrite=TRUE)
   #' writeRaster(landcov18_reproj, filename = "./Shapefiles/Cascadia_layers/Percent_Lancover_reproj/landcov18_reproj.tif", format="GTiff", overwrite=TRUE)
   #' writeRaster(landcov19_reproj, filename = "./Shapefiles/Cascadia_layers/Percent_Lancover_reproj/landcov19_reproj.tif", format="GTiff", overwrite=TRUE)
   #' writeRaster(landcov20_reproj, filename = "./Shapefiles/Cascadia_layers/Percent_Lancover_reproj/landcov20_reproj.tif", format="GTiff", overwrite=TRUE)
   
   
   #'  Load interpolated data
+  landcov17_reproj <- raster("./Shapefiles/Cascadia_layers/Percent_Lancover_reproj/landcov17_reproj.tif")
   landcov18_reproj <- raster("./Shapefiles/Cascadia_layers/Percent_Lancover_reproj/landcov18_reproj.tif")
   landcov19_reproj <- raster("./Shapefiles/Cascadia_layers/Percent_Lancover_reproj/landcov19_reproj.tif")
   landcov20_reproj <- raster("./Shapefiles/Cascadia_layers/Percent_Lancover_reproj/landcov20_reproj.tif")
@@ -85,7 +89,8 @@
   #'  Check to make sure it looks right
   forestm
   #'  Reclassify the raster based on a matrix
-  forest18 <- reclassify(landcov18_reproj, forestm) 
+  forest17 <- reclassify(landcov17_reproj, forestm)
+  forest18 <- reclassify(landcov18_reproj, forestm)
   forest19 <- reclassify(landcov19_reproj, forestm)
   forest20 <- reclassify(landcov20_reproj, forestm)
   #'  Plot to see how it looks - only forest areas (binary format)
@@ -107,6 +112,7 @@
                       210,211,1,
                       211,332,0),ncol=3,byrow=TRUE)
   mgrassm
+  mgrass17 <- reclassify(landcov17_reproj, mgrassm)
   mgrass18 <- reclassify(landcov18_reproj, mgrassm)
   mgrass19 <- reclassify(landcov19_reproj, mgrassm)
   mgrass20 <- reclassify(landcov20_reproj, mgrassm)
@@ -117,6 +123,7 @@
                     309,310,1,
                     310,330,0,
                     330,332,1),ncol=3,byrow=TRUE)
+  dvlp17 <- reclassify(landcov17_reproj, dvlpm)
   dvlp18 <- reclassify(landcov18_reproj, dvlpm)
   dvlp19 <- reclassify(landcov19_reproj, dvlpm)
   dvlp20 <- reclassify(landcov20_reproj, dvlpm)
@@ -128,6 +135,8 @@
                         211,220,0,
                         220,221,1,
                         221,332,0),ncol=3,byrow=TRUE)
+  
+  mesicmix17 <- reclassify(landcov17_reproj, mesicmixm)
   mesicmix18 <- reclassify(landcov18_reproj, mesicmixm)
   mesicmix19 <- reclassify(landcov19_reproj, mesicmixm)
   mesicmix20 <- reclassify(landcov20_reproj, mesicmixm)
@@ -143,6 +152,7 @@
                          221,229,0,
                          229,230,1,
                          221,332,0),ncol=3,byrow=TRUE)
+  forestmix17 <- reclassify(landcov17_reproj, forestmixm)
   forestmix18 <- reclassify(landcov18_reproj, forestmixm)
   forestmix19 <- reclassify(landcov19_reproj, forestmixm)
   forestmix20 <- reclassify(landcov20_reproj, forestmixm)
@@ -156,6 +166,7 @@
                           221,229,0,
                           229,230,1,
                           221,332,0),ncol=3,byrow=TRUE)
+  forestmix217 <- reclassify(landcov17_reproj, forestmix2m)
   forestmix218 <- reclassify(landcov18_reproj, forestmix2m)
   forestmix219 <- reclassify(landcov19_reproj, forestmix2m)
   forestmix220 <- reclassify(landcov20_reproj, forestmix2m)
@@ -165,6 +176,7 @@
   xgrassm <- matrix(c(0,211,0,
                       211,212,1,
                       212,332,0),ncol=3,byrow=TRUE)
+  xgrass17 <- reclassify(landcov17_reproj, xgrassm)
   xgrass18 <- reclassify(landcov18_reproj, xgrassm)
   xgrass19 <- reclassify(landcov19_reproj, xgrassm)
   xgrass20 <- reclassify(landcov20_reproj, xgrassm)
@@ -174,6 +186,7 @@
   xshrubm <- matrix(c(0,221,0,
                       221,222,1,
                       222,332,0),ncol=3,byrow=TRUE)
+  xshrub17 <- reclassify(landcov17_reproj, xshrubm)
   xshrub18 <- reclassify(landcov18_reproj, xshrubm)
   xshrub19 <- reclassify(landcov19_reproj, xshrubm)
   xshrub20 <- reclassify(landcov20_reproj, xshrubm)
@@ -192,26 +205,34 @@
   #'  Create proportional cover rasters: 
   #'  multiples the binary raster by the focal weight and then sums within the buffer
   forestprop_18 <- focal(forest18, buffer)
+  forestprop_18 <- focal(forest18, buffer)
   forestprop_19 <- focal(forest19, buffer)
   forestprop_20 <- focal(forest20, buffer)
+  mgrassprop_17 <- focal(mgrass17, buffer)
   mgrassprop_18 <- focal(mgrass18, buffer)
   mgrassprop_19 <- focal(mgrass19, buffer)
   mgrassprop_20 <- focal(mgrass20, buffer)
+  dvlpprop_17 <- focal(dvlp17, buffer)
   dvlpprop_18 <- focal(dvlp18, buffer)
   dvlpprop_19 <- focal(dvlp19, buffer)
   dvlpprop_20 <- focal(dvlp20, buffer)
+  mesicmixprop_17 <- focal(mesicmix17, buffer)
   mesicmixprop_18 <- focal(mesicmix18, buffer)
   mesicmixprop_19 <- focal(mesicmix19, buffer)
   mesicmixprop_20 <- focal(mesicmix20, buffer)
+  forestmixprop_17 <- focal(forestmix17, buffer)
   forestmixprop_18 <- focal(forestmix18, buffer)
   forestmixprop_19 <- focal(forestmix19, buffer)
   forestmixprop_20 <- focal(forestmix20, buffer)
+  forestmix2prop_17 <- focal(forestmix217, buffer)
   forestmix2prop_18 <- focal(forestmix218, buffer)
   forestmix2prop_19 <- focal(forestmix219, buffer)
   forestmix2prop_20 <- focal(forestmix220, buffer)
+  xgrassprop_17 <- focal(xgrass17, buffer)
   xgrassprop_18 <- focal(xgrass18, buffer)
   xgrassprop_19 <- focal(xgrass19, buffer)
   xgrassprop_20 <- focal(xgrass20, buffer)
+  xshrubprop_17 <- focal(xshrub17, buffer)
   xshrubprop_18 <- focal(xshrub18, buffer)
   xshrubprop_19 <- focal(xshrub19, buffer)
   xshrubprop_20 <- focal(xshrub20, buffer)
@@ -227,27 +248,35 @@
   plot(xshrubprop_18, main = "Xeric Shrub Prop")
   
   #'  Write individual output rasters- make sure to adjust name with _wgs84 if needed
+  writeRaster(forestprop_17,"./Shapefiles/Cascadia_layers/forestprop_17.tif")
   writeRaster(forestprop_18,"./Shapefiles/Cascadia_layers/forestprop_18.tif")
   writeRaster(forestprop_19,"./Shapefiles/Cascadia_layers/forestprop_19.tif")
   writeRaster(forestprop_20,"./Shapefiles/Cascadia_layers/forestprop_20.tif")
+  writeRaster(mgrassprop_17,"./Shapefiles/Cascadia_layers/mgrassprop_17.tif")
   writeRaster(mgrassprop_18,"./Shapefiles/Cascadia_layers/mgrassprop_18.tif")
   writeRaster(mgrassprop_19,"./Shapefiles/Cascadia_layers/mgrassprop_19.tif")
   writeRaster(mgrassprop_20,"./Shapefiles/Cascadia_layers/mgrassprop_20.tif")
+  writeRaster(dvlpprop_17,"./Shapefiles/Cascadia_layers/dvlpprop_17.tif")
   writeRaster(dvlpprop_18,"./Shapefiles/Cascadia_layers/dvlpprop_18.tif")
   writeRaster(dvlpprop_19,"./Shapefiles/Cascadia_layers/dvlpprop_19.tif")
   writeRaster(dvlpprop_20,"./Shapefiles/Cascadia_layers/dvlpprop_20.tif")
+  writeRaster(mesicmixprop_17,"./Shapefiles/Cascadia_layers/mesicmixprop_17.tif")
   writeRaster(mesicmixprop_18,"./Shapefiles/Cascadia_layers/mesicmixprop_18.tif")
   writeRaster(mesicmixprop_19,"./Shapefiles/Cascadia_layers/mesicmixprop_19.tif")
   writeRaster(mesicmixprop_20,"./Shapefiles/Cascadia_layers/mesicmixprop_20.tif")
+  writeRaster(forestmixprop_17,"./Shapefiles/Cascadia_layers/forestmixprop_17.tif")
   writeRaster(forestmixprop_18,"./Shapefiles/Cascadia_layers/forestmixprop_18.tif")
   writeRaster(forestmixprop_19,"./Shapefiles/Cascadia_layers/forestmixprop_19.tif")
   writeRaster(forestmixprop_20,"./Shapefiles/Cascadia_layers/forestmixprop_20.tif")
+  writeRaster(forestmix2prop_17,"./Shapefiles/Cascadia_layers/forestmix2prop_17.tif")
   writeRaster(forestmix2prop_18,"./Shapefiles/Cascadia_layers/forestmix2prop_18.tif")
   writeRaster(forestmix2prop_19,"./Shapefiles/Cascadia_layers/forestmix2prop_19_.tif")
   writeRaster(forestmix2prop_20,"./Shapefiles/Cascadia_layers/forestmix2prop_20.tif")
+  writeRaster(xgrassprop_17,"./Shapefiles/Cascadia_layers/xgrassprop_17.tif")
   writeRaster(xgrassprop_18,"./Shapefiles/Cascadia_layers/xgrassprop_18.tif")
   writeRaster(xgrassprop_19,"./Shapefiles/Cascadia_layers/xgrassprop_19.tif")
   writeRaster(xgrassprop_20,"./Shapefiles/Cascadia_layers/xgrassprop_20.tif")
+  writeRaster(xshrubprop_17,"./Shapefiles/Cascadia_layers/xshrubprop_17.tif")
   writeRaster(xshrubprop_18,"./Shapefiles/Cascadia_layers/xshrubprop_18.tif")
   writeRaster(xshrubprop_19,"./Shapefiles/Cascadia_layers/xshrubprop_19.tif")
   writeRaster(xshrubprop_20,"./Shapefiles/Cascadia_layers/xshrubprop_20.tif")
@@ -256,9 +285,11 @@
   #'  Calculate distance to edge using the forest raster
   #'  Distance to forest edge
   #'  Convert 0s to NAs
+  forest17na <- forest17
   forest18na <- forest18
   forest19na <- forest19
   forest20na <- forest20
+  forest17na[forest17na == 0] <- NA
   forest18na[forest18na == 0] <- NA
   forest19na[forest19na == 0] <- NA
   forest20na[forest20na == 0] <- NA
@@ -273,6 +304,10 @@
   #' dist20 <- raster::distance(forest20)
   #'  Distance to open edge
   #'  Reformat forest rasters so forested habitat is NA and open habitat is 1
+  open17 <- forest17
+  open17[open17 == 1] <- NA
+  open17[open17 == 0] <- 1
+  plot(open17)
   open18 <- forest18
   open18[open18 == 1] <- NA
   open18[open18 == 0] <- 1
@@ -287,12 +322,15 @@
   plot(open20)
   
   #'  Save- NOTE in the file name whether these are projected or in wgs84!
+  writeRaster(forest17, "./Shapefiles/Cascadia_layers/closed17.tif", overwrite = TRUE)
   writeRaster(forest18, "./Shapefiles/Cascadia_layers/closed18.tif", overwrite = TRUE)
   writeRaster(forest19, "./Shapefiles/Cascadia_layers/closed19.tif", overwrite = TRUE)
   writeRaster(forest20, "./Shapefiles/Cascadia_layers/closed20.tif", overwrite = TRUE)
+  writeRaster(forest17na, "./Shapefiles/Cascadia_layers/closed17na.tif", overwrite = TRUE)
   writeRaster(forest18na, "./Shapefiles/Cascadia_layers/closed18na.tif", overwrite = TRUE)
   writeRaster(forest19na, "./Shapefiles/Cascadia_layers/closed19na.tif", overwrite = TRUE)
   writeRaster(forest20na, "./Shapefiles/Cascadia_layers/closed20na.tif", overwrite = TRUE)
+  writeRaster(open17, "./Shapefiles/Cascadia_layers/open17na.tif", overwrite = TRUE)
   writeRaster(open18, "./Shapefiles/Cascadia_layers/open18na.tif", overwrite = TRUE)
   writeRaster(open19, "./Shapefiles/Cascadia_layers/open19na.tif", overwrite = TRUE)
   writeRaster(open20, "./Shapefiles/Cascadia_layers/open20na.tif", overwrite = TRUE)
