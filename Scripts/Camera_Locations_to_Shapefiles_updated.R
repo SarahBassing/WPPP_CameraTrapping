@@ -267,6 +267,7 @@
     dplyr::select(c("CameraLocation", "Year", "Longitude", "Latitude")) # note these are now flipped
   Cam_locs <- SpatialPointsDataFrame(coords = final_cams[,3:4], data = final_cams, proj4string = WGS84)
   final_cams_noYear <- dplyr::select(final_cams, -Year)
+  colnames(final_cams_noYear) <- c("NAME", "LONG", "LAT")
   Cam_locs_gpx <- SpatialPointsDataFrame(coords = final_cams_noYear[,2:3], data = final_cams_noYear, proj4string = WGS84)
   
   
