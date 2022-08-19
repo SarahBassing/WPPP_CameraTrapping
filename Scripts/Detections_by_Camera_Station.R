@@ -92,7 +92,7 @@
   deployed <- rbind(deployedYr1, deployedYr2, deployedYr3)
   
   #'  Species detection data  
-  alldetections <- read.csv("./Output/Bassing_AllDetections18-21_2022-04-27.csv") %>% 
+  alldetections <- read.csv("./Output/Bassing_AllDetections18-21_2022-08-19.csv") %>% #2022-04-27
     dplyr::select(-c(X, Folder, ImageQuality)) %>%
     mutate(
       DateTime = as.POSIXct(DateTime,
