@@ -387,6 +387,16 @@
   # write.csv(cougars, paste0('./Output/Cougars_allimgs_', Sys.Date(), '.csv'))
   
   
+  #'  All turkey detections - for Dan Thornton
+  turkeys <- full_dat %>%
+    filter(Species == "Turkey")
+  write.csv(turkeys, paste0('./Output/Turkey_allimgs_', Sys.Date(), '.csv'))
+  
+  #'  All grouse detections - for Dan Thornton
+  grouse <- full_dat %>%
+    filter(Species == "Grouse Spp")
+  write.csv(grouse, paste0('./Output/Grouse_allimgs_', Sys.Date(), '.csv'))
+  
   #  =============================
   #### CAPSTONE PROJECT DATA  ####
   #  =============================
@@ -538,6 +548,16 @@
     dplyr::select(-caps)
   # write.csv(wolf_food, paste0('./Output/Bassing_ungulate_detections_', Sys.Date(), '.csv'))
   
+  
+  #'  Turkey and grouse detections for Dan Thornton
+  turkey <- detections %>%
+    filter(Species == "Turkey")
+  NE_turkey <- turkey %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE))
+  grouse <- detections %>%
+    filter(Species == "Grouse Spp")
+  NE_grouse <- grouse %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE))
   
   #'  =============================================
   #'  Make the species detection data spatial based on CameraLocation lat/long
