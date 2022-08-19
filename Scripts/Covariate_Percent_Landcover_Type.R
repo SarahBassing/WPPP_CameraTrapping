@@ -195,8 +195,8 @@
   
   #'  Create a moving window buffer with a 250 m radius
   #'  It's based on the resolution/projection of the input raster
-  #'  If in UTMs then 250m, if in lat/long then 0.00025 degrees is approx. 250m
-  # buffer <- raster::focalWeight(landcov18, 0.00025, "circle") 
+  #'  If in UTMs then 250m, if in lat/long then 0.0025 degrees is approx. 250m
+  # buffer <- raster::focalWeight(landcov18, 0.0025, "circle") 
   buffer <- raster::focalWeight(landcov18_reproj, 250, "circle") # when projected
   
   
@@ -204,7 +204,7 @@
   
   #'  Create proportional cover rasters: 
   #'  multiples the binary raster by the focal weight and then sums within the buffer
-  forestprop_18 <- focal(forest18, buffer)
+  forestprop_17 <- focal(forest17, buffer)
   forestprop_18 <- focal(forest18, buffer)
   forestprop_19 <- focal(forest19, buffer)
   forestprop_20 <- focal(forest20, buffer)
