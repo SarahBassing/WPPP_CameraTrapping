@@ -34,8 +34,6 @@
   #'  Read in all csv files together, force all columns to characters, reformat
   #'  columns so all are consistent & of desired format
   #'  REVIEWED DATA
-  # mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Reviewed Image Data/Year 1"  #Year 1
-  # mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Test"
   read_files <- function(mydir) {
     csv_files <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>% 
       #  col_types forces all columns to be characters
@@ -111,74 +109,6 @@
   #' missing_data <- csv_files[is.na(csv_files$Species) & is.na(csv_files$HumanActivity) & csv_files$Count > 0,]
   #' print(droplevels(unique(missing_data$CameraLocation)))
   #' #'  BRB gotta go fix these!
-  #' 
-  #' #'  PROCESSED DATA BUT NOT REVIEWED YET
-  #' mydir <- "G:/My Drive/1_Repositories/WPPP_CameraTrapping/Processed Image Data/Year 2" 
-  #' csv_files2 <- list.files(path = mydir, pattern = "*.csv", full.names = TRUE) %>%
-  #'   #  col_types forces all columns to be characters
-  #'   #  Forcing to character addresses issue w/ inconsistent typecasting of columns
-  #'   map_df(~read_csv(., col_types = cols(.default = "c"))) %>%
-  #'   mutate(
-  #'     #  Reformat dates based on the structure of the character string
-  #'     DateNew = ifelse(nchar(Date) == 11,
-  #'                      format(as.Date(parse_date_time(Date,"dbY")), "%Y-%m-%d"), Date),
-  #'     DateNew = ifelse(nchar(Date) <= 9,
-  #'                      format(as.Date(parse_date_time(Date,"dby")), "%Y-%m-%d"), DateNew),
-  #'     #  Add extra columns to identify potential errors in date conversion
-  #'     #  Correct date format should have 10 characters (YYYY-MM-DD)
-  #'     Date_10char = ifelse(nchar(DateNew) != 10, "Fail", "Good"),
-  #'     #  Correct date format should be in the 2000's (not 0018, etc.)
-  #'     Date_2000 = ifelse(year(DateNew) == 0018 | year(DateNew) == 0019 |
-  #'                        year(DateNew) == 0020 | year(DateNew) == 0021,
-  #'                        "Fail", "Good"),
-  #'     CameraLocation = as.factor(as.character(CameraLocation)),
-  #'     #  Reformat columns to the desired format
-  #'     DT_Good = ifelse(DT_Good == "true", "TRUE", DT_Good),
-  #'     DT_Good = ifelse(DT_Good == "false", "FALSE", DT_Good),
-  #'     DT_Good = as.factor(as.character(DT_Good)),
-  #'     Service = ifelse(Service == "true", "TRUE", Service),
-  #'     Service = ifelse(Service == "false", "FALSE", Service),
-  #'     Service = as.factor(as.character(Service)),
-  #'     Empty = ifelse(Empty == "true", "TRUE", Empty),
-  #'     Empty = ifelse(Empty == "false", "FALSE", Empty),
-  #'     Empty = as.factor(as.character(Empty)),
-  #'     Animal = ifelse(Animal == "true", "TRUE", Animal),
-  #'     Animal = ifelse(Animal == "false", "FALSE", Animal),
-  #'     Animal = as.factor(as.character(Animal)),
-  #'     Human = ifelse(Human == "true", "TRUE", Human),
-  #'     Human = ifelse(Human == "false", "FALSE", Human),
-  #'     Human = as.factor(as.character(Human)),
-  #'     Vehicle = ifelse(Vehicle == "true", "TRUE", Vehicle),
-  #'     Vehicle = ifelse(Vehicle == "false", "FALSE", Vehicle),
-  #'     Vehicle = as.factor(as.character(Vehicle)),
-  #'     Species = as.character(Species),
-  #'     HumanActivity = as.character(HumanActivity),
-  #'     Count = as.numeric(Count),
-  #'     AdultFemale = as.numeric(AdultFemale),
-  #'     AdultMale = as.numeric(AdultMale),
-  #'     AdultUnknown = as.numeric(AdultUnknown),
-  #'     Offspring = as.numeric(Offspring),
-  #'     UNK = as.numeric(UNK),
-  #'     Collars = as.numeric(Collars),
-  #'     Tags = as.character(Tags),
-  #'     NaturalMarks = as.character(NaturalMarks),
-  #'     SecondOpinion = ifelse(SecondOpinion == "true", "TRUE", SecondOpinion),
-  #'     SecondOpinion = ifelse(SecondOpinion == "false", "FALSE", SecondOpinion),
-  #'     SecondOpinion = as.factor(as.character(SecondOpinion)),
-  #'     Comments = as.character(Comments)
-  #'   )
-  #' #'  Warnings are due to an extra empty column at end of csv files- ignore
-  #' 
-  #' 
-  #' #'  Check for rows where the date format is incorrect
-  #' fail2_10char <- csv_files2[csv_files2$Date_10char == "Fail",]
-  #' head(fail_10char)
-  #' fail2_2000 <- csv_files2[csv_files2$Date_2000 == "Fail",]
-  #' head(fail_2000)
-  #' #'  And rows where there's no species or human activity but count data
-  #' missing_data2 <- csv_files2[is.na(csv_files2$Species) & is.na(csv_files2$HumanActivity) & csv_files2$Count > 0,]
-  #' print(droplevels(unique(missing_data2$CameraLocation)))
-  
   
   #'  Final re-formatting of detection data
   #'  Merge reviewed data and processed data and re-format together
@@ -384,7 +314,7 @@
   
   
   ####  FILTER DATA & SAVE  ####
-  #'  ---------------------------------------------
+  #'  ----------------------
   
   #'  Filter service and empty images out 
   alldetections <- allimgs %>%
