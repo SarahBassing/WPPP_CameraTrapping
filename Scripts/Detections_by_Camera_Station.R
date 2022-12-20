@@ -66,12 +66,6 @@
     #  Remove duplicates that dplyr thinks are distinct for some reason
     filter(Cell_ID != "NE1990" | Status != "Checked") %>%    
     filter(Cell_ID != "NE2383" | Status != "Checked") %>%
-    #  Remove duplicates where camera angle changed but location effectively did not
-    #  Actually save this step for later down (match_coord step below)
-    # filter(Cell_ID != "OK2749" | Camera_Lat != "48.64027") %>%
-    # filter(Cell_ID != "OK3667" | Camera_Lat != "48.54991") %>%
-    # filter(Cell_ID != "OK7658" | Camera_Lat != "48.17755") %>%
-    # filter(Cell_ID != "NE3081" | Camera_Lat != "48.42142") %>%
     #  Remove camera station that did not change but camera # was changed due to damage
     filter(Cell_ID != "OK2145" | Camera_ID != "3") %>%
     #  Remove camera station that was stolen and no data recorded
@@ -377,6 +371,9 @@
     filter(Species == "Wolf") %>%
     filter(Year == "Year1")
   # write.csv(wolves, paste0('./Output/Wolf_allimgsYr1_', Sys.Date(), '.csv'))
+  NEwolves <- full_dat %>%
+    filter(Species == "Wolf") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE))
   
   #'  All cougar detections
   cougars <- full_dat %>%
@@ -385,6 +382,9 @@
   collared_coug <- cougars %>%
     filter(Collars > 0)
   # write.csv(cougars, paste0('./Output/Cougars_allimgs_', Sys.Date(), '.csv'))
+  NEcougs <- full_dat %>%
+    filter(Species == "Cougar") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE))
   
   
   #'  All turkey detections - for Dan Thornton
@@ -537,6 +537,10 @@
     filter(Species == "Cougar") %>%
     dplyr::select(-caps)
   # write.csv(Cougs, paste0('./Output/Cougar_inddet_', Sys.Date(), '.csv'))
+  NEcougs <- detections %>%
+    filter(Species == "Cougar") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
+    dplyr::select(-caps)
   
   #'  Wolf & ungulate detections for Lisanne
   wolf <- detections %>%
@@ -547,6 +551,38 @@
     filter(Species == "Elk" | Species == "Moose" | Species == "Mule Deer" | Species == "White-tailed Deer") %>%
     dplyr::select(-caps)
   # write.csv(wolf_food, paste0('./Output/Bassing_ungulate_detections_', Sys.Date(), '.csv'))
+  NEwolves <- detections %>%
+    filter(Species == "Wolf") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
+    dplyr::select(-caps)
+  
+  #  other species NE only
+  NEbear <- detections %>%
+    filter(Species == "Black Bear") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
+    dplyr::select(-caps)
+  NEcoy <- detections %>%
+    filter(Species == "Coyote") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
+    dplyr::select(-caps)
+  NEbob <- detections %>%
+    filter(Species == "Bobcat") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
+    dplyr::select(-caps)
+  NEelk <- detections %>%
+    filter(Species == "Elk") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
+    dplyr::select(-caps)
+  NEmd <- detections %>%
+    filter(Species == "Mule Deer") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
+    dplyr::select(-caps)
+  NEwtd <- detections %>%
+    filter(Species == "White-tailed Deer") %>%
+    filter(str_detect(CameraLocation, paste("OK"), negate = TRUE)) %>%
+    dplyr::select(-caps)
+  
+  
   
   
   #'  Turkey and grouse detections for Dan Thornton
@@ -593,6 +629,14 @@
   OKmoose <- st_as_sf(OKmoose, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   wolf <- st_as_sf(wolf, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   coug <- st_as_sf(Cougs, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  NEwolf <- st_as_sf(NEwolves, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  NEcoug <- st_as_sf(NEcougs, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  NEbear <- st_as_sf(NEbear, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  NEcoy <- st_as_sf(NEcoy, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  NEbob <- st_as_sf(NEbob, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  NEelk <- st_as_sf(NEelk, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  NEmd <- st_as_sf(NEmd, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
+  NEwtd <- st_as_sf(NEwtd, coords = c("Camera_Long", "Camera_Lat"), crs = wgs84)
   
   
   # ggplot() +
@@ -706,6 +750,38 @@
     group_by(CameraLocation) %>%
     summarise(count = n()) %>%
     ungroup()
+  NEwolf_n <- NEwolf %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  NEcoug_n <- NEcoug %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  NEbear_n <- NEbear %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  NEcoy_n <- NEcoy %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  NEbob_n <- NEbob %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  NEelk_n <- NEelk %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  NEmd_n <- NEmd %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
+  NEwtd_n <- NEwtd %>%
+    group_by(CameraLocation) %>%
+    summarise(count = n()) %>%
+    ungroup()
   #'  Plot moose detections based on the number of independent detections/camera
   pdf(file = "./Output/NE_moose_camera_detection.pdf")
   ggplot() +
@@ -714,12 +790,246 @@
     geom_sf(data = NEmoose_n, aes(size = count), shape  = 21, fill = "darkred") + 
     scale_fill_manual(values = c("A" = "transparent"),
                       labels = c("Camera traps"), name = "Legend") +
-    labs(size = "Independent \ndetections") +
+    labs(size = "Detection events") +
     labs(x = "Longitude", y = "Latitude") +
     ggtitle("WPPP Camera Trap Moose Detections \n(2018 - 2021)") +
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5))
   dev.off()
+  pdf(file = "./Output/NE_elk_camera_detection.pdf")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEelk_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Elk Detections \n(2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  pdf(file = "./Output/NE_md_camera_detection.pdf")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEmd_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Mule Deer Detections \n(2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  pdf(file = "./Output/NE_wtd_camera_detection.pdf")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEwtd_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap White-tailed Deer Detections \n(2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  pdf(file = "./Output/NE_wolf_camera_detection.pdf")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEwolf_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Wolf Detections \n(2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  pdf(file = "./Output/NE_cougar_camera_detection.pdf")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEcoug_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Cougar Detections \n(2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  pdf(file = "./Output/NE_bear_camera_detection.pdf")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEbear_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Black Bear Detections \n(2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  pdf(file = "./Output/NE_coyote_camera_detection.pdf")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEcoy_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Coyote Detections \n(2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  pdf(file = "./Output/NE_bob_camera_detection.pdf")
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEbob_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Bobcat Detections \n(2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  dev.off()
+  
+  
+  #'  Plots for Chewelah talk
+  NEmoose_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEmoose_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Moose Detections \n(June 2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEmoose_map.png", dpi = 300)
+  NEelk_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEelk_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Elk Detections \n(June 2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEelk_map.png", dpi = 300)
+  NEmd_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEmd_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Mule Deer Detections \n(June 2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEmd_map.png", dpi = 300)
+  NEwtd_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEwtd_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap White-tailed Deer Detections \n(June 2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEwtd_map.png", dpi = 300)
+  NEwolf_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEwolf_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Wolf Detections \n(June 2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEwolf_map.png", dpi = 300)
+  NEcoug_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEcoug_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Cougar Detections \n(June 2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEcoug_map.png", dpi = 300)
+  NEbear_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEbear_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Black Bear Detections \n(June 2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEbear_map.png", dpi = 300)
+  NEcoy_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEcoy_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Coyote Detections \n(June 2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEcoy_map.png", dpi = 300)
+  NEbob_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "A"), show.legend = "point") + 
+    geom_sf(data = NEbob_n, aes(size = count), shape  = 21, fill = "darkred") + 
+    scale_fill_manual(values = c("A" = "transparent"),
+                      labels = c("Camera traps"), name = "Legend") +
+    labs(size = "Detection events") +
+    labs(x = "Longitude", y = "Latitude") +
+    ggtitle("WPPP Camera Trap Bobcat Detections \n(June 2018 - 2021)") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEbob_map.png", dpi = 300)
+  
+  
+  ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 1, aes(fill = "darkgreen")) + 
+    scale_fill_manual(labels = c("Camera traps"), name = "Legend") +
+    # labs(size = "Camera traps") +
+    labs(x = "Longitude", y = "Latitude") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  NEcam_map <- ggplot() +
+    geom_sf(data = NE_wgs84, fill = NA) +
+    geom_sf(data = NEcams, shape = 16, size = 2.5, col = "darkgreen") + 
+    theme_classic() +
+    labs(x = "Longitude", y = "Latitude") +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave("./Output/NEcam_map.png", dpi = 300)
+  
   
   pdf(file = "./Output/wolf_camera_detections_18-19.pdf")
   ggplot() +
