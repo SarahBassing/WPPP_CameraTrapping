@@ -56,7 +56,7 @@
     cams19 <- cbind(deployed19, Year, cameras19)
     
     #  2020-2021 data
-    cameras20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_071921.csv")) %>% #052821
+    cameras20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Deployment_2020_100520.csv")) %>% #071921
       dplyr::select("Date", "Study_Area",  "Cell_ID", "Cam_ID", "Memory_Card", 
                     "Cam_Lat", "Cam_Long",  
                     "Cam_Distance_Focal_Point", "Cam_Distance_Ground", 
@@ -129,7 +129,7 @@
   chks19 <- cbind(checked19, checks19)
   
   #  Pulling Year 2 (summer 2019) cameras in summer 2020
-  summchecks20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Checking_2020_071921.csv")) %>% #052821
+  summchecks20 <- as.data.frame(read.csv("G:/My Drive/1 Predator Prey Project/Field Work/Data Entry/AudioMoth_and_Camera_Checking_2020_100520.csv")) %>% #071921
     dplyr::select("Date", "Study_Area", "Cell_ID",  
                   "Cam_ID", "Cam_Card", "Cam_Lat", "Cam_Long", 
                   "Cam_Condition", "Explain1", "Cam_Replaced", "Num_Images",
